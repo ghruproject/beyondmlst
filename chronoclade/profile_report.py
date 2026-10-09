@@ -324,7 +324,7 @@ def _location_network(value: object, directory: Path, cohorts: object = None) ->
 var data=JSON.parse(viewer.querySelector('[data-network-views]').textContent);
 var group=viewer.querySelector('[data-network-group]');var scope=viewer.querySelector('[data-network-scope]');
 var reconstruction=viewer.querySelector('[data-network-reconstruction]');var output=viewer.querySelector('[data-network-output]');
-function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.destroy(output);output.innerHTML=chosen[scope.value];var possible=reconstruction.value==='possible';output.querySelectorAll('[data-network-representative]').forEach(function(el){el.hidden=possible;});output.querySelectorAll('[data-network-possible]').forEach(function(el){el.hidden=!possible;});if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.mount(output);}}
+function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.destroy(output);output.innerHTML=chosen[scope.value];var possible=reconstruction.value==='possible';output.querySelectorAll('div[data-network-representative]').forEach(function(el){el.hidden=possible;});output.querySelectorAll('div[data-network-possible]').forEach(function(el){el.hidden=!possible;});if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.mount(output);}}
 group.addEventListener('change',update);scope.addEventListener('change',update);reconstruction.addEventListener('change',update);viewer.querySelector('.network-controls').hidden=false;
 });})();</script>"""
     return "".join(panels) + widget_assets() + script
