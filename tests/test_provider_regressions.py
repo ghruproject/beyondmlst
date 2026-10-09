@@ -16,7 +16,9 @@ from chronoclade.temporal import file_sha256
 def sample(tmp_path, name="focal", *, origin="local", collection_date="2019"):
     assembly = tmp_path / f"{name}.fasta"
     assembly.write_text(f">{name}\nACGT\n")
-    return Sample(name, assembly, collection_date, "India", "Klebsiella pneumoniae", "ST147", origin)
+    return Sample(
+        name, assembly, collection_date, "India", "Klebsiella pneumoniae", "ST147", origin
+    )
 
 
 def test_temporal_cache_invalidates_dates_clock_and_randomisation_settings(tmp_path, monkeypatch):
@@ -30,18 +32,30 @@ def test_temporal_cache_invalidates_dates_clock_and_randomisation_settings(tmp_p
 
     def runner(**kwargs):
         calls.append([s.collection_date for s in kwargs["samples"]])
-        return {"method": "root_to_tip", "tree_sha256": file_sha256(kwargs["tree"]),
-                "requested_randomisations": kwargs["randomisations"],
-                "seed": kwargs["seed"], "sequence_length": kwargs["sequence_length"],
-                "generation": len(calls)}
+        return {
+            "method": "root_to_tip",
+            "tree_sha256": file_sha256(kwargs["tree"]),
+            "requested_randomisations": kwargs["randomisations"],
+            "seed": kwargs["seed"],
+            "sequence_length": kwargs["sequence_length"],
+            "generation": len(calls),
+        }
 
     monkeypatch.setattr("chronoclade.lineage.run_date_randomisation", runner)
 
     def run(selected, randomisations=10):
-        return _temporal_signal(files, selected, sequence_length=123,
-                                randomisations=randomisations, randomisation_jobs=1,
-                                seed=7, force=False, tree=tree, method="root_to_tip",
-                                observed_clock=clock)
+        return _temporal_signal(
+            files,
+            selected,
+            sequence_length=123,
+            randomisations=randomisations,
+            randomisation_jobs=1,
+            seed=7,
+            force=False,
+            tree=tree,
+            method="root_to_tip",
+            observed_clock=clock,
+        )
 
     first = run(members)
     assert run(members) == first and len(calls) == 1
@@ -64,14 +78,26 @@ def test_report_selected_context_matches_actual_members_not_entire_manifest(tmp_
     source = tmp_path / "source"
     source.mkdir()
     catalogue = source / "context_catalogue.json"
-    payload = {"rows": [{"source_genome_id": "included"}, {"source_genome_id": "removed"}],
-               "focal_rows": [], "provenance": {"retrieved_at": "2026-10-09"}}
+    payload = {
+        "rows": [{"source_genome_id": "included"}, {"source_genome_id": "removed"}],
+        "focal_rows": [],
+        "provenance": {"retrieved_at": "2026-10-09"},
+    }
     digest = content_hash(payload)
     catalogue.write_text(json.dumps({**payload, "snapshot_sha256": digest}))
-    rows = [{"sample_id": f"PW_{ident}", "species": "Klebsiella pneumoniae", "lineage": "ST147",
-             "source": "pathogenwatch", "source_genome_id": ident, "country": "India",
-             "catalogue_path": str(catalogue), "catalogue_sha256": digest}
-            for ident in ("included", "removed")]
+    rows = [
+        {
+            "sample_id": f"PW_{ident}",
+            "species": "Klebsiella pneumoniae",
+            "lineage": "ST147",
+            "source": "pathogenwatch",
+            "source_genome_id": ident,
+            "country": "India",
+            "catalogue_path": str(catalogue),
+            "catalogue_sha256": digest,
+        }
+        for ident in ("included", "removed")
+    ]
     observed = {}
 
     def capture(public, destination, **kwargs):
@@ -82,7 +108,8 @@ def test_report_selected_context_matches_actual_members_not_entire_manifest(tmp_
     monkeypatch.setattr("chronoclade.context_geography.generate_context_geography", capture)
     evidence = context_evidence(
         [sample(tmp_path), sample(tmp_path, "PW_included", origin="context")],
-        rows, directory=directory,
+        rows,
+        directory=directory,
     )
     assert observed["selected"] == ["included"]
     assert len(observed["public"]) == 2  # Full-catalogue composition retains the denominator.
@@ -93,17 +120,32 @@ def test_report_selected_context_matches_actual_members_not_entire_manifest(tmp_
     assert [r["source_genome_id"] for r in exported] == ["included"]
 
 
-@pytest.mark.parametrize("manifest_rows", [[], [
-    {"sample_id": "unused", "species": "Klebsiella pneumoniae", "lineage": "ST147",
-     "source": "pathogenwatch", "catalogue_path": "/missing/previous/catalogue.json"}
-]])
-def test_rerun_without_current_context_removes_stale_geography_and_downloads(tmp_path, manifest_rows):
+@pytest.mark.parametrize(
+    "manifest_rows",
+    [
+        [],
+        [
+            {
+                "sample_id": "unused",
+                "species": "Klebsiella pneumoniae",
+                "lineage": "ST147",
+                "source": "pathogenwatch",
+                "catalogue_path": "/missing/previous/catalogue.json",
+            }
+        ],
+    ],
+)
+def test_rerun_without_current_context_removes_stale_geography_and_downloads(
+    tmp_path, manifest_rows
+):
     directory = tmp_path / "analysis"
     geography = directory / "context_geography"
     geography.mkdir(parents=True)
     (geography / "fragment.html").write_text("<img src='obsolete.svg'>")
-    stale = [directory / name for name in (
-        "context_manifest.tsv", "context_catalogue.json", "context_selection.json")]
+    stale = [
+        directory / name
+        for name in ("context_manifest.tsv", "context_catalogue.json", "context_selection.json")
+    ]
     for path in stale:
         path.write_text("previous run")
     assert _context_geography_visual(directory)

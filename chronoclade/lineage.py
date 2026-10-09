@@ -23,7 +23,11 @@ from chronoclade.report import (
 )
 from chronoclade.recombination import run_phipack_screen
 from chronoclade.recombination_report import write_recombination_evidence
-from chronoclade.temporal import file_sha256, run_date_randomisation, run_full_tree_date_randomisation
+from chronoclade.temporal import (
+    file_sha256,
+    run_date_randomisation,
+    run_full_tree_date_randomisation,
+)
 
 
 @dataclass(frozen=True)
@@ -305,7 +309,8 @@ def context_evidence(
     relevant_rows = [
         row
         for row in manifest_rows
-        if row.get("species") == members[0].species and row.get("lineage") == members[0].lineage
+        if row.get("species") == members[0].species
+        and row.get("lineage") == members[0].lineage
         and row.get("sample_id") in context_ids
     ]
     nearest: list[dict[str, object]] = []
@@ -339,8 +344,11 @@ def context_evidence(
         fieldnames = list(relevant_rows[0])
         _write_csv(subset_path, fieldnames, relevant_rows, delimiter="\t")
     geography = None
-    catalogue_paths = {row.get("catalogue_path", "") for row in relevant_rows
-                       if row.get("source") == "pathogenwatch" and row.get("catalogue_path")}
+    catalogue_paths = {
+        row.get("catalogue_path", "")
+        for row in relevant_rows
+        if row.get("source") == "pathogenwatch" and row.get("catalogue_path")
+    }
     if len(catalogue_paths) > 1:
         raise WorkflowError("Context manifest refers to multiple frozen catalogues")
     if not catalogue_paths:
@@ -352,30 +360,40 @@ def context_evidence(
     if catalogue_paths:
         from chronoclade.context_geography import generate_context_geography
         from chronoclade.pathogenwatch import content_hash
+
         frozen_path = Path(next(iter(catalogue_paths)))
         if not frozen_path.is_file():
             raise WorkflowError("Frozen Pathogenwatch catalogue required by manifest is missing")
         payload = json.loads(frozen_path.read_text(encoding="utf-8"))
         expected = payload.pop("snapshot_sha256", "")
-        if not expected or content_hash(payload) != expected or any(
-            row.get("catalogue_sha256") != expected for row in relevant_rows
-            if row.get("source") == "pathogenwatch"
+        if (
+            not expected
+            or content_hash(payload) != expected
+            or any(
+                row.get("catalogue_sha256") != expected
+                for row in relevant_rows
+                if row.get("source") == "pathogenwatch"
+            )
         ):
             raise WorkflowError("Frozen Pathogenwatch catalogue hash does not match manifest")
         provenance = payload.get("provenance", {})
         geography = generate_context_geography(
-            payload["rows"], directory / "context_geography",
-            selected_source_ids=[row["source_genome_id"] for row in relevant_rows
-                                 if row.get("source_genome_id")],
+            payload["rows"],
+            directory / "context_geography",
+            selected_source_ids=[
+                row["source_genome_id"] for row in relevant_rows if row.get("source_genome_id")
+            ],
             focal_rows=payload.get("focal_rows", []),
-            scope={"description": f"Public same-ST Pathogenwatch catalogue: "
-                   f"{members[0].species} {members[0].lineage}",
-                   "snapshot": provenance.get("retrieved_at", "unknown"),
-                   "filters": "QC pass; accession-deduplicated; undated records retained"},
+            scope={
+                "description": f"Public same-ST Pathogenwatch catalogue: "
+                f"{members[0].species} {members[0].lineage}",
+                "snapshot": provenance.get("retrieved_at", "unknown"),
+                "filters": "QC pass; accession-deduplicated; undated records retained",
+            },
         )
         (directory / "context_catalogue.json").write_text(
-            json.dumps({**payload, "snapshot_sha256": expected}, indent=2) + "\n",
-            encoding="utf-8")
+            json.dumps({**payload, "snapshot_sha256": expected}, indent=2) + "\n", encoding="utf-8"
+        )
         selection = frozen_path.parent / "context_selection.json"
         if selection.is_file():
             (directory / "context_selection.json").write_bytes(selection.read_bytes())
@@ -556,9 +574,7 @@ def _run_core_phylogeny(
     return files.tree, files.filtered_alignment, None
 
 
-def _run_observed_clock(
-    files: LineageFiles, tree: Path, sequence_length: int, force: bool
-) -> None:
+def _run_observed_clock(files: LineageFiles, tree: Path, sequence_length: int, force: bool) -> None:
     _run_command(
         [
             "treetime",
@@ -602,9 +618,12 @@ def _temporal_signal(
     method: str,
     observed_clock: Path,
 ) -> dict[str, object]:
-    dates_sha256 = hashlib.sha256(json.dumps(
-        [(sample.sample_id, sample.collection_date) for sample in members],
-        separators=(",", ":")).encode()).hexdigest()
+    dates_sha256 = hashlib.sha256(
+        json.dumps(
+            [(sample.sample_id, sample.collection_date) for sample in members],
+            separators=(",", ":"),
+        ).encode()
+    ).hexdigest()
     observed_sha256 = file_sha256(observed_clock)
     if not force and files.temporal_signal.exists():
         previous = json.loads(files.temporal_signal.read_text(encoding="utf-8"))
@@ -645,30 +664,30 @@ def _run_dated_tree(
     rooted_tree = files.clock_dir / "rerooted.newick"
     input_tree = tree if tree is not None else files.tree
     command = [
-            "treetime",
-            "--tree",
-            str(input_tree if reroot else rooted_tree),
-            "--dates",
-            str(files.metadata),
-            "--name-column",
-            "sample_id",
-            "--date-column",
-            "collection_date",
-            "--sequence-length",
-            str(sequence_length),
-            "--confidence",
-            "--time-marginal",
-            "only-final",
-            "--covariation",
-            "--clock-filter",
-            "0",
-            "--plot-tree",
-            "timetree.svg",
-            "--plot-rtt",
-            "root_to_tip_regression.svg",
-            "--outdir",
-            str(files.directory / "timetree"),
-        ]
+        "treetime",
+        "--tree",
+        str(input_tree if reroot else rooted_tree),
+        "--dates",
+        str(files.metadata),
+        "--name-column",
+        "sample_id",
+        "--date-column",
+        "collection_date",
+        "--sequence-length",
+        str(sequence_length),
+        "--confidence",
+        "--time-marginal",
+        "only-final",
+        "--covariation",
+        "--clock-filter",
+        "0",
+        "--plot-tree",
+        "timetree.svg",
+        "--plot-rtt",
+        "root_to_tip_regression.svg",
+        "--outdir",
+        str(files.directory / "timetree"),
+    ]
     if reroot:
         command.extend(["--reroot", "least-squares"])
     else:

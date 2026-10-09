@@ -119,8 +119,9 @@ MANIFEST_FIELDS = [
     "aws_url",
 ]
 
-MANIFEST_FIELDS.extend(field.name for field in fields(ContextCandidate)
-                       if field.name not in MANIFEST_FIELDS)
+MANIFEST_FIELDS.extend(
+    field.name for field in fields(ContextCandidate) if field.name not in MANIFEST_FIELDS
+)
 
 
 def _run_capture(
@@ -747,26 +748,49 @@ def prepare_context(
 
     if context_source == "pathogenwatch":
         from chronoclade.pathogenwatch_context import prepare_pathogenwatch_context
+
         if metadata_table is not None or source != "auto":
             raise ContextError("--metadata-table and --source aws/osf require --context-source atb")
         from chronoclade.cglin import CGLINError
         from chronoclade.pathogenwatch import PathogenwatchError
+
         try:
             return prepare_pathogenwatch_context(
-                focal, species=species, lineage=lineage, scheme=scheme, st=st, output=output,
-                cache_dir=cache_dir, countries=countries, year_from=year_from, year_to=year_to,
-                host=host, isolation_source=isolation_source, candidate_pool=candidate_pool,
-                max_context=max_context, nearest_per_focal=nearest_per_focal, seed=seed,
-                threads=threads, dry_run=dry_run, ska_executable=ska_executable,
-                catalogue=catalogue, cglin_export=cglin_export, focal_crosswalk=focal_crosswalk,
-                refresh_catalogue=refresh_catalogue)
+                focal,
+                species=species,
+                lineage=lineage,
+                scheme=scheme,
+                st=st,
+                output=output,
+                cache_dir=cache_dir,
+                countries=countries,
+                year_from=year_from,
+                year_to=year_to,
+                host=host,
+                isolation_source=isolation_source,
+                candidate_pool=candidate_pool,
+                max_context=max_context,
+                nearest_per_focal=nearest_per_focal,
+                seed=seed,
+                threads=threads,
+                dry_run=dry_run,
+                ska_executable=ska_executable,
+                catalogue=catalogue,
+                cglin_export=cglin_export,
+                focal_crosswalk=focal_crosswalk,
+                refresh_catalogue=refresh_catalogue,
+            )
         except (CGLINError, PathogenwatchError) as error:
             raise ContextError(str(error)) from None
 
     if context_source != "atb":
         raise ContextError("--context-source must be pathogenwatch or atb")
-    if (catalogue is not None or cglin_export is not None or focal_crosswalk is not None
-            or refresh_catalogue):
+    if (
+        catalogue is not None
+        or cglin_export is not None
+        or focal_crosswalk is not None
+        or refresh_catalogue
+    ):
         raise ContextError("Pathogenwatch catalogue/cgLIN options cannot be used with ATB")
     if not focal:
         raise ContextError("No focal samples were supplied for context preparation")
