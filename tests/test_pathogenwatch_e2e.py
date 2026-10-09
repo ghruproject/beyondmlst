@@ -274,11 +274,14 @@ def test_removed_provider_options_are_rejected(tmp_path, option, value):
 
 
 def test_context_help_exposes_only_pathogenwatch_route():
-    result = CliRunner().invoke(app, ["prepare-context", "--help"])
+    from click import unstyle
+
+    result = CliRunner().invoke(app, ["prepare-context", "--help"], color=True)
     assert result.exit_code == 0, result.output
-    assert "--catalogue" in result.output
+    text = unstyle(result.output)
+    assert "--catalogue" in text
     for removed in ("--source", "--context-source", "--metadata-table", "atbfetcher"):
-        assert removed not in result.output
+        assert removed not in text
 
 
 def test_interval_date_candidate_retains_bounds_and_filters_explicitly(tmp_path):
