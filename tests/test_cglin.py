@@ -192,6 +192,18 @@ def test_normalised_export_import_preserves_csv_provenance(tmp_path):
     assert imported["cglin_export_sha256"] == "original_csv_hash"
     assert imported["cglin_retrieved_at"] == "2026-10-09T12:00:00Z"
     assert imported["cglin_source"] == "pathogenwatch"
+    assert imported["cglin_export_row"] == exported["cglin_export_row"]
+
+
+def test_derived_group_fields_recomputed_from_raw_code():
+    exported = assignment("a", "0,0,197,0,4")
+    exported["cglin_group_7"] = "fabricated"
+    exported["cglin_status_7"] = "resolved"
+    row = annotate_catalogue([{"source_genome_id": "a"}], [exported])[0]
+    assert row["cglin_group_7"] == ""
+    assert row["cglin_status_7"] == "partial"
+    deeper = annotate_catalogue([{"source_genome_id": "a"}], [assignment("a")], depths=(8,))[0]
+    assert deeper["cglin_status_8"] == "resolved"
 
 
 @pytest.mark.parametrize("content", ["", "name,code\nfoo,0_0\n", '{"wrong":[]}'])
