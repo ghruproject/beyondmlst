@@ -154,3 +154,42 @@ def test_rerun_without_current_context_removes_stale_geography_and_downloads(
     assert _context_geography_visual(directory) == ""
     assert not geography.exists()
     assert not any(path.exists() for path in stale)
+
+
+def test_context_directory_moves_between_laptop_and_cluster(tmp_path):
+    import shutil
+    from chronoclade.context import ContextCandidate, write_candidate_table, write_combined_metadata
+    from chronoclade.lineage import read_context_manifest
+    from chronoclade.metadata import Sample, read_metadata
+
+    original = tmp_path / "laptop"
+    context = original / "context"
+    context.mkdir(parents=True)
+    focal_assembly = original / "focal.fasta"
+    focal_assembly.write_text(">focal\nACGT\n")
+    candidate_assembly = context / "public.fasta"
+    candidate_assembly.write_text(">context\nACGT\n")
+    catalogue = context / "context_catalogue.json"
+    catalogue.write_text("{}")
+    focal = Sample("F1", focal_assembly, "2020", "India", "Klebsiella pneumoniae", "ST147", "local")
+    candidate = ContextCandidate(
+        "PW_1",
+        "Klebsiella pneumoniae",
+        "ST147",
+        "klebsiella",
+        "147",
+        collection_date="2019",
+        assembly=str(candidate_assembly),
+        catalogue_path=str(catalogue),
+        source="pathogenwatch",
+    )
+    write_candidate_table(context / "context_manifest.tsv", [candidate])
+    write_combined_metadata(context / "combined_metadata.csv", [focal], [candidate])
+    relocated = tmp_path / "cluster"
+    shutil.copytree(original, relocated)
+    samples = read_metadata(relocated / "context/combined_metadata.csv")
+    manifest = read_context_manifest(relocated / "context/context_manifest.tsv")
+    assert samples[0].assembly == relocated / "focal.fasta"
+    assert samples[1].assembly == relocated / "context/public.fasta"
+    assert manifest[0]["catalogue_path"] == str(relocated / "context/context_catalogue.json")
+    assert str(original) not in (context / "combined_metadata.csv").read_text()

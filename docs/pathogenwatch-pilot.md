@@ -181,3 +181,9 @@ hand-checks the focal group's country subset and denominators, all-depth assignm
 coverage, raw/sample-unit reconciliation, zero unresolved sample identity and three
 focal memberships/overlaps. The source's immutable raw search/details and annotated
 catalogue hashes remain embedded for audit.
+
+Metadata and manifest assembly/catalogue paths are written relative to their
+files. For SLURM analysis, stage the complete pilot directory, including focal
+assemblies, context assemblies and annotated catalogue, preserving that layout.
+The same frozen directory can move between laptop and cluster without rewriting
+absolute laptop paths; a regression fixture verifies the moved inputs.

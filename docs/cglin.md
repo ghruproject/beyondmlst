@@ -139,7 +139,7 @@ batches in 101.13 seconds, totalling 1,823,172 decoded CSV bytes. Export
 manifest SHA256 was
 `f6bc0cddd85ba29935e508b9a5bc1dd32dcab62a6804d0b0706d119bdfed9241`.
 Its metadata catalogue snapshot hash was
-`2a9d9bacb6d6967b0fbcd855758192ce8a365abbfd98c4ea8cc0971ca3365701`.
+`bcffd21c69089623103170b0e770f6852db3178be0a07a2d029176f94eb4b8d7`.
 
 Raw-record coverage before QC/deduplication was:
 

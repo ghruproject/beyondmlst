@@ -90,7 +90,10 @@ def _context_geography_visual(directory: Path) -> str:
     # The fragment is generated locally; asset URLs are relative to its directory.
     fragment = fragment.replace('href="', 'href="context_geography/').replace(
         'src="', 'src="context_geography/')
-    return fragment
+    return ('<div class="context-geography"><style>'
+            '.context-geography{min-width:0;max-width:100%;overflow:hidden}'
+            '.context-geography svg{width:100%;max-width:100%;height:auto;display:block}'
+            '</style>' + fragment + '</div>')
 
 
 def _display_summary(value: object) -> str:
