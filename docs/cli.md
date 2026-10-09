@@ -18,8 +18,9 @@ See [query typing](query-typing.md) for examples and database requirements.
 
 ## `chronoclade preflight`
 
-Reports whether SKA2, IQ-TREE, ClonalFrameML, PhiPack Profile and TreeTime are available in the
-active environment.
+Reports whether the native genome-analysis and temporal-analysis tools are
+available in the active environment. Profile-first `fast` mode does not invoke
+these assembly/tree tools.
 
 ```bash
 pixi run chronoclade preflight
@@ -35,7 +36,8 @@ pixi run chronoclade validate metadata.csv --min-samples 10
 
 ## `chronoclade run`
 
-Runs all ready lineages and writes the combined index.
+Runs the cumulative profile-first workflow and writes an index for completed
+stages. The default `fast` mode stops after profile analysis.
 
 ```bash
 pixi run chronoclade run metadata.csv [OPTIONS]
@@ -47,21 +49,48 @@ pixi run chronoclade run metadata.csv [OPTIONS]
 | `--threads`, `-t` | `4` | Total CPU budget |
 | `--lineage-jobs` | `2` | Maximum concurrent lineages |
 | `--randomisation-jobs` | `4` | Maximum TreeTime permutations per lineage |
-| `--date-randomisations` | `100` | Number of tip-date permutations |
-| `--mode` | `full` | `full` analysis or `fast` triage screen |
-| `--date-randomisation-method` | `root-to-tip` | `root-to-tip` screen or `full-tree` TreeTime refits |
+| `--mode` | `fast` | `fast` profile analysis, `full` corrected genomic analysis, or `finish` temporal analysis |
+| `--collection` | none | Pathogenwatch collection UUID or full URL as query input |
+| `--accessions` | none | Query accession list or CSV |
+| `--species` | none | Declared species for new assemblies or accession lookup |
+| `--catalogue` | none | Frozen public metadata catalogue |
+| `--public-typing` | none | Frozen public cgMLST and group assignments |
+| `--query-typing` | none | Verified query typing JSON |
+| `--typing-config` | none | Native caller and reference configuration for query assemblies |
+| `--cglin-export` | none | Frozen public cgLIN assignments |
+| `--profile-limit` | `500` | Maximum public records in profile analysis; query records are additional |
+| `--context-size` | `50` | Maximum selected context assemblies per lineage; query assemblies are additional |
+| `--nearest-per-query` | `3` | Nearest profile relatives considered per query during context selection |
+| `--profile-bootstraps` | `10` | Requested locus-bootstrap replicates for descriptive group support |
+| `--group-distance` | `0.02` | Exploratory complete-linkage cgMLST mismatch fraction |
+| `--date-randomisations` | `100` | Number of tip-date permutations in `finish` |
+| `--date-randomisation-method` | `root-to-tip` | `root-to-tip` screen or `full-tree` TreeTime refits in `finish` |
 | `--temporal-p-value` | `0.05` | Temporal gate threshold |
-| `--min-samples` | `10` | Minimum genomes per lineage |
-| `--seed` | `20260818` | Randomisation seed |
+| `--min-samples` | `10` | Minimum genomes per lineage for whole-genome workflow |
+| `--seed` | `20260818` | Selection and analysis seed |
 | `--context-manifest` | none | Frozen manifest from `prepare-context` |
 | `--force` | false | Rerun completed stages |
 | `--dry-run` | false | Validate and print the plan only |
 
-`--mode fast` always uses `root-to-tip`. It runs PhiPack Profile in bounded
-blocks, builds an uncorrected screening tree from the SKA alignment and reports
-the root-to-tip permutation result. PhiPack is a detection screen in this mode;
-it does not localise tracts or create a filtered alignment. Fast mode does not
-produce a time-scaled tree or circulation/introduction interpretation.
+`--mode fast` compares the query set with the available public typing context.
+It does not download context assemblies or build a corrected tree. Its report
+shows query/context profile coverage, exclusions, country figures, PCoA and
+neighbour-joining views where possible, descriptive genetic groups, separate
+year-persistence and time/place-concentration summaries, an exploratory
+allele-distance root-to-tip diagnostic, and nearest profile relatives.
+
+`--mode full` selects up to `--context-size` public context assemblies per
+lineage, retains all query genomes, and runs the corrected genomic analysis.
+It stops before date tests and time scaling. `--mode finish` runs the same
+corrected analysis and then performs the temporal tests; TreeTime creates a
+dated tree only when the configured temporal gate passes. If there are fewer
+than three usable distinct collection dates, `finish` retains the corrected
+report and records that temporal analysis was not assessed.
+
+Supply one query source: a metadata CSV, `--collection`, or `--accessions`.
+`--dry-run` writes a plan without fetching typing exports, downloading
+assemblies or running analyses. `--public-typing` and `--query-typing` import
+local frozen files; they do not grant access to protected production databases.
 
 ## `chronoclade prepare-context`
 

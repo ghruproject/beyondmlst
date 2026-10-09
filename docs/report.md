@@ -133,10 +133,18 @@ Figures are exported as SVG and PNG, numerical values as CSV/TSV, trees as
 Newick/Nexus and decisions as JSON. The supporting-results ZIP holds the evidence
 actually available for that run.
 
-## Fast-screen report
+## Staged reports
 
-Fast mode remains explicitly limited: recombination detection, a genetic tree
-without recombination correction, and a date-permutation screen. It never presents
-a dated tree, final clonal-neighbour analysis or an introduction interpretation.
-A PHI-positive block signals that the full analysis is needed; it is not itself
-a localised recombinant tract.
+The public `fast` report is profile-first: it describes profile coverage,
+country/region composition, exploratory PCoA and neighbour-joining views,
+descriptive genetic groups, profile neighbours, persistence across years and
+time/place concentration. Persistence and concentration are reported as
+separate observations. Profile-stage root-to-tip diagnostics and location
+networks are exploratory, not clock gates or transmission evidence.
+
+`full` produces corrected assembly-based genomic evidence but does not assess
+dates. `finish` adds date randomisation and a dated tree only when the temporal
+evidence gate passes. See [the staged workflow](staged-workflow.md) for the
+inputs, outputs and limitations of each mode. Older PhiPack screening files,
+where present in preserved results, belong to the legacy per-lineage fast
+screen and are not outputs of the current public `fast` mode.

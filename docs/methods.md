@@ -1,6 +1,55 @@
 # Methods
 
+## Stages and profile analysis
+
+The public `chronoclade run` modes are cumulative. `fast` (the default) analyses
+available cgMLST profiles without downloading public assemblies. `full` selects
+context assemblies and runs the recombination-corrected genomic workflow but
+stops before clock fitting. `finish` adds the temporal-signal tests and gated
+time scaling. The profile-stage root-to-tip diagnostic and the finish-stage
+clock test answer different questions; the former never passes the temporal
+gate.
+
+Each profile comparison requires compatible species, cgMLST scheme/version,
+database provenance where available, and a compatible locus set. Allele
+identifiers are categorical; numeric allele IDs are not evolutionary
+distances. Pairwise distances are the number of mismatches divided by the
+number of jointly called loci. Missing calls are excluded from the numerator
+and the report gives the shared-call count and overlap. Comparisons with
+incompatible schemes or locus sets are not combined into one cohort.
+
+Some exports list only observed loci and do not declare the full canonical
+scheme universe. For such compatible records, ChronoClade uses the union of
+observed loci as the overlap denominator and flags that canonical completeness
+is unknown. This does not estimate the proportion of the full scheme covered.
+Complete-comparability cohorts are deterministic partitions for ordination and
+neighbour-joining views; they are not themselves genetic groups.
+
+Genetic groups use deterministic complete linkage at the configured
+`--group-distance`, expressed as a mismatch fraction. Locus-bootstrap
+co-assignment is descriptive support for those candidate groups. If no valid
+bootstrap replicates are available, support is unknown, not evidence against a
+group. A singleton has no within-group pair support to estimate.
+
+Persistence across years and concentration in time/place are computed and
+reported separately. Persistence lists the observed collection years in the
+group; gaps do not demonstrate uninterrupted presence. Concentration summarizes
+year/location cells among records with both date and place metadata; it does
+not test for an outbreak or establish transmission. Both summaries describe
+the sample submitted, not population prevalence.
+
+The profile-stage nearest relative is selected from the available compatible
+public profiles and reports shared called loci. Country figures include
+profile-available members of a comparable cohort, combine query and public
+context records, and exclude records without profiles. They do not split
+country counts by origin or provide a separate region-count view in the current
+profile summary. The separate query/context coverage counts include records
+without profiles.
+
 ## Whole-genome phylogeny
+
+The following assembly methods apply to `full` and `finish`. Clock methods
+apply only to `finish`.
 
 ChronoClade analyses each `species` and `lineage` group independently. SKA2
 builds a split-k-mer index and maps samples to a selected reference to produce a
@@ -35,7 +84,7 @@ members of each pair. The report always gives the callable-site count beside the
 SNP count. These corrected distances provide a second opportunity to identify
 unusual genomes after recombination has been modelled.
 
-## Root-to-tip analysis
+## Finish-stage root-to-tip analysis
 
 TreeTime reroots the recombination-corrected phylogeny by least squares and fits
 root-to-tip distance against sampling date. ChronoClade disables automatic
@@ -49,7 +98,7 @@ times reliably.[^murray]
 
 ## Date-randomisation test
 
-The default `root-to-tip` method permutes sampling dates among tips while
+The `finish` stage's default `root-to-tip` method permutes sampling dates among tips while
 retaining the corrected tree and sequence length. TreeTime repeats the same
 least-squares clock analysis for each permutation. The empirical one-sided
 p-value compares observed R² with the permutation distribution and includes a
@@ -75,27 +124,19 @@ workflow, not a universal definition of temporal signal. Structured datasets
 may require clustered permutations or sensitivity analyses that preserve known
 population groups.[^duche]
 
-## Fast screen
+## Stage boundaries
 
-Fast mode uses PhiPack's Profile program with Parsnp's 100-site PHI window,
-100-site step and p < 0.01 threshold. Because SKA writes reference records
-consecutively, ChronoClade divides each record into bounded 250 kb analysis
-blocks; a PHI calculation cannot cross a contig join. Ambiguous and missing
-calls remain inside their reference segment and are handled by PhiPack.
-
-A PHI-positive result means that incompatibility was detected somewhere within
-a computational block. It does not identify a tract, and ChronoClade does not
-mask sites from the fast alignment. The per-block p < 0.01 threshold is
-unadjusted: this favours sensitivity for triage, so a positive result is an
-escalation signal rather than a tract call or a final recombination inference.
-The fixed blocks bound runtime but are not biological segments or Parsnp locally
-collinear blocks. IQ-TREE therefore builds the fast screening tree from the
-uncorrected SKA alignment. Fast-mode output is suitable for triage, not final
-dating or public-health interpretation.
+`fast` does not align assemblies, screen recombination with PhiPack, build a
+whole-genome tree or run date permutations. It reports the profile comparisons
+and metadata available at that stage. `full` builds the corrected genomic
+evidence but does not run the clock methods above. Only `finish` assesses
+temporal signal. With fewer than three usable distinct collection dates,
+`finish` records that temporal analysis was not assessed and leaves the
+corrected report available; it does not create a failed permutation result.
 
 ## Time scaling
 
-Passing datasets are analysed with TreeTime using marginal time inference,
+Passing datasets in `finish` are analysed with TreeTime using marginal time inference,
 covariation and 90% confidence intervals. The output tree has branch positions
 on a calendar-time axis. ChronoClade exports the root estimate, clock-rate
 uncertainty and each internal node's date interval.
@@ -108,7 +149,8 @@ interpretation.
 ## Location states and public context
 
 TreeTime's mugration model reconstructs the supplied `location` state on the
-dated tree, or on the corrected genetic tree when temporal signal is absent.
+dated tree when time scaling succeeds, or on the corrected genetic tree when
+dating was unsupported or not assessed in `full`.
 This reconstruction is exploratory. Its result depends on how locations were
 defined and sampled.
 
@@ -129,7 +171,9 @@ the rooted tree, sampling and supplied location states. They do not prove
 transmission or migration, and they do not estimate national prevalence.
 Because reconstruction uses the rooted genetic tree, the network can be shown
 after dating is unsupported; it contains no inferred timing. Fast-screen mode
-does not run this reconstruction.
+does not run this reconstruction. Profile `fast` has a separate exploratory
+maximum-parsimony network based on possible changes across alternate sample
+roots; its root fraction is a sensitivity summary, not a probability.
 
 The context workflow freezes a full public Pathogenwatch same-ST catalogue with
 source IDs, accessions, QC, raw metadata, date precision and retrieval hashes.

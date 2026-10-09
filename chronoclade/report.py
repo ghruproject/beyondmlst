@@ -61,8 +61,8 @@ def write_supporting_bundle(directory: Path) -> Path:
     """Package reader-facing evidence files without duplicating large intermediates."""
 
     bundle = directory / "supporting_results.zip"
-    allowed = {".csv", ".tsv", ".json", ".txt", ".svg", ".png", ".nexus", ".newick"}
-    excluded_parts = {"logs", "randomisations"}
+    allowed = {".csv", ".tsv", ".json", ".txt", ".svg", ".png", ".nexus", ".newick", ".nwk"}
+    excluded_parts = {"logs", "randomisations", "stages"}
     obsolete_fast_outputs = {"phipack_recombination_regions.tsv"}
     with zipfile.ZipFile(bundle, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(directory.rglob("*")):
@@ -70,6 +70,7 @@ def write_supporting_bundle(directory: Path) -> Path:
                 not path.is_file()
                 or path == bundle
                 or path.name in obsolete_fast_outputs
+                or path.name.startswith(("report.full.", "report.finish."))
                 or path.suffix.lower() not in allowed
                 or excluded_parts.intersection(path.relative_to(directory).parts)
             ):
@@ -1368,7 +1369,7 @@ def write_summary_report(summary: dict[str, object], *, output: Path) -> Path:
             scenario_code = str(scenario.get("code", "indeterminate"))
         report_link = (
             f'<a href="{escape(slug, quote=True)}/report.html">Open report</a>'
-            if "temporal_signal" in lineage
+            if "temporal_signal" in lineage or mode == "corrected"
             else "Not analysed"
         )
         rows.append(

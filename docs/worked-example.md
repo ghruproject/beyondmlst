@@ -33,6 +33,7 @@ pixi run chronoclade validate \
 
 pixi run chronoclade run \
   validation/st239_baines2015/run/metadata.csv \
+  --mode finish \
   --output validation/st239_baines2015/run/results \
   --threads 8 \
   --lineage-jobs 1 \

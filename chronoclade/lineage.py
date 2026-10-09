@@ -604,6 +604,11 @@ def _run_core_phylogeny(
     return files.tree, files.filtered_alignment, None
 
 
+def _clock_dates_path(files: LineageFiles) -> Path:
+    path = files.directory / "clock_dates.csv"
+    return path if path.is_file() else files.metadata
+
+
 def _run_observed_clock(files: LineageFiles, tree: Path, sequence_length: int, force: bool) -> None:
     _run_command(
         [
@@ -612,7 +617,7 @@ def _run_observed_clock(files: LineageFiles, tree: Path, sequence_length: int, f
             "--tree",
             str(tree),
             "--dates",
-            str(files.metadata),
+            str(_clock_dates_path(files)),
             "--name-column",
             "sample_id",
             "--date-column",
@@ -632,7 +637,7 @@ def _run_observed_clock(files: LineageFiles, tree: Path, sequence_length: int, f
         log=files.directory / "logs" / "clock.log",
         expected=files.clock_file,
         force=force,
-        inputs=(tree, files.metadata),
+        inputs=(tree, _clock_dates_path(files)),
     )
 
 
@@ -671,7 +676,7 @@ def _temporal_signal(
     result = runner(
         tree=tree,
         sequence_length=sequence_length,
-        samples=members,
+        samples=_dated_members(members),
         observed_clock=observed_clock,
         randomisations=randomisations,
         randomisation_jobs=randomisation_jobs,
@@ -680,6 +685,28 @@ def _temporal_signal(
     )
     result.update(dates_sha256=dates_sha256, observed_clock_sha256=observed_sha256)
     files.temporal_signal.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return result
+
+
+def _dated_members(members: list[Sample]) -> list[Sample]:
+    """Keep genuinely usable date values without inventing dates for other tips."""
+    from chronoclade.metadata import MetadataError, _validate_date
+
+    from datetime import date
+
+    result = []
+    for sample in members:
+        try:
+            _validate_date(sample.collection_date, row_number=0)
+            # Partial dates are represented by their earliest possible day.
+            parts = [int(part) for part in sample.collection_date.split("-")]
+            earliest = date(parts[0], parts[1] if len(parts) > 1 else 1,
+                            parts[2] if len(parts) > 2 else 1)
+            if earliest > date.today():
+                continue
+        except MetadataError:
+            continue
+        result.append(sample)
     return result
 
 
@@ -698,7 +725,7 @@ def _run_dated_tree(
         "--tree",
         str(input_tree if reroot else rooted_tree),
         "--dates",
-        str(files.metadata),
+        str(_clock_dates_path(files)),
         "--name-column",
         "sample_id",
         "--date-column",
@@ -727,7 +754,7 @@ def _run_dated_tree(
         log=files.directory / "logs" / "timetree.log",
         expected=files.time_tree,
         force=force,
-        inputs=((input_tree if reroot else rooted_tree), files.metadata),
+        inputs=((input_tree if reroot else rooted_tree), _clock_dates_path(files)),
     )
 
 
@@ -868,6 +895,81 @@ def _run_lineage(
         files, members, reference, threads, force, mode
     )
     sequence_length = complete_alignment_sites(filtered_alignment)
+    dated_members = _dated_members(members)
+    insufficient_dates = len(dated_members) < 3 or len(
+        {sample.collection_date for sample in dated_members}
+    ) < 3
+    if mode == "corrected" or (mode == "full" and insufficient_dates):
+        # The intermediate stage provides genetic evidence without running a
+        # clock fit, permutations or a dated tree. Missing dates are retained.
+        from chronoclade.profile_report import write_corrected_report
+
+        assessment = {
+            "code": "not_assessed",
+            "supported": False,
+            "reason": (
+                "Fewer than three usable distinct collection dates; temporal signal was not assessed."
+                if mode == "full" and insufficient_dates
+                else "Dating is assessed only in the finish stage."
+            ),
+        }
+        recombination_masking = write_recombination_evidence(
+            alignment=files.alignment,
+            filtered_alignment=files.filtered_alignment,
+            importations=files.importations,
+            output_directory=files.directory,
+            reference=reference.assembly,
+        )
+        public_health = build_public_health_evidence(
+            filtered_alignment=filtered_alignment,
+            rooted_tree=files.tree,
+            samples=members,
+            output=files.directory,
+            temporal_assessment=assessment,
+        )
+        neighbourhood = build_neighbourhood_evidence(
+            tree=files.tree, samples=members, output=files.directory
+        )
+        _run_location_tree(files, files.tree, force, seed)
+        network = build_country_network(files.directory, temporal_supported=False)
+        report = {
+            **item,
+            "analysis_mode": "corrected",
+            "reference_path": str(reference.assembly),
+            "alignment_length": alignment_length(files.alignment),
+            "complete_alignment_sites": sequence_length,
+            "context": context_summary,
+            "temporal_status": "not_assessed",
+            "temporal_signal_supported": False,
+            "temporal_signal_reason": assessment["reason"],
+            "dated_sample_count": len(dated_members),
+            "undated_sample_count": len(members) - len(dated_members),
+            "recombination_masking": recombination_masking,
+            "public_health": public_health,
+            "neighbourhood": neighbourhood,
+            "country_network": network,
+            "outputs": {
+                "tree": str(files.tree),
+                "genetic_tree": str(files.tree),
+                "clonal_pairwise_distances": str(files.directory / "clonal_pairwise_distances.tsv"),
+                "nearest_neighbours": str(files.directory / "nearest_neighbours.tsv"),
+                "country_network": str(files.directory / "country_network_edges.csv"),
+                "filtered_alignment": str(filtered_alignment),
+                "html_report": str(files.directory / "report.html"),
+                "supporting_results": str(files.directory / "supporting_results.zip"),
+            },
+        }
+        (files.directory / "report.json").write_text(
+            json.dumps(report, indent=2) + "\n", encoding="utf-8"
+        )
+        write_corrected_report(report, directory=files.directory)
+        write_supporting_bundle(files.directory)
+        return report
+    valid_dates = {sample.sample_id: sample.collection_date for sample in dated_members}
+    _write_csv(files.directory / "clock_dates.csv", ["sample_id", "collection_date"],
+               ({"sample_id": sample.sample_id,
+                 "collection_date": valid_dates.get(sample.sample_id, "")}
+                for sample in members))
     _run_observed_clock(files, tree, sequence_length, force)
     observed_clock = files.clock_file
     if date_randomisation_method == "full_tree":

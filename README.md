@@ -1,24 +1,26 @@
 # ChronoClade
 
-ChronoClade tests whether sampling dates contain enough information to estimate a
-molecular clock in a bacterial lineage. It builds a whole-genome phylogeny,
-accounts for recombination with ClonalFrameML, examines the root-to-tip
-relationship, and runs a date-randomisation test. TreeTime estimates a dated
-phylogeny only when the temporal-signal test passes.
+ChronoClade first compares cgMLST profiles, then adds public context assemblies
+and a recombination-corrected whole-genome tree when requested. Dating is a
+separate final stage: TreeTime estimates a dated phylogeny only when the
+temporal-signal test passes.
 
-Two analysis modes are available. `full` uses ClonalFrameML and can use either
-the quick root-to-tip permutation screen or complete TreeTime refits. `fast`
-uses PhiPack Profile to screen for recombination, then builds an uncorrected fast
-tree for root-to-tip permutations. It is triage: PhiPack does not localise or
-remove recombinant tracts here, and fast mode does not produce a dated tree or
-an epidemiological interpretation.
+`fast` is the default and builds a profile-first report without downloading
+context assemblies. `full` adds up to 50 selected public context assemblies per
+lineage and runs the corrected genomic analysis; it does not run date tests.
+`finish` runs that same genomic analysis and then evaluates temporal signal,
+creating a time-scaled tree only when the gate passes. Profile reports describe
+genetic groups, recurrence across observed years, and concentration in time and
+place separately. These summaries do not establish persistence, outbreaks or
+transmission on their own.
 
 The workflow is intended for longitudinal surveillance within a species and
 lineage, such as an MLST sequence type. Public context genomes can be added to
 help distinguish a sampled local lineage from separate introductions. The final
-HTML report starts with countries, closest analysed relatives and a genetic tree,
-then explains interpretation and dating. Detailed methods and the full public
-country atlas are available separately.
+profile report starts with input coverage, countries and figures before nearest
+profile relatives. The corrected report adds recombination-filtered genetic
+distances and context; the finish report adds temporal evidence when assessed.
+Detailed methods and the full public country atlas are available separately.
 
 ChronoClade does not infer direct transmission. A dated tree estimates ancestral
 times under a molecular-clock model; it does not identify who infected whom.
@@ -61,6 +63,7 @@ Run the analysis:
 ```bash
 pixi run chronoclade run metadata.csv \
   --output chronoclade_results \
+  --mode finish \
   --threads 8 \
   --lineage-jobs 2 \
   --randomisation-jobs 4 \
@@ -70,17 +73,24 @@ pixi run chronoclade run metadata.csv \
 For a quick screen:
 
 ```bash
-pixi run chronoclade run metadata.csv --mode fast --date-randomisations 100
+pixi run chronoclade run metadata.csv --mode fast --output chronoclade_results
 ```
 
-For the more demanding date-randomisation test, refitting the full TreeTime
-model after every permutation:
+For a corrected genomic analysis without date testing:
 
 ```bash
 pixi run chronoclade run metadata.csv \
   --mode full \
-  --date-randomisation-method full-tree \
-  --date-randomisations 100
+  --output chronoclade_results
+```
+
+To run the temporal tests after the corrected analysis:
+
+```bash
+pixi run chronoclade run metadata.csv \
+  --mode finish \
+  --date-randomisations 100 \
+  --output chronoclade_results
 ```
 
 After SKA mapping, ChronoClade checks whether any genome is an extreme
@@ -176,11 +186,11 @@ pixi run docs
 
 ChronoClade uses SKA2 for reference-ordered whole-genome alignment, IQ-TREE for
 the starting maximum-likelihood phylogeny, ClonalFrameML to account for
-recombination, and TreeTime for clock analysis and time scaling. The observed
-root-to-tip fit is compared with fits obtained after permuting collection dates.
-The default screen requires a positive clock rate and an empirical R²
-permutation p-value of 0.05 or less. The optional full-tree test reruns the
-complete TreeTime fit and applies the stricter CR2 rate-interval rule.
+recombination, and TreeTime for clock analysis and time scaling in `finish`.
+The default finish-stage screen requires a positive clock rate and an empirical
+R² permutation p-value of 0.05 or less. The optional full-tree test reruns the
+complete TreeTime fit for each permutation and applies the stricter CR2
+rate-interval rule.
 
 Root-to-tip regression is a diagnostic rather than a formal test. Population
 structure, biased sampling, date uncertainty and residual recombination can all

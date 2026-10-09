@@ -7,6 +7,18 @@ The `logs/` directory contains each external command and a JSON fingerprint of
 its direct inputs. ChronoClade uses those fingerprints to decide whether a
 completed stage can be reused.
 
+## Public staged run outputs
+
+The public run defaults to profile-first `fast` mode. It writes a root
+`index.html`, `fast/profile_report.html` and profile-analysis data such as
+`fast/profile_analysis.json`, profile distances, nearest neighbours, groups,
+exclusions and the profile PCoA/NJ figures. Per-lineage profile reports link
+only to figure and data files that were actually produced. `full` adds a
+corrected assembly-based report and supporting results; `finish` adds temporal
+evidence and a time tree only when the clock gate passes. Earlier stage reports
+remain available after later stages complete. See
+[`staged-workflow.md`](staged-workflow.md) for stage-level paths and semantics.
+
 ## Main lineage outputs
 
 | File | Content |
@@ -48,7 +60,11 @@ completed stage can be reused.
 | `timetree_confidence.csv` | Clock and root uncertainty summary |
 | `node_dates.csv` | Internal-node estimates and 90% intervals |
 
-## Fast-mode evidence
+## Legacy per-lineage fast-screen evidence
+
+The files below describe the earlier assembly-based fast screen. They may
+appear in preserved results from that workflow, but the current public `fast`
+mode is profile-first and does not run PhiPack, SKA alignment or IQ-TREE.
 
 | File | Content |
 | --- | --- |

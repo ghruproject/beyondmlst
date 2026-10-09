@@ -17,7 +17,6 @@ from chronoclade.workflow import (
     WorkflowError,
     native_platform_supported,
     plan,
-    run_workflow,
     tool_status,
 )
 
@@ -363,7 +362,12 @@ def prepare_context_command(
 
 @app.command()
 def run(
-    metadata: Annotated[Path, typer.Argument(help="Input metadata CSV")],
+    metadata: Annotated[
+        Path | None,
+        typer.Argument(
+            help="Assembly/accession metadata CSV; optional with --collection or --accessions"
+        ),
+    ] = None,
     output: Annotated[Path, typer.Option("--output", "-o", help="Output directory")] = Path(
         "chronoclade_results"
     ),
@@ -394,8 +398,10 @@ def run(
     ] = 100,
     mode: Annotated[
         str,
-        typer.Option("--mode", help="Analysis mode: full or fast"),
-    ] = "full",
+        typer.Option(
+            "--mode", help="Stopping stage: fast profiles, full corrected tree, finish dating"
+        ),
+    ] = "fast",
     date_randomisation_method: Annotated[
         str,
         typer.Option(
@@ -413,30 +419,93 @@ def run(
             help="Frozen context_manifest.tsv produced by prepare-context",
         ),
     ] = None,
+    collection: Annotated[
+        str | None, typer.Option("--collection", help="Pathogenwatch collection UUID or full URL")
+    ] = None,
+    accessions: Annotated[
+        Path | None, typer.Option("--accessions", help="Query accession list or CSV")
+    ] = None,
+    species: Annotated[
+        str | None, typer.Option("--species", help="Declared species for new assemblies")
+    ] = None,
+    catalogue: Annotated[
+        Path | None, typer.Option("--catalogue", help="Frozen public metadata catalogue")
+    ] = None,
+    public_typing: Annotated[
+        Path | None, typer.Option("--public-typing", help="Frozen public cgMLST/group assignments")
+    ] = None,
+    query_typing: Annotated[
+        Path | None, typer.Option("--query-typing", help="Verified query typing JSON")
+    ] = None,
+    typing_config: Annotated[
+        Path | None,
+        typer.Option(
+            "--typing-config", help="Native caller and reference configuration for new queries"
+        ),
+    ] = None,
+    cglin_export: Annotated[
+        Path | None, typer.Option("--cglin-export", help="Frozen public cgLIN assignments")
+    ] = None,
+    profile_limit: Annotated[
+        int,
+        typer.Option(
+            "--profile-limit",
+            min=0,
+            help="Maximum public contexts in the profile analysis; queries retained separately",
+        ),
+    ] = 500,
+    context_size: Annotated[
+        int,
+        typer.Option(
+            "--context-size", min=0, help="Context assemblies per lineage; queries are additional"
+        ),
+    ] = 50,
+    nearest_per_query: Annotated[int, typer.Option("--nearest-per-query", min=1)] = 3,
+    include_genome: Annotated[
+        list[str] | None,
+        typer.Option("--include-genome", help="Require a contextual genome; repeat for more"),
+    ] = None,
+    bootstrap_replicates: Annotated[int, typer.Option("--profile-bootstraps", min=0, max=200)] = 10,
+    group_distance: Annotated[
+        float,
+        typer.Option(
+            "--group-distance",
+            min=0,
+            max=1,
+            help="Exploratory complete-linkage cgMLST mismatch fraction",
+        ),
+    ] = 0.02,
     force: Annotated[bool, typer.Option("--force", help="Rerun completed stages")] = False,
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Validate and print the plan only")
     ] = False,
 ) -> None:
-    """Run lineage-specific recombination and temporal analyses."""
+    """Run cumulative profile, corrected-tree and dating stages."""
+    from chronoclade.profile_inputs import ProfileInputError
+    from chronoclade.staged_workflow import run_staged_workflow
 
     try:
         normalized_method = date_randomisation_method.replace("-", "_")
-        if mode not in {"full", "fast"}:
-            raise WorkflowError("--mode must be full or fast")
         if normalized_method not in {"root_to_tip", "full_tree"}:
             raise WorkflowError("--date-randomisation-method must be root-to-tip or full-tree")
-        if mode == "fast" and normalized_method != "root_to_tip":
-            raise WorkflowError("--mode fast only supports root-to-tip randomisation")
-        samples = read_metadata(metadata)
-        items = plan(samples, min_samples=min_samples)
-        if dry_run:
-            _print_plan(items)
-            console.print(json.dumps(items, indent=2))
-            return
-        summary = run_workflow(
-            samples,
+        result = run_staged_workflow(
+            metadata,
             output=output,
+            mode=mode,
+            collection=collection,
+            accessions=accessions,
+            species=species,
+            catalogue=catalogue,
+            public_typing=public_typing,
+            query_typing=query_typing,
+            typing_config=typing_config,
+            cglin_export=cglin_export,
+            profile_limit=profile_limit,
+            context_size=context_size,
+            nearest_per_query=nearest_per_query,
+            include_genomes=include_genome,
+            bootstrap_replicates=bootstrap_replicates,
+            distance_threshold=group_distance,
             threads=threads,
             lineage_jobs=lineage_jobs,
             randomisation_jobs=randomisation_jobs,
@@ -445,19 +514,18 @@ def run(
             min_samples=min_samples,
             seed=seed,
             force=force,
-            context_manifest=context_manifest,
-            mode=mode,
             date_randomisation_method=normalized_method,
+            context_manifest=context_manifest,
+            dry_run=dry_run,
         )
-    except (MetadataError, WorkflowError, OSError) as error:
+    except (MetadataError, WorkflowError, ProfileInputError, ValueError, OSError) as error:
         _fail(error)
-    supported = sum(bool(item.get("temporal_signal_supported")) for item in summary["lineages"])
-    result_word = "screen" if mode == "fast" else "configured temporal-signal test"
-    console.print(
-        f"[green]Completed {len(summary['lineages'])} lineage records; "
-        f"{supported} passed the {result_word}.[/green]"
-    )
-    console.print(f"Summary: {(output.expanduser().resolve() / 'summary.json')}")
+    if dry_run:
+        console.print(json.dumps(result, indent=2))
+    else:
+        console.print(
+            f"Completed through {mode}; reports: {output.expanduser().resolve() / 'index.html'}"
+        )
 
 
 if __name__ == "__main__":

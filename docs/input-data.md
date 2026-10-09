@@ -1,7 +1,10 @@
 # Input data
 
-ChronoClade requires assembled genomes and a CSV metadata table. Each row names
-one assembly. Paths are resolved relative to the metadata file.
+The assembly-based `full` and `finish` stages use a CSV metadata table whose
+rows name assemblies. Paths are resolved relative to the metadata file. The
+default profile-first `fast` stage can instead use a Pathogenwatch collection,
+an accession list, or a metadata CSV with query typing and public typing data;
+these profile inputs do not require context assemblies.
 
 ```csv
 sample_id,assembly,collection_date,location,species,lineage,origin,is_reference,patient_id
@@ -12,6 +15,8 @@ KPN_REF,context/KPN_REF.fasta,2021,Philippines,Klebsiella_pneumoniae,ST15,contex
 
 ## Required columns
 
+The following columns describe assembly-based metadata CSV inputs:
+
 | Column | Content |
 | --- | --- |
 | `sample_id` | Unique tree-safe identifier using letters, numbers, `.`, `_` or `-` |
@@ -21,6 +26,19 @@ KPN_REF,context/KPN_REF.fasta,2021,Philippines,Klebsiella_pneumoniae,ST15,contex
 | `species` | Confirmed species or species-complex label |
 | `lineage` | Analysis unit, usually an ST or genomic cluster |
 | `origin` | `local`, `retrospective` or `context` |
+
+## Profile-first query sources
+
+The default `fast` stage accepts one query source: a metadata CSV,
+`--collection COLLECTION_UUID`, or `--accessions accessions.txt`. A collection
+uses its members as the query set. An accession list needs a declared species
+when the species cannot be resolved from a verified frozen catalogue. Add
+`--public-typing` for a local frozen public typing export and `--query-typing`
+for verified query assignments; these files do not provide access to a
+protected live database. The report retains query rows with missing profiles
+in coverage and exclusion counts, rather than silently dropping them. Use
+`--mode full` or `--mode finish` when assembly-based context and corrected
+genomic evidence are required.
 
 ## Optional columns
 

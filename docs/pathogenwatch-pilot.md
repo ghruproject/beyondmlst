@@ -59,7 +59,7 @@ pixi run python scripts/st147_pilot.py --stage replay \
 pixi run python scripts/st147_pilot.py --stage analyse \
   --output validation/st147_pathogenwatch/run --threads 2 --dry-run
 
-# Full native analysis, where supported, preserving default dating/divergence gates.
+# Full native analysis, where supported, with temporal assessment in finish mode.
 pixi run python scripts/st147_pilot.py --stage analyse \
   --output validation/st147_pathogenwatch/run --threads 2 --date-randomisations 100 \
   --public-focal-demonstration
