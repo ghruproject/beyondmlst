@@ -110,3 +110,84 @@ def test_location_reconstruction_is_seeded_and_repairs_missing_confidence(
     assert observed["command"][observed["command"].index("--rng-seed") + 1] == "7"
     assert "--confidence" in observed["command"]
     assert observed["force"] is True
+
+
+def _native_context_fixture(tmp_path, monkeypatch):
+    import json
+    from chronoclade.metadata import Sample
+    from chronoclade.pathogenwatch import content_hash
+
+    source = tmp_path / "source"
+    source.mkdir()
+    payload = {"rows": [], "focal_rows": [], "provenance": {}}
+    digest = content_hash(payload)
+    catalogue = source / "context_catalogue.json"
+    catalogue.write_text(json.dumps(dict(payload, snapshot_sha256=digest)))
+    monkeypatch.setattr(
+        "chronoclade.context_geography.generate_context_geography", lambda *args, **kwargs: {}
+    )
+    sample = Sample(
+        "pw_public", tmp_path / "genome.fa", "2026", "UK", "Escherichia coli", "ST131", "context"
+    )
+    manifest = [
+        {
+            "sample_id": sample.sample_id,
+            "species": sample.species,
+            "lineage": sample.lineage,
+            "source": "pathogenwatch",
+            "source_genome_id": "public",
+            "catalogue_path": str(catalogue),
+            "catalogue_sha256": digest,
+        }
+    ]
+    destination = tmp_path / "lineage"
+    destination.mkdir()
+    return source, destination, sample, manifest
+
+
+def test_lineage_copies_only_hash_verified_native_public_typing(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    from chronoclade.lineage import context_evidence
+
+    source, destination, sample, manifest = _native_context_fixture(tmp_path, monkeypatch)
+    data = b'{"schema_version":1,"assignments":[{"source_genome_id":"public"}]}\n'
+    (source / "native_public_typing.json").write_bytes(data)
+    (source / "context_selection.json").write_text(
+        json.dumps({"native_public_typing_sha256": hashlib.sha256(data).hexdigest()})
+    )
+    context_evidence([sample], manifest, directory=destination)
+    assert (destination / "native_public_typing.json").read_bytes() == data
+
+
+def test_lineage_rejects_missing_or_changed_native_typing_artifact(tmp_path, monkeypatch):
+    import json
+    import pytest
+    from chronoclade.errors import WorkflowError
+    from chronoclade.lineage import context_evidence
+
+    source, destination, sample, manifest = _native_context_fixture(tmp_path, monkeypatch)
+    (source / "context_selection.json").write_text(
+        json.dumps({"native_public_typing_sha256": "a" * 64})
+    )
+    with pytest.raises(WorkflowError, match="typing.*missing"):
+        context_evidence([sample], manifest, directory=destination)
+    (source / "native_public_typing.json").write_text("changed")
+    (destination / "native_public_typing.json").write_text("stale result")
+    with pytest.raises(WorkflowError, match="typing hash"):
+        context_evidence([sample], manifest, directory=destination)
+    assert not (destination / "native_public_typing.json").exists()
+
+
+def test_lineage_removes_stale_typing_when_audit_does_not_declare_it(tmp_path, monkeypatch):
+    from chronoclade.lineage import context_evidence
+
+    source, destination, sample, manifest = _native_context_fixture(tmp_path, monkeypatch)
+    (source / "context_selection.json").write_text("{}")
+    (source / "native_public_typing.json").write_text("unclaimed file")
+    (destination / "native_public_typing.json").write_text("stale result")
+    context_evidence([sample], manifest, directory=destination)
+    assert not (destination / "native_public_typing.json").exists()
+    (destination / "native_public_typing.json").write_text("stale result")
+    context_evidence([sample], [], directory=destination)
+    assert not (destination / "native_public_typing.json").exists()

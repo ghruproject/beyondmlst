@@ -82,12 +82,24 @@ def write_supporting_bundle(directory: Path) -> Path:
     return bundle
 
 
-def _context_geography_visual(directory: Path) -> str:
+def _context_geography_visual(directory: Path, species: str = "") -> str:
     """Embed a focused country view; keep the full public atlas separately."""
     path = directory / "context_geography" / "focused_fragment.html"
     if not path.is_file():
         return (
             '<p class="missing">A focused country breakdown is not available for this analysis.</p>'
+        )
+    if species.replace("_", " ").casefold() == "escherichia coli":
+        return (
+            '<div class="context-geography"><figure><a href="context_geography/focused_country_counts.svg">'
+            '<img src="context_geography/focused_country_counts.svg" alt="Countries of focal samples and selected public context"></a>'
+            "<figcaption>Countries of the focal samples and selected public comparisons, with separate counts. "
+            '<a href="context_geography/focused_country_counts.svg">Full-resolution SVG</a> · '
+            '<a href="context_geography/focused_country_counts.png">PNG</a>.</figcaption></figure>'
+            "<p>These are recorded sample locations, not prevalence or acquisition countries. "
+            "HierCC evidence used for selection is recorded in the context audit; this country figure does not show HierCC group proportions.</p>"
+            '<p><a href="context_geography/focused_country_counts.csv">Country counts</a> · '
+            '<a href="context_selection.json">Typing and selection audit</a></p></div>'
         )
     fragment = path.read_text(encoding="utf-8")
     fragment = fragment.replace('<a href="', '<a href="context_geography/').replace(
@@ -477,6 +489,32 @@ def _context_selection_summary(directory: Path) -> str:
     if audit.get("context_source") != "pathogenwatch":
         return ""
     deduplication = audit.get("deduplication", {})
+    refinement = audit.get("native_lineage_refinement") or audit.get("lineage_refinement", {})
+    refinement_counts = refinement.get("counts", {})
+    priority = refinement_counts.get("priority_selected", 0)
+    if priority:
+        selection_explanation = (
+            "The possible pool starts with the same species and sequence type. "
+            "Compatible genetic-group assignments and cgMLST allele comparisons "
+            "prioritise closer context, while a reserved background sample spans "
+            "country and collection-year groups. Genetic screening then selects the closest comparisons."
+        )
+    else:
+        selection_explanation = (
+            (
+                "The possible pool starts with the same species and sequence type. "
+                "No compatible typing evidence was available to prioritise this pool, "
+                "so it was balanced across country and collection-year groups before "
+                "genetic screening. Closest comparisons are retained first, with remaining "
+                "places filled by background samples."
+            )
+            if refinement
+            else (
+                "The initial pool is balanced across country and collection-year groups, "
+                "then screened for genetic similarity. Closest comparisons are retained "
+                "first, with remaining places filled by background samples."
+            )
+        )
     stages = [
         (
             "Matching public records",
@@ -506,7 +544,16 @@ def _context_selection_summary(directory: Path) -> str:
         (
             "Downloaded screening pool",
             audit.get("candidate_pool"),
-            "A bounded pool is sampled across country and collection-year groups before genetic screening.",
+            (
+                "Compatible typing prioritises closer candidates, with country/year-balanced background retained."
+                if audit.get("lineage_refinement", {}).get("counts", {}).get("priority_selected")
+                else "A bounded pool is balanced across country and collection-year groups."
+            ),
+        ),
+        (
+            "After typing downloaded genomes",
+            audit.get("native_lineage_refinement", {}).get("counts", {}).get("selected"),
+            "The same reference databases type queries and downloaded genomes. Compatible groups and allele profiles refine the pool, while retaining balanced background.",
         ),
         (
             "Successfully screened",
@@ -556,7 +603,7 @@ def _context_selection_summary(directory: Path) -> str:
     )
     return f"""<section class="card" id="context-selection"><h3>How were the public comparisons selected?</h3>
       <p>{headline}.</p>
-      <p>The initial pool is balanced across country and collection-year groups, then screened for genetic similarity. Closest comparisons are retained first, with remaining places filled by background samples.</p>
+      <p>{escape(selection_explanation)}</p>
       <p class="guardrail">Nearest means nearest within the screened pool, not the entire public database.</p>
       <details class="evidence-files"><summary>See all filtering steps and counts</summary><p>{escape(settings)}</p>{_table_region(table, label="Public comparison selection")}
       <p>This subsample is not a random prevalence survey; country figures describe the recorded public samples, not national disease burden.</p>
@@ -887,6 +934,12 @@ def write_lineage_report(
     context_visual = _context_section(context, directory)
     recombination_visual = _recombination_visual(report, directory)
     country_network_visual = _country_network_visual(directory)
+    geography_explanation = (
+        "Country figures describe the recorded collection locations of focal samples and selected public comparisons. "
+        "Compatible HierCC groups and cgMLST profiles can prioritise E. coli context. Exact closest-relative rankings below use SNP and tree distances among analysed genomes."
+        if str(report["species"]).replace("_", " ").casefold() == "escherichia coli"
+        else "The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes."
+    )
 
     randomised_values = [
         value for value in temporal.get("randomised", []) if isinstance(value, dict)
@@ -1101,7 +1154,7 @@ def write_lineage_report(
     <p>{escape(timing_boundary)}</p>
     <details class="terms"><summary>Terms used in this report</summary><p><strong>Focal genomes</strong> are the samples you supplied. <strong>Public genomes</strong> are comparison samples from the source database. A <strong>SNP</strong> is a difference at one DNA position. <strong>cgLIN</strong> groups genomes by a hierarchical core-genome typing code; a shared code is a grouping aid, not proof of transmission. Countries describe recorded sample collection locations, not inferred routes of spread.</p></details>
   </div></section>
-  <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples, selected public comparisons, and the wider public groups.</p><p>The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes.</p>{_context_selection_summary(directory)}{_context_geography_visual(directory)}</div></section>
+  <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples and selected public comparisons.</p><p>{escape(geography_explanation)}</p>{_context_selection_summary(directory)}{_context_geography_visual(directory, str(report["species"]))}</div></section>
   <section class="stage" id="relatives"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These comparisons cover the genomes included in this analysis. They cannot identify the closest genome in the entire public catalogue or prove direct transmission.</p>{neighbourhood_visual}</div></section>
   <section class="stage" id="country-network"><div class="stage-body"><h2>What location changes does the tree suggest?</h2><p>The network uses only the genomes in the analysed tree. It summarises sample locations and representative ancestral location changes reconstructed on that rooted tree. Arrows are model-based summaries; they do not establish transmission, migration routes or national prevalence.</p>{country_network_visual}</div></section>
   <section class="stage" id="interpretation"><div class="stage-body"><h2>What pattern is consistent with these genomes?</h2>{public_health_summary}<p class="guardrail">Genetic similarity and country records alone do not prove direct transmission, local circulation, or a definitive number of introductions. Interpret these results alongside patient, place and sampling information.</p><details class="evidence-files"><summary>Biological interpretation: evidence and sensitivity checks</summary>{public_health_evidence}</details></div></section>

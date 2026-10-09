@@ -1,5 +1,21 @@
 # Command line
 
+## Native query typing
+
+`setup-typing` installs pinned Pathogenwatch tools with uv-managed Python
+environments and a native Node runtime. `--species klebsiella` and
+`--species ecoli` can be combined. `--prepare-db` downloads/indexes public
+cgMLST data; protected `--pasteur-secrets` and `--enterobase-key-file` enable
+the corresponding lineage reference builds. Software-only installation writes
+a configuration with `ready: false` until the databases are available.
+
+`type-queries METADATA --typing-config CONFIG --output DIRECTORY` runs cgMLST
+and the organism's LIN/HierCC assigner locally. `prepare-context` can use the same
+`--typing-config` to type focal and bounded public assemblies, or import
+`--query-typing` and `--public-typing` files. `--cglin-depth` and
+`--hiercc-level` select compatible groups within the initial same-ST pool.
+See [query typing](query-typing.md) for examples and database requirements.
+
 ## `chronoclade preflight`
 
 Reports whether SKA2, IQ-TREE, ClonalFrameML, PhiPack Profile and TreeTime are available in the

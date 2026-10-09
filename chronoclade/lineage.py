@@ -357,7 +357,11 @@ def context_evidence(
         raise WorkflowError("Context manifest refers to multiple frozen catalogues")
     if not catalogue_paths:
         shutil.rmtree(directory / "context_geography", ignore_errors=True)
-        for name in ("context_catalogue.json", "context_selection.json"):
+        for name in (
+            "context_catalogue.json",
+            "context_selection.json",
+            "native_public_typing.json",
+        ):
             (directory / name).unlink(missing_ok=True)
         if not relevant_rows:
             (directory / "context_manifest.tsv").unlink(missing_ok=True)
@@ -399,8 +403,30 @@ def context_evidence(
             json.dumps({**payload, "snapshot_sha256": expected}, indent=2) + "\n", encoding="utf-8"
         )
         selection = frozen_path.parent / "context_selection.json"
+        native_destination = directory / "native_public_typing.json"
+        native_destination.unlink(missing_ok=True)
         if selection.is_file():
-            (directory / "context_selection.json").write_bytes(selection.read_bytes())
+            selection_bytes = selection.read_bytes()
+            try:
+                selection_audit = json.loads(selection_bytes)
+            except (ValueError, UnicodeDecodeError) as exc:
+                raise WorkflowError("Context selection audit is not valid JSON") from exc
+            if not isinstance(selection_audit, dict):
+                raise WorkflowError("Context selection audit must be a JSON object")
+            native_hash = selection_audit.get("native_public_typing_sha256")
+            if native_hash is not None:
+                native_source = frozen_path.parent / "native_public_typing.json"
+                if not native_source.is_file():
+                    raise WorkflowError(
+                        "Native public typing required by selection audit is missing"
+                    )
+                native_bytes = native_source.read_bytes()
+                if hashlib.sha256(native_bytes).hexdigest() != native_hash:
+                    raise WorkflowError("Native public typing hash does not match selection audit")
+                native_destination.write_bytes(native_bytes)
+            (directory / "context_selection.json").write_bytes(selection_bytes)
+        else:
+            (directory / "context_selection.json").unlink(missing_ok=True)
     return {
         "geography_available": geography is not None,
         "local_samples": len(local),

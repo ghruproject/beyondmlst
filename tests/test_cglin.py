@@ -291,3 +291,48 @@ def test_retry_exhaustion_and_recovery(tmp_path):
             api_key="secret",
             transport=unavailable,
         )
+
+
+def test_whole_frozen_import_hash_preserves_original_batch_hashes(tmp_path):
+    path = tmp_path / "frozen.json"
+    path.write_text(
+        json.dumps(
+            {
+                "assignments": [
+                    {
+                        "source_genome_id": "a",
+                        "cglin_raw": "1_2_3_4_5_6_7_8_9_10",
+                        "cglin_export_sha256": "a" * 64,
+                    },
+                    {
+                        "source_genome_id": "b",
+                        "cglin_raw": "1_2_3_4_5_6_7_8_9_10",
+                        "cglin_export_sha256": "b" * 64,
+                    },
+                ]
+            }
+        )
+    )
+    loaded = load_cglin_export(path)
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    assert {row["cglin_frozen_export_sha256"] for row in loaded} == {digest}
+    assert [row["cglin_export_sha256"] for row in loaded] == ["a" * 64, "b" * 64]
+    annotated = annotate_catalogue([{"source_genome_id": "a"}, {"source_genome_id": "b"}], loaded)
+    assert {row["cglin_frozen_export_sha256"] for row in annotated} == {digest}
+    focal, _ = resolve_focal_assignments([{"sample_id": "Q", "source_genome_id": "a"}], annotated)
+    assert focal[0]["cglin_frozen_export_sha256"] == digest
+
+
+def test_independent_imports_have_distinct_frozen_scope(tmp_path):
+    first, second = tmp_path / "first.json", tmp_path / "second.json"
+    row = {
+        "source_genome_id": "a",
+        "cglin_raw": "1_2_3_4_5_6_7_8_9_10",
+        "cglin_export_sha256": "a" * 64,
+    }
+    first.write_text(json.dumps([row]))
+    second.write_text(json.dumps([dict(row, source_genome_id="b")]))
+    assert (
+        load_cglin_export(first)[0]["cglin_frozen_export_sha256"]
+        != load_cglin_export(second)[0]["cglin_frozen_export_sha256"]
+    )

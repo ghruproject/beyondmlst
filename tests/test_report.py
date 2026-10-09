@@ -570,3 +570,15 @@ def test_selection_summary_does_not_invent_missing_audit_counts(tmp_path: Path) 
     assert "<strong>4</strong> selected comparisons" in text
     assert "Matching public records" not in text
     assert "seed" not in text
+
+
+def test_ecoli_country_view_does_not_present_klebsiella_prefix_groups(tmp_path):
+    from chronoclade.report import _context_geography_visual
+
+    directory = tmp_path / "context_geography"
+    directory.mkdir()
+    (directory / "focused_fragment.html").write_text("Klebsiella cgLIN groups")
+    html = _context_geography_visual(tmp_path, "Escherichia_coli")
+    assert "focused_country_counts.svg" in html
+    assert "HierCC evidence" in html
+    assert "cgLIN" not in html

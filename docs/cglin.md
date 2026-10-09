@@ -115,9 +115,11 @@ in `cglin_join_status`. A raw focal code without scheme/provenance receives
 `missing_provenance` and no comparable group. Focal samples with no available
 assignment receive explicit missing/unavailable/ambiguous status. They are
 never uploaded automatically and never borrow a nearest public genome's
-complete code. For a novel assembly, the supported route is user-authorised
-typing in Pathogenwatch and validated export import; BIGSdb-Pasteur submission
-is required for definitive identifiers according to its nomenclature guidance.
+complete code. For a novel assembly, ChronoClade can run Pathogenwatch's own
+cgMLST caller and `plincer` locally with prepared, pinned databases, or import
+validated Pathogenwatch results. BIGSdb-Pasteur submission is required for
+definitive identifiers according to its nomenclature guidance. See
+[new assembly typing](query-typing.md) for installation and context refinement.
 
 Country figures can still use annotated public records when focal typing is
 unavailable. cgLIN annotations do not replace phylogenetic divergence,

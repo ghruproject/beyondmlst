@@ -14,6 +14,13 @@ MLST and organism-specific analysis capabilities separately. Genome availability
 or cgMLST support does not imply cgLIN support; `LIN Codes` is a separate
 Klebsiella pneumoniae capability.
 
+The provider also supports *E. coli* (organism `562`), whose advertised analyses
+include `HierCC`. Public genome details do not expose allele profiles or HierCC
+codes directly. Use a frozen `--public-typing` import or native typing of the
+bounded downloaded pool, rather than assuming an undocumented HierCC download
+job. `--scheme ecoli` queries the primary `mlst` field. See
+[new assembly typing and HierCC](query-typing.md) for refinement.
+
 `POST /api/search/genomes` takes an explicit `organismId`, the ST array in the
 explicit `mlst` or `mlst2` field, and `qc: [true, false]`. Pagination uses query
 parameters `limit`, `sort=id` and `after=meta.endCursor`, with the total in

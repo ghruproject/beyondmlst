@@ -133,13 +133,17 @@ does not run this reconstruction.
 
 The context workflow freezes a full public Pathogenwatch same-ST catalogue with
 source IDs, accessions, QC, raw metadata, date precision and retrieval hashes.
-It currently supports *K. pneumoniae*; other organisms and schemes return an
-explicit unsupported-provider error. Genome availability does not imply cgLIN
-support for other organisms.
+It supports *K. pneumoniae* and *E. coli*; other organisms and schemes return an
+explicit unsupported-provider error. Klebsiella uses cgLIN; E. coli uses HierCC.
 QC-passing records are deduplicated by accession-supported sample units,
 without claiming unique patients or infections. Undated records remain in
-country summaries but are excluded from the dated analysis cohort. It balances the candidate pool
-across country and year, screens candidates against every focal sample with SKA
+country summaries but are excluded from the dated analysis cohort. Same-ST
+membership defines the possible pool; compatible cgLIN prefixes, HierCC clusters
+and cgMLST distances prioritise candidates, reserving 25% of the bounded pool for
+country/year background. Unresolved or incompatible typing falls back explicitly
+to balanced same-ST sampling. Native typing can process query assemblies and the
+bounded downloaded public pool with the same databases before SKA. It screens
+the resulting candidates against every focal sample with SKA
 distance, then retains nearby genomes and a stratified background. The manifest
 records the bounded search. "Nearest" means nearest within the downloaded pool,
 not nearest among all public bacterial genomes.
@@ -152,6 +156,11 @@ SNP threshold. These figures do not estimate prevalence, incidence, migration,
 transmission or country of acquisition. Submission bias, missing annotations and
 date uncertainty constrain interpretation. See [cgLIN](cglin.md) and
 [geography](context-geography.md).
+
+Native typing uses Pathogenwatch's cgMLST caller and `plincer` or exact `hclink`.
+Missing, ambiguous and novel alleles, incomplete assignments and database
+provenance remain explicit. HClink is a reference-linking inference rather than
+an official new EnteroBase cluster designation. See [query typing](query-typing.md).
 
 ## References
 

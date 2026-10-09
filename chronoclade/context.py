@@ -39,6 +39,7 @@ class ContextCandidate:
     min_ska_distance: float | None = None
     mismatch_proportion: float | None = None
     selection_reason: str = ""
+    pool_selection_reason: str = ""
 
     source: str = "pathogenwatch"
     source_genome_id: str = ""
@@ -65,6 +66,8 @@ class ContextCandidate:
     cglin_scheme: str = ""
     cglin_scheme_version: str = ""
     cglin_export_sha256: str = ""
+    cglin_frozen_export_sha256: str = ""
+    cglin_database_sha256: str = ""
     cglin_retrieved_at: str = ""
     cglin_group_5: str = ""
     cglin_group_6: str = ""
@@ -72,6 +75,12 @@ class ContextCandidate:
     cglin_status_5: str = ""
     cglin_status_6: str = ""
     cglin_status_7: str = ""
+    cgmlst_scheme: str = ""
+    cgmlst_scheme_version: str = ""
+    cgmlst_database_sha256: str = ""
+    hiercc_scheme: str = ""
+    hiercc_scheme_version: str = ""
+    hiercc_codes: str = ""
 
     @property
     def year(self) -> str:
@@ -484,6 +493,11 @@ def prepare_context(
     cglin_export: Path | None = None,
     focal_crosswalk: Path | None = None,
     refresh_catalogue: bool = False,
+    typing_config: Path | None = None,
+    query_typing: Path | None = None,
+    public_typing: Path | None = None,
+    cglin_depth: int = 7,
+    hiercc_level: str = "HC1100",
 ) -> dict[str, object]:
     """Prepare a frozen, distance-screened public context set for one lineage."""
 
@@ -516,6 +530,11 @@ def prepare_context(
             cglin_export=cglin_export,
             focal_crosswalk=focal_crosswalk,
             refresh_catalogue=refresh_catalogue,
+            typing_config=typing_config,
+            query_typing=query_typing,
+            public_typing=public_typing,
+            cglin_depth=cglin_depth,
+            hiercc_level=hiercc_level,
         )
     except (CGLINError, PathogenwatchError) as error:
         raise ContextError(str(error)) from None
