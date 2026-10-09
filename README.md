@@ -94,6 +94,12 @@ Open `chronoclade_results/index.html` when the run completes. Each lineage has
 its own report and a ZIP archive containing the figures, tables, trees and
 machine-readable results used in that report.
 
+Full reports also include an exploratory country network, with dashed links for
+uncertain ancestral location assignments, SVG/PNG figures and downloadable
+branch and node uncertainty tables. This uses the locations supplied in your
+metadata and remains available when dating is unsupported. Inferred location
+changes are not confirmed transmission routes; see the [report guide](docs/report.md).
+
 ## Public context genomes
 
 Pathogenwatch is the primary public-context provider, initially for

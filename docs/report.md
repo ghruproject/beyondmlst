@@ -63,6 +63,32 @@ final recombination-filtered relatedness result.
 selection cannot establish the globally nearest public genome. Close genetic
 relationships alone do not establish transmission or infection direction.
 
+## Country network
+
+The full report may include a StrainHub-style view of location states on the
+rooted analysed tree. It uses the `location` values in the analysis metadata as
+supplied; there is no automatic lookup or conversion through a geography
+hierarchy. Supply country labels for a country-level network. City, hospital or
+other location labels produce a network at that level. Nodes summarise the
+locations represented by sampled tips and their sample counts. Arrows summarise
+representative ancestral state changes in the tree; they are not proven
+transmission links, migration routes, country of acquisition or estimates of
+national prevalence. Unknown or missing location values are excluded from the
+network rather than treated as a location state.
+
+TreeTime assigns marginal probabilities to ancestral location states. A solid
+arrow means both endpoint states have a unique assignment with probability at
+least 0.9. Dashed arrows mark an ambiguous assignment or an endpoint below that
+threshold. Endpoint confidence is not the joint probability of the transition. Ties between states remain ambiguous. These
+probabilities are conditional on the rooted tree, its sampling and the location
+states supplied to the model; they do not capture uncertainty in those inputs.
+The view uses TreeTime's maximum-likelihood ancestral reconstruction, not
+StrainHub's parsimony algorithm. It is available after an unsupported dating
+result because it uses the rooted genetic tree and does not require dates.
+
+Fast-screen reports do not reconstruct ancestral location states and do not
+include this network.
+
 ## Interpretation
 
 The working interpretation combines the corrected topology, SNP comparisons,

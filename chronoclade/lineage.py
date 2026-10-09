@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Iterable
 
 from chronoclade.coherence import screen_alignment
+from chronoclade.country_network import UNKNOWN, build_country_network
 from chronoclade.errors import WorkflowError
 from chronoclade.evidence import build_public_health_evidence
 from chronoclade.metadata import Sample, select_reference
@@ -141,7 +142,9 @@ def _write_lineage_inputs(directory: Path, samples: list[Sample]) -> tuple[Path,
         (
             {
                 "sample_id": sample.sample_id,
-                "location": sample.location,
+                "location": (
+                    "?" if sample.location.strip().casefold() in UNKNOWN else sample.location
+                ),
                 "origin": sample.origin,
             }
             for sample in samples
@@ -702,7 +705,15 @@ def _run_dated_tree(
     )
 
 
-def _run_location_tree(files: LineageFiles, tree: Path, force: bool) -> None:
+def _run_location_tree(files: LineageFiles, tree: Path, force: bool, seed: int = 20260818) -> None:
+    with files.states.open(newline="", encoding="utf-8") as handle:
+        known = {row["location"] for row in csv.DictReader(handle) if row["location"] != "?"}
+    if len(known) < 2:
+        # TreeTime cannot fit a discrete transition model to a single observed state.
+        # Remove stale products so a rerun cannot reuse an earlier location network.
+        for name in ("annotated_tree.nexus", "confidence.csv", "GTR.txt"):
+            (files.directory / "location" / name).unlink(missing_ok=True)
+        return
     _run_command(
         [
             "treetime",
@@ -716,12 +727,18 @@ def _run_location_tree(files: LineageFiles, tree: Path, force: bool) -> None:
             "--attribute",
             "location",
             "--confidence",
+            "--rng-seed",
+            str(seed),
             "--outdir",
             str(files.directory / "location"),
         ],
         log=files.directory / "logs" / "location.log",
         expected=files.location_tree,
-        force=force,
+        force=force
+        or not all(
+            (files.directory / "location" / name).is_file()
+            for name in ("confidence.csv", "GTR.txt")
+        ),
         inputs=(tree, files.states),
     )
 
@@ -900,7 +917,8 @@ def _run_lineage(
         if date_randomisation_method != "full_tree":
             _run_dated_tree(files, sequence_length, force, tree)
     time_tree_available = temporal_supported and files.time_tree.exists()
-    _run_location_tree(files, files.time_tree if time_tree_available else files.tree, force)
+    _run_location_tree(files, files.time_tree if time_tree_available else files.tree, force, seed)
+    country_network = build_country_network(files.directory, temporal_supported=time_tree_available)
     report = _report_record(
         item,
         files,
@@ -916,12 +934,16 @@ def _run_lineage(
         time_tree_available,
     )
     report["neighbourhood"] = neighbourhood
+    report["country_network"] = country_network
     report["outputs"].update(
         {
             "nearest_neighbours": str(files.directory / "nearest_neighbours.tsv"),
             "neighbourhood_evidence": str(files.directory / "nearest_neighbours.json"),
             "genetic_tree_plot": str(files.directory / "genetic_tree.svg"),
             "genetic_tree_png": str(files.directory / "genetic_tree.png"),
+            "country_network": str(files.directory / "country_network.json"),
+            "country_network_plot": str(files.directory / "country_network.svg"),
+            "country_network_png": str(files.directory / "country_network.png"),
         }
     )
     (files.directory / "report.json").write_text(

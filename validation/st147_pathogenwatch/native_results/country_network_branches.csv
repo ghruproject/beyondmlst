@@ -1,0 +1,13 @@
+parent,child,parent_country,child_country,parent_marginal_confidence,child_marginal_confidence,parent_candidates,child_candidates,parent_tied,child_tied,changes_country,both_endpoints_high_confidence,included,reason
+NODE_13,PW_aBbUpWyNcgnBayYVXLFaX4,Italy,Italy,0.999997688776772,1.0,Italy,Italy,False,False,False,True,True,
+NODE_13,NODE_12,Italy,Italy,0.999997688776772,0.9999992506437761,Italy,Italy,False,False,False,True,True,
+NODE_12,SAMEA9453699,Italy,Italy,0.9999992506437761,1.0,Italy,Italy,False,False,False,True,True,
+NODE_12,NODE_11,Italy,Italy,0.9999992506437761,0.9995171727181695,Italy,Italy,False,False,False,True,True,
+NODE_11,PW_oSavMhBThwcTN6GSL6Rg9q,Italy,Italy,0.9995171727181695,1.0,Italy,Italy,False,False,False,True,True,
+NODE_11,NODE_10,Italy,India,0.9995171727181695,0.3942094934933457,Italy,India,False,False,True,False,True,
+NODE_10,SAMEA122094000,India,India,0.3942094934933457,0.9999999999999999,India,India,False,False,False,False,True,
+NODE_10,NODE_9,India,Myanmar (Burma),0.3942094934933457,0.43918452197998986,India,Myanmar (Burma),False,False,True,False,True,
+NODE_9,SAMD00193192,Myanmar (Burma),Myanmar (Burma),0.43918452197998986,1.0,Myanmar (Burma),Myanmar (Burma),False,False,False,False,True,
+NODE_9,NODE_8,Myanmar (Burma),Portugal,0.43918452197998986,0.39653653854499155,Myanmar (Burma),Nigeria | Portugal,False,True,True,False,True,
+NODE_8,PW_5ifnG8SSwbwRCiwbs5Wahp,Portugal,Portugal,0.39653653854499155,1.0,Nigeria | Portugal,Portugal,True,False,False,False,True,
+NODE_8,PW_9Cg5tSRuj3WekAkohxtNF8,Portugal,Nigeria,0.39653653854499155,1.0,Nigeria | Portugal,Nigeria,True,False,True,False,True,

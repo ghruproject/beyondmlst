@@ -2,6 +2,7 @@ import json
 import zipfile
 from pathlib import Path
 
+import chronoclade.country_network as country_network
 from chronoclade.report import (
     _context_selection_summary,
     assess_temporal_signal,
@@ -221,6 +222,7 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
     assert (
         text.index('id="countries"')
         < text.index('id="relatives"')
+        < text.index('id="country-network"')
         < text.index('id="interpretation"')
         < text.index('id="dating"')
         < text.index('id="prepare"')
@@ -238,6 +240,7 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
     assert "Patient-level sensitivity" in text
     assert "Which parts of the alignment were inferred as recombinant?" in text
     assert "does not mean that every sampled genome acquired that segment" in text
+    assert "A country network reconstruction is not available for this analysis." in text
     assert "Recombination removed" in text
     assert "Incomplete-data removed" in text
     assert "recombination_map.svg" in text
@@ -331,6 +334,34 @@ def test_unsupported_report_omits_dated_tree_visual(tmp_path: Path) -> None:
     assert 'class="overall not_supported"' in text
     assert "Time-scaled phylogeny" not in text
     assert "cannot distinguish" in text
+    assert 'id="country-network"' in text
+    assert "What location changes does the tree suggest?" in text
+
+
+def test_country_network_is_rendered_when_dates_are_unsupported(
+    tmp_path: Path, monkeypatch
+) -> None:
+    (tmp_path / "country_network.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        country_network,
+        "country_network_report_html",
+        lambda directory: '<p class="network-test">Rendered country network</p>',
+    )
+    report = {
+        "species": "E_coli",
+        "lineage": "ST131",
+        "sample_count": 20,
+        "distinct_dates": 5,
+        "temporal_signal": temporal_result(p_value=1.0),
+    }
+
+    text = write_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text(
+        encoding="utf-8"
+    )
+
+    assert 'class="overall not_supported"' in text
+    assert "Time-scaled phylogeny" not in text
+    assert '<p class="network-test">Rendered country network</p>' in text
 
 
 def test_supporting_bundle_is_reproducible(tmp_path: Path) -> None:
@@ -409,6 +440,7 @@ def test_fast_report_separates_recombination_root_to_tip_and_permutation_stages(
     assert "dated phylogeny" in text
     assert "Time-scaled phylogeny" not in text
     assert "Interpret" not in text
+    assert 'id="country-network"' not in text
     assert "Not applicable" not in text
     assert "phipack.filtered.fasta" not in text
     assert "Masked regions" not in text

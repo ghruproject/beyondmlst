@@ -129,6 +129,19 @@ def _neighbourhood_visual(directory: Path) -> str:
     return neighbourhood_report_html(directory)
 
 
+def _country_network_visual(directory: Path) -> str:
+    """Embed the reconstructed country network when this full run produced it."""
+    if not (directory / "country_network.json").is_file():
+        return '<p class="missing">A country network reconstruction is not available for this analysis.</p>'
+    try:
+        from chronoclade.country_network import country_network_report_html
+    except ModuleNotFoundError as exc:
+        if exc.name != "chronoclade.country_network":
+            raise
+        return '<p class="missing">A country network reconstruction is not available for this analysis.</p>'
+    return country_network_report_html(directory)
+
+
 def _display_summary(value: object) -> str:
     if not isinstance(value, dict) or not value.get("comparisons"):
         return "No comparisons"
@@ -873,6 +886,7 @@ def write_lineage_report(
     outlier_note = _outlier_note(directory)
     context_visual = _context_section(context, directory)
     recombination_visual = _recombination_visual(report, directory)
+    country_network_visual = _country_network_visual(directory)
 
     randomised_values = [
         value for value in temporal.get("randomised", []) if isinstance(value, dict)
@@ -1076,7 +1090,7 @@ def write_lineage_report(
     <div class="identity-mark">ChronoClade · ANALYSIS REPORT</div>
     <div class="identity-copy"><h1><i>{escape(species_display)}</i><span>{escape(lineage_display)}</span></h1><p>{int(report["sample_count"])} genomes · {int(report["distinct_dates"])} distinct collection dates</p></div>
   </header>
-  <nav class="contents" aria-label="Report topics"><a href="#overview">Overview</a><a href="#countries">Countries</a><a href="#relatives">Closest relatives</a><a href="#interpretation">Interpretation</a><a href="#dating">Dating</a><a href="#prepare">Methods &amp; files</a></nav>
+  <nav class="contents" aria-label="Report topics"><a href="#overview">Overview</a><a href="#countries">Countries</a><a href="#relatives">Closest relatives</a><a href="#country-network">Country network</a><a href="#interpretation">Interpretation</a><a href="#dating">Dating</a><a href="#prepare">Methods &amp; files</a></nav>
   <section class="stage" id="overview"><div class="stage-body">
     <h2>Your results at a glance</h2>
     {_demonstration_banner(report)}
@@ -1089,6 +1103,7 @@ def write_lineage_report(
   </div></section>
   <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples, selected public comparisons, and the wider public groups.</p><p>The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes.</p>{_context_selection_summary(directory)}{_context_geography_visual(directory)}</div></section>
   <section class="stage" id="relatives"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These comparisons cover the genomes included in this analysis. They cannot identify the closest genome in the entire public catalogue or prove direct transmission.</p>{neighbourhood_visual}</div></section>
+  <section class="stage" id="country-network"><div class="stage-body"><h2>What location changes does the tree suggest?</h2><p>The network uses only the genomes in the analysed tree. It summarises sample locations and representative ancestral location changes reconstructed on that rooted tree. Arrows are model-based summaries; they do not establish transmission, migration routes or national prevalence.</p>{country_network_visual}</div></section>
   <section class="stage" id="interpretation"><div class="stage-body"><h2>What pattern is consistent with these genomes?</h2>{public_health_summary}<p class="guardrail">Genetic similarity and country records alone do not prove direct transmission, local circulation, or a definitive number of introductions. Interpret these results alongside patient, place and sampling information.</p><details class="evidence-files"><summary>Biological interpretation: evidence and sensitivity checks</summary>{public_health_evidence}</details></div></section>
   <section class="stage" id="dating"><div class="stage-body"><h2>Can this analysis estimate when ancestors existed?</h2><div class="overall {escape(status)}"><b>{escape(timing_label)}</b></div><p>{escape(timing_boundary)}</p><p>{escape(str(assessment["reason"]))}</p>
   {timetree_visual}
