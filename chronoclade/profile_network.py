@@ -373,7 +373,8 @@ def _place_country_labels(fig, ax, nodes, positions):
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     scale = fig.dpi / 72
-    font = FontProperties(size=9)
+    font_size = 11 if len(nodes) <= 16 else 9
+    font = FontProperties(size=font_size)
     obstacles = []
     for node in nodes:
         x, y = ax.transData.transform(positions[node["country"]])
@@ -406,7 +407,7 @@ def _place_country_labels(fig, ax, nodes, positions):
         _, ox, oy, dx, box, extra = min(candidates, key=lambda candidate: candidate[0])
         labels.append(box)
         ax.annotate(text, positions[name], xytext=(ox, oy), textcoords="offset points",
-                    ha="left" if dx >= 0 else "right", va="center", fontsize=9, zorder=4,
+                    ha="left" if dx >= 0 else "right", va="center", fontsize=font_size, zorder=4,
                     bbox=dict(facecolor="white", edgecolor="none", alpha=0.8, pad=0.8),
                     arrowprops=dict(arrowstyle="-", color="#999999", linewidth=0.5)
                     if extra else None)

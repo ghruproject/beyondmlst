@@ -121,8 +121,8 @@ Fast location networks mimic StrainHub: maximum-parsimony ancestral country
 assignments produce parent-to-child state changes on the tree, aggregated into
 directed country links weighted by their branch-change counts. The same
 representative history is shown on the country-coloured NJ tree.
-All country links and the representative reconstruction are shown
-by default; controls offer input-country links and a view that adds alternative
+Input-country links and the representative reconstruction are shown
+by default; controls offer all country links and a view that adds alternative
 possible links. A subgroup selector follows the input level-5 LIN prefixes.
 Thickness counts changes in the displayed history, while dashed links mark
 variation across optimal assignments. The table retains every possible pair,
