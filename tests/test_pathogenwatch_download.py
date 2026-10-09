@@ -96,3 +96,22 @@ def test_provider_revision_invalidates_cached_assembly(tmp_path):
     paths, ledger = download_assemblies([row], **kwargs)
     assert len(calls) == 2 and ledger[0]["status"] == "downloaded"
     assert b"TGCA" in paths["a"].read_bytes()
+
+
+def test_wrong_source_content_is_rejected(tmp_path):
+    import hashlib
+
+    row = {
+        "source_genome_id": "a",
+        "source_checksum": hashlib.sha1(b">a\nACGT\n").hexdigest(),
+        "source_length": 4,
+    }
+    paths, ledger = download_assemblies(
+        [row],
+        output=tmp_path / "out",
+        cache_dir=tmp_path / "cache",
+        api_key="secret",
+        fetch=lambda source: b">a\nTGCA\n",
+    )
+    assert not paths and ledger[0]["reason"] == "source_checksum_mismatch"
+    assert not list((tmp_path / "cache").glob("*.fasta"))

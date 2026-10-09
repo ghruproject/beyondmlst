@@ -196,6 +196,16 @@ def download_assemblies(
                         )
                     )
                     requests = stats.get("requests", 0)
+            expected = str(row.get("source_checksum") or "")
+            if re.fullmatch(r"[a-fA-F0-9]{40}", expected):
+                if hashlib.sha1(data).hexdigest() != expected.lower():
+                    raise DownloadError("source_checksum_mismatch")
+            sequence_bases = sum(
+                len(line.strip()) for line in data.splitlines() if not line.startswith(b">")
+            )
+            source_length = row.get("source_length")
+            if source_length is not None and sequence_bases != int(source_length):
+                raise DownloadError("source_length_mismatch")
             digest = hashlib.sha256(data).hexdigest()
             blob = cache_dir / f"{digest}.fasta"
             if not cached:
@@ -221,18 +231,23 @@ def download_assemblies(
                     "status": "cached" if cached else "downloaded",
                     "sha256": digest,
                     "bytes": len(data),
+                    "sequence_bases": sequence_bases,
+                    "source_checksum_verified": bool(re.fullmatch(r"[a-fA-F0-9]{40}", expected)),
                     "requests": requests,
                     "seconds": round(time.monotonic() - started, 3),
                 },
             )
-        except (DownloadError, OSError):
+        except (DownloadError, OSError, ValueError) as error:
+            requests = stats.get("requests", requests)
             return (
                 source,
                 None,
                 {
                     "source_genome_id": source,
                     "status": "failed",
-                    "reason": "download_or_validation_failed",
+                    "reason": str(error)
+                    if str(error) in {"source_checksum_mismatch", "source_length_mismatch"}
+                    else "download_or_validation_failed",
                     "requests": requests,
                     "seconds": round(time.monotonic() - started, 3),
                 },
