@@ -25,6 +25,62 @@ from chronoclade.context_refinement import _allele, _compatible, _lineage, _loci
 MAX_RECORDS = 1500
 
 
+def draw_profile_tree(tree, records, labels, path, nearest_ids=()):
+    """Draw neutral branches with dataset-coloured tips and supplied metadata."""
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+
+    by_id = {row["sample_id"]: row for row in records}
+    colours = {"input": "#2166ac", "context": "#666666"}
+    nearest_ids = set(nearest_ids)
+    tip_labels, label_colours = {}, {}
+    for tip in tree.get_terminals():
+        row = by_id[tip.name]
+        dataset = "input" if row.get("origin") in {"local", "query", "focal"} else "context"
+        country = str(row.get("country") or "Country unknown")
+        date = str(row.get("collection_date") or row.get("collection_year") or "Date unknown")
+        label = f"{labels.get(tip.name, tip.name)} | {country} | {date}"
+        tip_labels[tip.name] = label
+        label_colours[label] = colours[dataset]
+
+    fig, ax = plt.subplots(figsize=(13, max(4, len(records) * 0.24)))
+    Phylo.draw(
+        tree, axes=ax, do_show=False,
+        label_func=lambda clade: tip_labels.get(clade.name),
+        label_colors=label_colours,
+    )
+    # Draw a coloured marker at each terminal without colouring ancestral branches.
+    depths = tree.depths()
+    if not max(depths.values()):
+        depths = tree.depths(unit_branch_lengths=True)
+    terminals = tree.get_terminals()
+    for index, tip in enumerate(terminals):
+        ax.plot(depths[tip], index + 1, "o", markersize=4,
+                color=label_colours[tip_labels[tip.name]], zorder=3)
+        if tip.name in nearest_ids and by_id[tip.name].get("origin") == "context":
+            ax.plot(depths[tip], index + 1, marker="*", markersize=9,
+                    markerfacecolor="white", markeredgecolor="#e66101",
+                    markeredgewidth=1.5, linestyle="None", zorder=4)
+    handles = [Line2D([], [], color=colour, marker="o", linestyle="None", label=label)
+               for colour, label in ((colours["input"], "Input genomes"),
+                                     (colours["context"], "Public comparisons"))]
+    if nearest_ids:
+        handles.append(Line2D([], [], color="#e66101", marker="*", markersize=9,
+                              markerfacecolor="white", markeredgewidth=1.5,
+                              linestyle="None", label="Nearest public relatives (ties included)"))
+    ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.01),
+              frameon=False, ncol=len(handles))
+    ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
+    ax.set_ylabel("")
+    ax.set_yticks([])
+    left, right = ax.get_xlim()
+    ax.set_xlim(left, right + (right - left) * 0.35)
+    ax.set_title("Neighbour-joining tree · tip labels: genome | country | collection date", pad=38)
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+
+
 def _date_interval(row, *, allow_future=False):
     value = str(row.get("collection_date") or row.get("collection_year") or "").strip()
     try:
@@ -274,6 +330,7 @@ def analyse_profiles(
     min_overlap: float = 0.9,
     bootstrap_replicates: int = 30,
     distance_threshold: float = 0.02,
+    tree_limit: int = 100,
 ) -> dict:
     """Write a reproducible, descriptive report using available compatible profiles.
 
@@ -286,6 +343,8 @@ def analyse_profiles(
             f"Profile analysis is limited to {MAX_RECORDS} records; explicitly bound "
             "the catalogue first. No records have been silently discarded."
         )
+    if not isinstance(tree_limit, int) or isinstance(tree_limit, bool) or tree_limit < 2:
+        raise ValueError("tree_limit must be an integer of at least two")
     if not 0 < min_overlap <= 1 or not 0 <= distance_threshold <= 1:
         raise ValueError("Overlap must be in (0,1] and distance threshold in [0,1]")
     if not isinstance(bootstrap_replicates, int) or not 0 <= bootstrap_replicates <= 200:
@@ -566,21 +625,50 @@ def analyse_profiles(
             cohort["tree_path"] = str(path)
             import matplotlib.pyplot as plt
 
-            if len(rows) <= 100:
-                fig, ax = plt.subplots(figsize=(9, max(4, len(rows) * 0.2)))
-                Phylo.draw(tree, axes=ax, do_show=False,
-                           label_func=lambda clade: summary["sample_labels"].get(clade.name, clade.name))
-                ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
-                ax.set_title("Exploratory neighbour-joining tree")
-                fig.tight_layout()
+            if len(rows) >= 2:
                 tree_figure = output / f"{cohort_id}_nj.svg"
-                fig.savefig(tree_figure)
-                plt.close(fig)
+                nearest_ids = {
+                    item["context_id"]
+                    for item in nearest
+                    if item.get("status") == "matched"
+                    and item.get("cohort_id") == cohort_id
+                    and item.get("context_id")
+                }
+                mandatory = {i for i, r in enumerate(rows)
+                             if r.get("origin") in {"local", "query", "focal"}
+                             or r["sample_id"] in nearest_ids}
+                chosen = sorted(mandatory)
+                if not chosen:
+                    chosen = [0]
+                remaining = set(range(len(rows))) - set(chosen)
+                while remaining and len(chosen) < tree_limit:
+                    candidate = max(remaining, key=lambda i: (
+                        min(matrix[i, j] for j in chosen),
+                        rows[i]["sample_id"],
+                    ))
+                    chosen.append(candidate)
+                    remaining.remove(candidate)
+                display_rows = [rows[i] for i in sorted(chosen)]
+                display_tree = copy.deepcopy(tree)
+                display_ids = {r["sample_id"] for r in display_rows}
+                for tip in list(display_tree.get_terminals()):
+                    if tip.name not in display_ids:
+                        display_tree.prune(tip)
+                draw_profile_tree(display_tree, display_rows, summary["sample_labels"],
+                                  tree_figure, nearest_ids)
                 cohort["tree_figure"] = str(tree_figure)
-            else:
-                cohort["warnings"].append(
-                    "Static tree figure omitted above 100 tips; complete NJ Newick is available."
-                )
+                cohort["tree_display_sample_ids"] = [r["sample_id"] for r in display_rows]
+                cohort["tree_display_limit"] = tree_limit
+                if len(display_rows) < len(rows):
+                    cohort["warnings"].append(
+                        f"Tree figure shows {len(display_rows)} of {len(rows)} profiles: "
+                        "all inputs and nearest public relatives (including ties), then "
+                        "genetic diversity. Neighbour searches, PCoA and metadata use the full pool."
+                    )
+                if len(mandatory) > tree_limit:
+                    cohort["warnings"].append(
+                        "Tree display limit exceeded to retain every input and tied nearest relative."
+                    )
             cohort["exploratory_root"] = names[0]
             if any((node.branch_length or 0) < 0 for node in tree.find_clades()):
                 cohort["warnings"].append(

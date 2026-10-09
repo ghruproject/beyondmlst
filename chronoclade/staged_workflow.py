@@ -274,6 +274,8 @@ def run_staged_workflow(
     typing_config: Path | None = None,
     cglin_export: Path | None = None,
     profile_limit: int = 500,
+    tree_limit: int = 80,
+    lin_min_context: int = 20,
     context_size: int = 50,
     nearest_per_query: int = 3,
     include_genomes: list[str] | None = None,
@@ -293,10 +295,8 @@ def run_staged_workflow(
     dry_run: bool = False,
 ) -> dict:
     """Execute cumulative stages while preserving reports and selected input hashes."""
-    from chronoclade.profile_analysis import analyse_profiles
     from chronoclade.profile_inputs import materialise_assemblies, resolve_profile_inputs
-    from chronoclade.profile_report import write_profile_report, write_stage_index
-    from chronoclade.report import write_supporting_bundle
+    from chronoclade.profile_report import write_stage_index
     from chronoclade.workflow import run_workflow
 
     if mode not in {"fast", "full", "finish"}:
@@ -333,46 +333,25 @@ def run_staged_workflow(
         typing_config=typing_config,
         cglin_export=cglin_export,
         profile_limit=profile_limit,
+        lin_min_context=lin_min_context,
         seed=seed,
     )
-    queries, context = inputs["queries"], inputs["context"]
-    analysis = analyse_profiles(
-        queries + context,
-        output=output / "fast",
-        seed=seed,
-        bootstrap_replicates=bootstrap_replicates,
-        distance_threshold=distance_threshold,
-    )
-    species_names = sorted({row["species"] for row in queries})
-    lineage_names = sorted({row.get("lineage") or "Unassigned" for row in queries})
-    if len(species_names) == 1:
-        analysis["species"] = species_names[0]
-    analysis["lineage"] = ", ".join(lineage_names)
-    def geography(rows: list[dict]) -> list[dict]:
-        counts: dict[tuple, int] = defaultdict(int)
-        for row in rows:
-            counts[(row.get("origin", "context"), row.get("country") or "Unknown",
-                    row.get("region") or "Unknown", row.get("nuts2") or "Unknown")] += 1
-        return [dict(origin=key[0], country=key[1], region=key[2], nuts2=key[3], count=count)
-                for key, count in sorted(counts.items())]
+    from chronoclade.fast_workflow import route_datasets, run_fast_datasets
 
-    analysis["metadata_geography"] = geography(queries + context)
-    analysis["public_catalogue_geography"] = geography(inputs.get("catalogue_rows", []))
-    _write_json(output / "fast" / "metadata_geography.json", {
-        "analysis_records": analysis["metadata_geography"],
-        "public_catalogue": analysis["public_catalogue_geography"],
-    })
-    _write_json(output / "fast" / "profile_analysis.json", analysis)
-    profile_report = write_profile_report(
-        analysis, directory=output / "fast", provenance=inputs["provenance"]
+    inputs = route_datasets(inputs)
+    queries, context = inputs["queries"], inputs["context"]
+    analysis, profile_report, fast_datasets = run_fast_datasets(
+        inputs, output / "fast", seed=seed,
+        bootstrap_replicates=bootstrap_replicates,
+        distance_threshold=distance_threshold, tree_limit=tree_limit,
     )
-    write_supporting_bundle(output / "fast")
     fingerprint = content_hash(
         {
             "resolved_records_sha256": inputs["provenance"].get(
                 "resolved_records_sha256", content_hash({"queries": queries, "context": context})
             ),
             "context_size": context_size,
+            "tree_limit": tree_limit,
             "seed": seed,
             "nearest_per_query": nearest_per_query,
             "include_genomes": include_genomes or [],
@@ -412,6 +391,7 @@ def run_staged_workflow(
         "stages": stages,
         "provenance": inputs["provenance"],
         "context_selections": [],
+        "fast_datasets": fast_datasets,
     }
     _write_json(previous_path, result)
     write_stage_index(output, stages)

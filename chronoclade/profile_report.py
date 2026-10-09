@@ -528,6 +528,79 @@ def _nearest_neighbour_table(rows: list[dict[str, Any]]) -> str:
     )
 
 
+def _adaptive_context_summary(provenance: dict[str, Any]) -> str:
+    audit = _mapping(provenance.get("adaptive_context_selection"))
+    datasets = _records(audit.get("datasets"))
+    if not datasets:
+        return ""
+    overview = _table(datasets, [
+        ("mlst_st", "MLST ST"), ("clonal_group", "Clonal group"),
+        ("input_count", "Your input genomes"),
+        ("public_cg_pool_count", "Available public CG comparisons"),
+        ("selected_context_count", "Chosen public context pool"),
+    ], empty="No typed input datasets were available.")
+    rows = []
+    for dataset in datasets:
+        for subgroup in _records(dataset.get("subgroups")):
+            counts = _mapping(subgroup.get("context_counts"))
+            prefix = subgroup.get("input_prefix", [])
+            rows.append({
+                "cg": dataset.get("clonal_group"),
+                "prefix": ",".join(str(part) for part in prefix) if isinstance(prefix, list) else prefix,
+                "inputs": subgroup.get("input_count"),
+                "level5": counts.get("5"), "level6": counts.get("6"), "level7": counts.get("7"),
+                "selected_level": subgroup.get("selected_level"),
+                "selected_count": subgroup.get("selected_context_count"),
+                "coverage": "Limited context" if subgroup.get("limited_context") else "Minimum met",
+            })
+    selection = _table(rows, [
+        ("cg", "Clonal group"), ("prefix", "Input level-5 prefix"), ("inputs", "Inputs"),
+        ("level5", "Level 5 context"), ("level6", "Level 6 context"),
+        ("level7", "Level 7 context"), ("selected_level", "Chosen level"),
+        ("selected_count", "Chosen context"), ("coverage", "Context coverage"),
+    ], empty="No subgroup selection counts were supplied.")
+    minimum = escape(_text(audit.get("min_context")))
+    return (
+        '<h3>Input datasets and their public context</h3>'
+        '<p>Inputs are separated by MLST sequence type, then by clonal group. '
+        'Each dataset is analysed separately.</p>' + overview
+        + '<h3>Which closer LIN groups were chosen?</h3>'
+        + '<p>For each input level-5 subgroup, start at level 7 and widen to level 6 '
+        'or 5 until every input has at least ' + minimum + ' public comparisons. '
+        'This minimum is a sampling setting, not a biological cutoff. Sparse groups '
+        'remain visible as limited context. Counts at each level combine the matching '
+        'prefixes represented by the inputs; overlapping comparisons are counted once '
+        'in the chosen dataset pool.</p>' + selection
+        + '<p>LIN prefixes define where to search. Closest relatives are ranked by '
+        'actual cgMLST allele differences, with jointly compared loci and distance ties '
+        'reported below. One set of figures describes each dataset; separate figures '
+        'are not generated for every LIN level.</p>'
+    )
+
+
+def _adaptive_context_metadata(provenance: dict[str, Any]) -> str:
+    datasets = _records(_mapping(provenance.get("adaptive_context_selection")).get("datasets"))
+    blocks = []
+    for dataset in datasets:
+        countries = _records(dataset.get("selected_context_geography"))
+        years = _records(dataset.get("selected_context_years"))
+        if not countries and not years:
+            continue
+        blocks.append('<h3>Complete chosen context pool: '
+                      + escape(_text(dataset.get("analysis_dataset"))) + '</h3>')
+        blocks.append('<p>These counts use all public metadata in the chosen LIN groups, '
+                      'before tree subsampling or profile exclusions. Missing locations and '
+                      'collection years remain in the denominator.</p>')
+        blocks.append(_table(countries, [("country", "Country"), ("region", "Region"),
+                      ("nuts2", "NUTS2 region"), ("count", "Public samples"),
+                      ("denominator", "Chosen context pool")],
+                      empty="Country metadata for the complete chosen pool was not available."))
+        blocks.append(_table(years, [("year", "Collection year"), ("count", "Public samples"),
+                      ("denominator", "Chosen context pool")],
+                      empty="Collection-year metadata for the complete chosen pool was not available."))
+    return "".join(blocks)
+
+
 def _context_funnel(provenance: dict[str, Any]) -> str:
     rows = []
     catalogue = _mapping(provenance.get("catalogue_deduplication"))
@@ -738,6 +811,21 @@ def write_profile_report(
         if query_count is not None and public_context_count is not None else
         f"{focal} genomes · Profile comparison"
     )
+    adaptive_selection = bool(_records(_mapping(prov.get("adaptive_context_selection")).get("datasets")))
+    comparison_scope = (
+        "All public genomes in the chosen LIN context groups, before tree subsampling."
+        if adaptive_selection else "Additional genomes selected for comparison."
+    )
+    catalogue_heading = "Full public clonal-group pool" if adaptive_selection else "Frozen public catalogue"
+    figure_scope = (
+        "Country and collection-year tables describe the complete chosen context pool, including records without usable profiles. "
+        "PCoA and nearest-neighbour comparisons use usable profiles; the NJ tree may show a smaller selection. "
+        "The full public clonal-group pool has a separate denominator. Unknown countries and regions remain visible."
+        if adaptive_selection else
+        "Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. "
+        "The tables above separately summarize resolved input metadata by origin, including rows without profiles, and the full frozen public catalogue. "
+        "These pools have different denominators. Unknown country and region values remain visible."
+    )
     metadata_geography = _records(data.get("metadata_geography"))
     input_geography = [row for row in metadata_geography if row.get("origin") in {"local", "query", "focal"}]
     comparison_geography = [row for row in metadata_geography if row not in input_geography]
@@ -775,14 +863,16 @@ def write_profile_report(
         '<nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#geography">Countries</a><a href="#nearest">Closest relatives</a><a href="#network">Country network</a><a href="#groups">Groups</a><a href="#root-to-tip">Dates</a><a href="#downloads">Methods &amp; files</a></nav>',
         f'<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{message}{warnings}{_metric_cards(summary_values)}'
         f'<p>{escape(input_description)}</p><p>Public comparison typing: {escape(context_description)}.</p>'
+        f'{_adaptive_context_summary(prov)}'
         '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic relationships and concentration in time and place are reported separately.</p></div></section>',
         f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
+        f'{_adaptive_context_metadata(prov)}'
         f'<h3>Your input genomes</h3><p>The samples you supplied for investigation.</p>{_geography_table(input_geography, label="Your input genomes", include_origin=True)}'
-        f'<h3>Public comparison genomes</h3><p>Additional genomes selected for comparison.</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
-        f'<h3>Frozen public catalogue</h3>{_geography_table(data.get("public_catalogue_geography"), label="Frozen public catalogue", include_origin=False)}'
+        f'<h3>Public comparison genomes</h3><p>{escape(comparison_scope)}</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
+        f'<h3>{escape(catalogue_heading)}</h3>{_geography_table(data.get("public_catalogue_geography"), label=catalogue_heading, include_origin=False)}'
         f'{legacy_geography}'
         f'{country_figures}'
-        '<p class="muted">Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. The tables above separately summarize resolved input metadata by origin, including rows without profiles, and the full frozen public catalogue. These pools have different denominators. Unknown country and region values remain visible.</p></div></section>',
+        f'<p class="muted">{escape(figure_scope)}</p></div></section>',
         f'<section class="stage" id="nearest"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These rankings use the shared cgMLST loci in the analysed profiles.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
         '<section class="stage" id="figures"><div class="stage-body"><h2>How are the genomes related?</h2><div class="figures">'
         + pcoa_figures
@@ -807,6 +897,72 @@ def write_profile_report(
 <title>""" + escape(heading) + """</title><style>
 """ + _profile_styles() + """
 </style></head><body>""" + "\n".join(sections) + "</body></html>"
+    output = directory / "profile_report.html"
+    output.write_text(document, encoding="utf-8")
+    return output
+
+
+def write_fast_group_index(
+    directory: Path,
+    datasets: list[dict[str, Any]],
+    *,
+    provenance: dict | None = None,
+) -> Path:
+    """Link separate input-group analyses without duplicating their figures."""
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    audit = _mapping(_mapping(provenance).get("adaptive_context_selection"))
+    audit_datasets = _records(audit.get("datasets"))
+    rows = []
+    for dataset in datasets:
+        lineage = _text(dataset.get("lineage"))
+        matching = next((item for item in audit_datasets
+                         if item.get("analysis_dataset") == lineage), {})
+        candidate = dataset.get("report")
+        link = '<span class="muted">Report unavailable</span>'
+        if isinstance(candidate, (str, Path)):
+            path = Path(candidate)
+            if not path.is_absolute():
+                path = directory / path
+            try:
+                relative = path.resolve().relative_to(directory.resolve())
+            except (OSError, ValueError):
+                relative = None
+            if relative is not None and path.is_file():
+                link = f'<a href="{escape(relative.as_posix(), quote=True)}">Open group report</a>'
+        values = [dataset.get("species"), lineage,
+                  matching.get("mlst_st", dataset.get("mlst_st")),
+                  matching.get("clonal_group", dataset.get("clonal_group")),
+                  dataset.get("input_count", matching.get("input_count")),
+                  matching.get("public_cg_pool_count"),
+                  dataset.get("context_count", matching.get("selected_context_count"))]
+        cells = "".join(f"<td>{escape(_text(value))}</td>" for value in values)
+        rows.append(f"<tr>{cells}<td>{link}</td></tr>")
+    headers = ["Species", "Dataset", "MLST ST", "Clonal group", "Your inputs",
+               "Available public CG pool", "Chosen public context", "Results"]
+    table = ('<div class="table-wrap" tabindex="0" role="region" aria-label="Input analysis datasets">'
+             '<table><thead><tr>'
+             + "".join(f'<th scope="col">{header}</th>' for header in headers)
+             + '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>')
+    if not rows:
+        table = '<p class="empty">No group reports are available yet.</p>'
+    document = (
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        '<title>ChronoClade fast group reports</title><style>' + _profile_styles() + '</style></head>'
+        '<body><main class="shell"><header class="identity">'
+        '<div class="identity-mark">ChronoClade · ANALYSIS REPORT</div>'
+        '<div class="identity-copy"><h1>Fast profile results</h1>'
+        '<p>Choose an input dataset to explore its context.</p></div></header>'
+        '<section class="stage" id="summary"><div class="stage-body">'
+        '<h2>Your input datasets</h2><p>Inputs are separated by MLST sequence type, '
+        'then by clonal group. Each group has its own context selection, nearest-neighbour '
+        'results, PCoA and genetic tree.</p>' + table
+        + '<p>Available public CG pool counts exclude your inputs. Chosen public context '
+        'counts describe the complete selected LIN groups, before tree subsampling. '
+        'Open a group report to see which LIN levels were chosen and the country and '
+        'collection-year breakdowns.</p></div></section></main></body></html>'
+    )
     output = directory / "profile_report.html"
     output.write_text(document, encoding="utf-8")
     return output

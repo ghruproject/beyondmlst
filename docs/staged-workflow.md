@@ -24,7 +24,9 @@ defaults are:
 | Option | Default | Meaning |
 | --- | ---: | --- |
 | `--mode` | `fast` | Stop after the profile report (`fast`), corrected-tree stage (`full`), or dating (`finish`) |
-| `--profile-limit` | `500` | Maximum public context records in profile analysis; query records are additional |
+| `--profile-limit` | `500` | Public profile cap for inputs without adaptive cgLIN context; `0` disables public context |
+| `--tree-limit` | `80` | Tips displayed per fast NJ tree; inputs and tied nearest relatives are always retained |
+| `--lin-min-context` | `20` | Public comparisons required for each represented LIN prefix before narrowing the context level |
 | `--context-size` | `50` | Maximum public context assemblies selected per lineage; focal query genomes are additional |
 | `--nearest-per-query` | `3` | Nearest public profile candidates considered for each query during assembly selection |
 | `--profile-bootstraps` | `10` | Requested locus-bootstrap replicates for descriptive group support |
@@ -40,6 +42,28 @@ local reference inputs. `--query-typing` imports verified query assignments,
 and `--typing-config` runs the configured native caller for query assemblies.
 
 ## What each mode produces
+
+For version-compatible Klebsiella LIN assignments, inputs are separated by ST
+and then clonal group (the full four-component prefix). LIN codes are obtained
+for the complete same-ST public catalogue before selecting context. For each
+represented level-5 input subgroup, the narrowest of levels 7, 6 and 5 is chosen
+where every represented prefix has at least `--lin-min-context` public samples.
+Sparse groups retain level 5 and are labelled as limited context. Selection
+never expands to a different clonal group or sublineage.
+
+The union of those context groups is deduplicated and its profiles are retrieved.
+Nearest relatives are calculated from actual cgMLST mismatch fractions, with
+allele differences, callable denominators and all ties retained. Country/year
+tables use the complete chosen metadata pool; PCoA uses usable profiles. The NJ
+figure retains inputs and all nearest ties, then adds genetic diversity up to
+`--tree-limit`. The full NJ Newick remains available. The tree display cap does
+not restrict the nearest-neighbour search. Each ST/CG has one set of figures and
+its own subsequent assembly/temporal analysis. Multiple datasets are linked
+from `fast/profile_report.html`.
+
+The default minimum of 20 is a configurable sampling choice, not a biological
+threshold. Inputs without compatible LIN assignments retain the bounded same-ST
+pathway; their reports explicitly record missing evidence.
 
 | Mode | Work and report |
 | --- | --- |

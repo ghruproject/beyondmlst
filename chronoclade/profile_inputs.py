@@ -423,15 +423,19 @@ def _analysis_exports(
 
 
 def _grouped_analysis_exports(
-    rows: list[dict], client: PathogenwatchClient, output: Path, provenance: dict
+    rows: list[dict], client: PathogenwatchClient, output: Path, provenance: dict,
+    *, download_names: set[str] | None = None,
 ) -> list[dict]:
     """Discover server-advertised jobs for exact already-resolved public IDs."""
     eligible = [
         row
         for row in rows
         if str(row.get("numeric_source_id", "")).isdigit()
-        and not row.get("cgmlst_profile")
-        and not row.get("cgmlst_novel_alleles")
+        and (
+            (download_names == {"klebsiella-lincodes"} and not row.get("cglin_raw"))
+            or (download_names is None and not row.get("cgmlst_profile")
+                and not row.get("cgmlst_novel_alleles"))
+        )
     ]
     if not eligible:
         return rows
@@ -467,7 +471,9 @@ def _grouped_analysis_exports(
                     "Genome-group export organism does not match public identity"
                 )
             advertised = group.get("downloads") or []
-            if not any(item.get("name") == "cgmlst" for item in advertised):
+            if download_names is not None:
+                advertised = [item for item in advertised if item.get("name") in download_names]
+            if download_names is None and not any(item.get("name") == "cgmlst" for item in advertised):
                 provenance.setdefault("profile_export_unavailable", []).append(
                     {
                         "organism_id": group.get("organismId"),
@@ -740,6 +746,7 @@ def resolve_profile_inputs(
     typing_config: Path | None = None,
     cglin_export: Path | None = None,
     profile_limit: int = 500,
+    lin_min_context: int = 20,
     seed: int = 1729,
 ) -> dict[str, Any]:
     """Freeze input identity, metadata and profile evidence; defer public assemblies.
@@ -937,6 +944,10 @@ def resolve_profile_inputs(
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
         provided_context = _frozen_cglin(provided_context, cglin_assignments)
+    queries_with_existing_profiles = {
+        row["sample_id"] for row in queries
+        if row.get("cgmlst_profile") or row.get("cgmlst_novel_alleles")
+    }
     if not collection and any(
         str(row.get("numeric_source_id", "")).isdigit()
         and not row.get("cgmlst_profile")
@@ -964,6 +975,24 @@ def resolve_profile_inputs(
                     row.update(by_sample[row["sample_id"]])
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
+    # An available allele profile does not imply the LIN assignment is present.
+    # Obtain only missing query LIN codes before defining the contextual pool.
+    frozen_typing_only = client is None and catalogue is not None and (
+        public_typing is not None or query_typing is not None
+    )
+    if not cglin_export and not frozen_typing_only and any(
+        row["sample_id"] in queries_with_existing_profiles
+        and str(row.get("numeric_source_id", "")).isdigit()
+        and "klebsiella" in row["species"].casefold()
+        and not row.get("cglin_raw")
+        for row in queries
+    ):
+        client = client or PathogenwatchClient()
+        if client.api_key:
+            queries = _grouped_analysis_exports(
+                queries, client, output / "query_lin_exports", provenance,
+                download_names={"klebsiella-lincodes"},
+            )
     scopes = {(row["species"].casefold(), row["lineage"]) for row in queries}
     context = [
         _canonical(dict(row, sample_id="PW_" + row["source_genome_id"]), origin="context")
@@ -1005,6 +1034,19 @@ def resolve_profile_inputs(
         catalogue_rows = annotate_public_typing(catalogue_rows, public_assignments)
     if cglin_export:
         catalogue_rows = _frozen_cglin(catalogue_rows, cglin_assignments)
+    # LIN assignment precedes sampling: fetch codes for the whole same-ST pool,
+    # without fetching its profiles or assemblies.
+    if (profile_limit > 0 and any(row.get("cglin_raw") for row in queries)
+            and any(not row.get("cglin_raw") for row in catalogue_rows)):
+        client = client or PathogenwatchClient()
+        catalogue_rows = _grouped_analysis_exports(
+            catalogue_rows, client, output / "catalogue_lin_exports", provenance,
+            download_names={"klebsiella-lincodes"},
+        )
+        if cglin_export:
+            catalogue_rows = _frozen_cglin(catalogue_rows, cglin_assignments)
+        catalogue_by_id = {row["source_genome_id"]: row for row in catalogue_rows}
+        context = [catalogue_by_id.get(row["source_genome_id"], row) for row in context]
     provenance["catalogue_metadata_count"] = len(catalogue_rows)
     excluded_inputs = queries + provided_context
     query_ids = {
@@ -1025,9 +1067,30 @@ def resolve_profile_inputs(
     if cglin_export:
         context = _frozen_cglin(context, cglin_assignments)
     unbounded_context_count = len(context)
-    context, refinement_audit = _refined_context_pool(
-        context, queries, limit=profile_limit, seed=seed
-    )
+    from chronoclade.adaptive_context import adaptive_cglin_context
+
+    if profile_limit > 0:
+        queries, adaptive_context, adaptive_audit = adaptive_cglin_context(
+            queries, context, min_context=lin_min_context
+        )
+    else:
+        adaptive_context, adaptive_audit = [], {"datasets": [], "subgroups": []}
+    if adaptive_audit["datasets"]:
+        adaptive_ids = {r["sample_id"] for r in adaptive_context if r.get("analysis_dataset")}
+        fallback_queries = [r for r in queries if not r.get("analysis_dataset")]
+        fallback_context = [r for r in context if r["sample_id"] not in adaptive_ids and any(
+            (r["species"].casefold(), r["lineage"]) == (q["species"].casefold(), q["lineage"])
+            for q in fallback_queries
+        )]
+        fallback_context, refinement_audit = _refined_context_pool(
+            fallback_context, fallback_queries, limit=profile_limit, seed=seed
+        )
+        context = [r for r in adaptive_context if r["sample_id"] in adaptive_ids] + fallback_context
+        provenance["adaptive_context_selection"] = adaptive_audit
+    else:
+        context, refinement_audit = _refined_context_pool(
+            context, queries, limit=profile_limit, seed=seed
+        )
     provenance["eligible_public_context_count"] = unbounded_context_count
     provenance["bounded_public_context_count"] = len(context)
     provenance["context_pool_selection"] = refinement_audit
@@ -1047,7 +1110,8 @@ def resolve_profile_inputs(
                 f"{seed}:{row['source_genome_id']}".encode()
             ).hexdigest(),
         )
-        selected_ids = {row["source_genome_id"] for row in ranked[:profile_limit]}
+        export_rows = ranked if adaptive_audit["datasets"] else ranked[:profile_limit]
+        selected_ids = {row["source_genome_id"] for row in export_rows}
         selected = [
             row
             for row in context
@@ -1062,7 +1126,7 @@ def resolve_profile_inputs(
         )
         by_id = {row["source_genome_id"]: row for row in exported}
         context = [by_id.get(row["source_genome_id"], row) for row in context]
-    context.extend(provided_context)
+    context.extend(dict(row, provided_context=True) for row in provided_context)
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
         context = _frozen_cglin(context, cglin_assignments)

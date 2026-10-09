@@ -771,7 +771,7 @@ def test_explicit_frozen_cglin_survives_query_typing_and_context_live_exports(
     )
     assert exported == ["A", "C"]
     assert result["context"][0]["source_genome_id"] == "C"
-    assert result["context"][0]["profile_pool_selection_reason"] == "lineage_priority:q"
+    assert result["context"][0]["profile_pool_selection_reason"] == "adaptive_cglin_level_5"
     for row in result["queries"] + result["context"]:
         assert row["cglin_raw"] == "1_2_3_4_5_6_7_8_9_10"
         assert row["cglin_scheme_version"] == "unknown"
@@ -893,3 +893,33 @@ def test_cgmlst_malformed_locus_is_not_retried_as_transient_identity(tmp_path, m
     assert not result[0].get("cgmlst_profile")
     assert "analysis_export_identity_retries" not in provenance
     assert provenance["analysis_exports"][-1]["reason"] == "cgMLST export contains an empty locus"
+
+
+def test_existing_query_profile_still_fetches_missing_lin_before_context(monkeypatch, tmp_path):
+    from chronoclade.cglin import normalise_assignment
+
+    metadata = tmp_path / "queries.csv"
+    metadata.write_text("sample_id\nq\n")
+    catalogue = tmp_path / "catalogue.json"
+    catalogue.write_text("{}")
+    query = dict(sample_id="q", source_genome_id="query", numeric_source_id=1,
+                 species="Klebsiella pneumoniae", lineage="ST39", mlst_st="39",
+                 cgmlst_profile={"g1": "1"})
+    public = dict(query, sample_id="public", source_genome_id="public", numeric_source_id=2)
+    monkeypatch.setattr("chronoclade.profile_inputs._csv", lambda *a: [query])
+    monkeypatch.setattr("chronoclade.profile_inputs.load_catalogue", lambda *a: {"rows": [public]})
+    calls = []
+
+    def exports(rows, *args, **kwargs):
+        calls.append(([r["source_genome_id"] for r in rows], kwargs.get("download_names")))
+        return [dict(row, **{key: value for key, value in normalise_assignment(
+            {"source_genome_id": row["source_genome_id"],
+             "cglin_raw": "0,0,107,0,0,0,0,0,0,0", "cglin_scheme_version": "v1",
+             "Clonal Group": "39"}).items() if key != "source_genome_id"}) for row in rows]
+
+    monkeypatch.setattr("chronoclade.profile_inputs._grouped_analysis_exports", exports)
+    result = resolve_profile_inputs(metadata, catalogue=catalogue, output=tmp_path / "out",
+                                     client=client_fixture([], api_key="fixture")[0], profile_limit=10)
+    assert calls == [(["query"], {"klebsiella-lincodes"}), (["public"], {"klebsiella-lincodes"})]
+    assert result["queries"][0]["analysis_dataset"] == "ST39_CG39"
+    assert result["context"][0]["analysis_dataset"] == "ST39_CG39"

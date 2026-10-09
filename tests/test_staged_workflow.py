@@ -343,3 +343,25 @@ def test_snapshot_uses_advertised_corrected_report_and_normalises_entry(tmp_path
     with zipfile.ZipFile(entry.parent / "supporting_results.zip") as archive:
         assert archive.read("genetic_tree.svg").decode() == "corrected relationships"
         assert json.loads(archive.read("report.json"))["outputs"]["html_report"] == str(entry)
+
+
+def test_cg_datasets_remain_separate_through_assembly_selection(tmp_path, stage_mocks, monkeypatch):
+    calls, inputs = stage_mocks
+    inputs["queries"][0]["analysis_dataset"] = "ST147_CG147"
+    inputs["context"][0]["analysis_dataset"] = "ST147_CG147"
+    inputs["queries"].append(row("q2", origin="local", analysis_dataset="ST147_CG2"))
+    inputs["context"].append(row("c2", analysis_dataset="ST147_CG2"))
+
+    def analyse(records, *, output, **kwargs):
+        queries = [r for r in records if r["origin"] == "local"]
+        public = [r for r in records if r["origin"] == "context"]
+        return pair_table(output / "pairs.csv", [(q["sample_id"], c["sample_id"], 0.01)
+                                                for q in queries for c in public])
+
+    monkeypatch.setattr("chronoclade.profile_analysis.analyse_profiles", analyse)
+    result = run_staged_workflow(None, collection="id", output=tmp_path, mode="full", context_size=1)
+    assert len(result["fast_datasets"]) == 2
+    assert {frozenset(r["sample_id"] for r in group) for group in calls["materialise"]} == {
+        frozenset({"q", "c"}), frozenset({"q2", "c2"})}
+    assert {r["lineage"] for group in calls["materialise"] for r in group} == {
+        "ST147_CG147", "ST147_CG2"}

@@ -48,6 +48,27 @@ These figures describe submitted sequence records. Surveillance and submission
 coverage affect the proportions; country metadata does not establish where an
 infection was acquired, migration direction or population prevalence.
 
+## Adaptive LIN context in the fast report
+
+For Klebsiella inputs with compatible cgLIN assignments, the fast report first
+shows the datasets separated by MLST ST and clonal group. A compact selection
+table lists available comparisons at levels 5, 6 and 7 and the level chosen for
+each input level-5 subgroup. Selection starts at level 7 and widens until each
+represented input prefix has the configured minimum number of public comparisons
+(default 20), or reaches level 5. This minimum is a sampling choice, not a
+biological threshold. Sparse subgroups remain labelled as limited context.
+
+The chosen prefixes are combined and deduplicated within each clonal-group
+dataset. Country and collection-year summaries describe that complete chosen
+pool, before NJ-tree subsampling. The wider public clonal-group pool is reported
+separately. One PCoA and one NJ view are produced per analysable dataset, rather
+than a new set of figures for every LIN level. Missing profiles and metadata are
+retained in the coverage tables.
+
+LIN codes define the context search groups; they do not rank closest relatives.
+The fast nearest-neighbour table uses actual cgMLST allele differences and
+reports jointly compared loci and all ties within the searched profile pool.
+
 ## Closest relatives and the genetic tree
 
 The first tree shows genetic relationships before time scaling. Its branch
