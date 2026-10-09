@@ -192,3 +192,14 @@ requests**. Compact public audit files are in `native_results/`.
 SLURM submission syntax is validated and a portable staging recipe is supplied.
 **No cluster job was submitted** in this pilot. This is a completed native laptop
 result plus an exercised offline reproduction path, not a claim of cluster execution.
+
+Representative publication exports are retained in `figures/`: the full-public
+prefix-depth-5 percentage overview (page 1), selected-context depth-7 percentages,
+and separate focal depth-7 percentages, each as SVG and PNG. They were inspected
+at readable size: named countries, full-prefix/scheme labels, N/known/Unknown,
+legends, group-size labels, scope and interpretation captions remain legible.
+The public overview orders groups by size; every singleton remains in the complete
+source tables and paginated offline output. Bounded selected/focal panels show every
+named country rather than needlessly collapsing them to Other. Caption/legend
+space is reserved separately. The integrated report was also checked in the browser
+by the orchestrating agent, including the failed temporal-signal gate.
