@@ -15,7 +15,6 @@ phipack = ">=1.1,<1.2"
 
 [pypi-dependencies]
 chronoclade = { path = ".", editable = true }
-atbfetcher = { git = "https://github.com/happykhan/atbfetcher.git", rev = "4c1b936137ba3dbe125ac7cf612d19a1a0d5a7df" }
 
 [tasks]
 chronoclade = "chronoclade"

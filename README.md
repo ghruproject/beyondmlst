@@ -124,16 +124,10 @@ and `--focal-crosswalk` can supply assignments without uploading focal genomes.
 Missing assignments remain explicit. See the [country figures](docs/context-geography.md)
 and [laptop/SLURM pilot](docs/pathogenwatch-pilot.md).
 
-AllTheBacteria is retained as an explicit legacy/deferred route:
-
-```bash
-pixi run chronoclade prepare-context focal_metadata.csv \
-  --context-source atb --scheme ecoli_achtman_4 --st 131 \
-  --source auto --output context/ST131
-```
-
-`--source` continues to select the ATB transport (`auto`, `aws`, `osf`).
-Unsupported Pathogenwatch organisms do not silently fall back to ATB.
+Pathogenwatch is the only built-in public-context provider. Context preparation
+currently supports *K. pneumoniae* with `--scheme klebsiella`; other organisms
+or schemes return an explicit unsupported-provider error. The main analysis
+still accepts local genomes for any validated species and lineage.
 
 ## Worked example
 

@@ -71,12 +71,12 @@ Contextual genomes from the same ST are needed to distinguish introductions
 from local circulation. A local-only dataset can reveal one or several local
 clusters, but it cannot establish where those clusters originated.
 
-Candidate context assemblies may be fetched reproducibly from AllTheBacteria or
-RefSeq with `atbfetcher`. Selection must include close genomic neighbours of
-each focal group and a geography/time-stratified background. A convenience
-sample based only on availability or assembly quality is not sufficient. The
-report must link to a frozen manifest recording the candidate pool, selection
-rules, accessions, metadata snapshot and reasons for inclusion.
+Candidate context assemblies are fetched from Pathogenwatch for supported
+organisms. Selection must include close genomic neighbours of each focal group
+and a geography/time-stratified background. A convenience sample based only on
+availability or assembly quality is not sufficient. The report must link to a
+frozen manifest recording the candidate pool, selection rules, accessions,
+metadata snapshot and reasons for inclusion.
 
 ### Longitudinal patients and epidemiology
 

@@ -102,7 +102,7 @@ signal gate. Host and isolation source are optional and never implicit exclusion
 
 `source_qc`/`qc_pass` preserve the provider's boolean QC status or `None`, and
 `source_length`, `source_n50`, `source_contigs` preserve available metrics. These
-are Pathogenwatch fields, not ATB HQ PASS, completeness or contamination scores.
+are Pathogenwatch fields; they are not completeness or contamination scores.
 
 ## Sample counting and focal aliases
 

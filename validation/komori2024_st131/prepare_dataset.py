@@ -12,7 +12,6 @@ import csv
 import hashlib
 import http.cookiejar
 import re
-import sqlite3
 import time
 import urllib.parse
 import urllib.request
@@ -253,26 +252,6 @@ def build_provenance(
     return provenance
 
 
-def add_atb_fields(rows: list[dict[str, str]], database: Path) -> None:
-    for row in rows:
-        row["atb_aws_url"] = ""
-        row["atb_hq_filter"] = ""
-    if not database.exists():
-        return
-    connection = sqlite3.connect(f"file:{database}?mode=ro", uri=True)
-    try:
-        for row in rows:
-            result = connection.execute(
-                "SELECT aws_url, hq_filter FROM assembly WHERE sample_accession = ?",
-                (row["ncbi_biosample"],),
-            ).fetchone()
-            if result:
-                row["atb_aws_url"] = "" if result[0] == "NA" else result[0] or ""
-                row["atb_hq_filter"] = result[1] or ""
-    finally:
-        connection.close()
-
-
 def _safe_name(value: str) -> str:
     return "".join(character if character.isalnum() else "_" for character in value).strip("_")
 
@@ -355,11 +334,6 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=Path(__file__).parent / "verified")
     parser.add_argument("--supplement", type=Path)
-    parser.add_argument(
-        "--atb-database",
-        type=Path,
-        default=Path.home() / ".atbfetcher" / "atb.metadata.202505.sqlite",
-    )
     parser.add_argument("--download", action="store_true", help="Download the 96 exact chromosomes")
     args = parser.parse_args()
 
@@ -373,7 +347,6 @@ def main() -> None:
     figure_rows = read_figure_s5(supplement)
     records = fetch_ncbi_records(figure_rows)
     provenance = build_provenance(figure_rows, records)
-    add_atb_fields(provenance, args.atb_database)
     write_tables(provenance, args.output)
     if args.download:
         download_chromosomes(provenance, args.output)
@@ -384,10 +357,9 @@ def main() -> None:
         )
         for row in provenance
     )
-    atb = sum(bool(row["atb_aws_url"]) for row in provenance)
     print(
         f"Prepared {len(provenance)} accession-defined C0/C1 chromosomes; "
-        f"{reviews} records have metadata differences to review; {atb} are indexed by ATB"
+        f"{reviews} records have metadata differences to review"
     )
 
 

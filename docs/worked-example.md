@@ -5,29 +5,18 @@ They described two Australian clades and estimated a mean substitution rate of
 1.6 x 10^-6 substitutions per site per year, with the emergence of ST239 dated
 to 1946.[^baines]
 
-ChronoClade was run on 72 assemblies from that collection available in the
-AllTheBacteria 2025-05 release. The subset contains 69 Australian isolates, one
-New Zealand isolate and two external comparators. Seventeen collection years
-are represented.
+ChronoClade was run on 72 assemblies from this collection in the AllTheBacteria
+2025-05 release. The subset contains 69 Australian isolates, one New Zealand
+isolate and two external comparators. Seventeen collection years are represented.
 
 ## Prepare the assemblies
 
 The repository records every accession and collection year in
-`validation/st239_baines2015/input_manifest.csv`. The following commands
-download the assemblies and create the ChronoClade metadata table:
+`validation/st239_baines2015/input_manifest.csv`. Place the corresponding
+assemblies in the run directory, then create the ChronoClade metadata table:
 
 ```bash
 mkdir -p validation/st239_baines2015/run
-
-cut -d, -f1 validation/st239_baines2015/input_manifest.csv \
-  | tail -n +2 \
-  > validation/st239_baines2015/run/accessions.txt
-
-pixi run atbfetcher accessions \
-  validation/st239_baines2015/run/accessions.txt \
-  --output validation/st239_baines2015/run/assemblies \
-  --source aws \
-  --threads 8
 
 pixi run python validation/st239_baines2015/prepare_metadata.py \
   --assemblies validation/st239_baines2015/run/assemblies \

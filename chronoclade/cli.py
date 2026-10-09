@@ -104,7 +104,7 @@ def prepare_context_command(
     metadata: Annotated[Path, typer.Argument(help="Focal-isolate metadata CSV")],
     scheme: Annotated[
         str,
-        typer.Option("--scheme", help="MLST scheme in the context metadata snapshot"),
+        typer.Option("--scheme", help="MLST scheme for Pathogenwatch context"),
     ],
     output: Annotated[
         Path, typer.Option("--output", "-o", help="Context preparation directory")
@@ -120,13 +120,6 @@ def prepare_context_command(
     st: Annotated[
         str | None,
         typer.Option("--st", help="MLST sequence type; inferred from an ST-prefixed lineage"),
-    ] = None,
-    metadata_table: Annotated[
-        Path | None,
-        typer.Option(
-            "--metadata-table",
-            help="Override the bundled compact ATB context metadata Parquet",
-        ),
     ] = None,
     cache_dir: Annotated[
         Path, typer.Option("--cache-dir", help="Source-ID/content-hash assembly cache")
@@ -162,13 +155,6 @@ def prepare_context_command(
         ),
     ] = 3,
     threads: Annotated[int, typer.Option("--threads", "-t", min=1)] = 4,
-    source: Annotated[
-        str,
-        typer.Option("--source", help="atbfetcher source: auto, aws or osf"),
-    ] = "auto",
-    context_source: Annotated[str, typer.Option(
-        "--context-source", help="Context provider: pathogenwatch (default) or legacy atb"
-    )] = "pathogenwatch",
     catalogue: Annotated[Path | None, typer.Option(
         "--catalogue", help="Frozen Pathogenwatch JSON catalogue; no live metadata requests"
     )] = None,
@@ -191,8 +177,6 @@ def prepare_context_command(
 ) -> None:
     """Fetch and select reproducible public context for one species/ST."""
 
-    if source not in {"auto", "aws", "osf"}:
-        _fail(ValueError("--source must be auto, aws or osf"))
     if year_from is not None and year_to is not None and year_from > year_to:
         _fail(ValueError("--year-from cannot be later than --year-to"))
     try:
@@ -224,7 +208,6 @@ def prepare_context_command(
             st=selected_st,
             output=output,
             cache_dir=cache_dir,
-            metadata_table=metadata_table,
             countries=country,
             year_from=year_from,
             year_to=year_to,
@@ -235,9 +218,7 @@ def prepare_context_command(
             nearest_per_focal=nearest_per_focal,
             seed=seed,
             threads=threads,
-            source=source,
             dry_run=dry_run,
-            context_source=context_source,
             catalogue=catalogue,
             cglin_export=cglin_export,
             focal_crosswalk=focal_crosswalk,
