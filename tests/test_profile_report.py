@@ -241,8 +241,10 @@ def test_geography_distinguishes_input_origin_and_full_catalogue(tmp_path: Path)
     )
     html = output.read_text(encoding="utf-8")
 
-    assert "Analysed input metadata" in html
-    assert "Query set" in html and "Public context" in html
+    assert "Your input genomes" in html and "Public comparison genomes" in html
+    assert "2 input genomes · 1 public comparisons" in html
+    assert "your 2 input genomes and compares them with 1 additional public genomes" in html
+    assert html.index("<h3>Your input genomes") < html.index("<h3>Public comparison genomes")
     assert "Frozen public catalogue" in html
     assert "Public catalogue records before deduplication" in html
     assert "Public context records in profile analysis" in html
