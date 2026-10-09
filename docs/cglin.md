@@ -28,6 +28,9 @@ BIGSdb-Pasteur describes provisional cgSTs marked with `*`, and incomplete
 codes derived from the shared prefix with an existing reference. ChronoClade
 preserves that provisional flag and the code's independent complete/partial
 status. It never expands a partial code using the closest profile field.
+The verified CSV also represents provisional cgSTs as 40-character
+hexadecimal profile hashes without the UI's asterisk; these remain raw and
+are explicitly flagged, including when no LIN code is available.
 See [BIGSdb-Pasteur cgMLST/LIN documentation](https://bigsdb.web.pasteur.fr/klebsiella/cgmlst-lincodes/).
 
 ## Verified export contract
@@ -130,6 +133,26 @@ strong/ambiguous/conflicting focal matches; raw export hashes; partial
 download batches; corrupt/duplicate/unrequested IDs; retries and credential
 redaction. These tests require no live credential.
 
-The two-record ST147 export above is a live contract check, not a claim of
-complete ST147 catalogue coverage or validated focal assemblies. Full
-catalogue coverage and group sizes must be measured from the frozen pilot.
+The 9 October 2026 frozen public same-ST catalogue contained 7,807 raw
+records. All requested UUIDs were returned across 79 sequential export
+batches in 101.13 seconds, totalling 1,823,172 decoded CSV bytes. Export
+manifest SHA256 was
+`f6bc0cddd85ba29935e508b9a5bc1dd32dcab62a6804d0b0706d119bdfed9241`.
+Its metadata catalogue snapshot hash was
+`2a9d9bacb6d6967b0fbcd855758192ce8a365abbfd98c4ea8cc0971ca3365701`.
+
+Raw-record coverage before QC/deduplication was:
+
+| Prefix depth | Groups | Definitive prefix | Provisional prefix | Partial below depth | Missing code |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 5 | 134 | 7,627 | 152 | 16 | 12 |
+| 6 | 285 | 7,627 | 136 | 32 | 12 |
+| 7 | 703 | 7,627 | 136 | 32 | 12 |
+
+Every row reconciles to 7,807. No code was malformed. There were 168
+nonmissing provisional codes; 12 further records had a provisional cgST
+hash but no LIN code. Reimporting the saved exports and repeating annotation
+offline produced identical keys. These are **raw genome-record** statistics,
+not the QC-filtered, deduplicated geographical counting denominator and not
+a claim about validated focal assemblies. The full pilot must compute that
+eligible sample-unit denominator and separate focal coverage explicitly.

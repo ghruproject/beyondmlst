@@ -56,6 +56,10 @@ def test_full_prefix_version_scoping_and_provisional_status():
     assert provisional["cglin_status_6"] == "partial"
     assert provisional["cglin_group_6"] == ""
     assert first["cgst"] == ""
+    # Live CSV exposes provisional profile hashes without the UI's asterisk.
+    missing = assignment("e", "", cgST="84d2602acae8e3608d7a0a220447bc30a2dc9f59")
+    assert missing["cglin_provisional"]
+    assert missing["cglin_status"] == "missing"
     with pytest.raises(CGLINError):
         group_key(DEFAULT_SCHEME, "v1", [0], 0)
 
