@@ -512,6 +512,7 @@ def test_network_viewer_switches_weighted_reconstructions_and_retains_nearest_ti
     assert "Unknown" in views[1]["input"]
     assert '<option value="all">All country links</option>' in html
     assert '<option value="input">Input-country links</option>' in html
+    assert '<div data-network-output>' + views[0]["input"] + '</div>' in html
     assert '<option value="possible">Include alternative possible links</option>' in html
     assert "Minimum total changes" in views[0]["all"]
     assert "Changes in displayed reconstruction" in views[0]["all"]

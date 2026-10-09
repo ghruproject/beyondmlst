@@ -118,7 +118,7 @@ The profile-first `fast` report follows the StrainHub state-change workflow:
 reconstruct countries at ancestral nodes, record parent-to-child country changes
 on branches, then aggregate those changes into a directed, weighted network.
 It shows that representative history on the selected rooted cgMLST NJ tree.
-The default network includes all country pairs. Input-country links and
+The default network shows links involving input countries. All country links and
 alternative possible links are optional views, and each input LIN subgroup has
 its own viewer. Node colours identify country states; a dark outline marks a
 country containing input genomes. Unknown-country sample tips remain grey and
