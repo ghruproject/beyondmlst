@@ -340,6 +340,8 @@ def test_large_geography_and_network_tables_are_collapsed_and_network_figure_is_
                     "cohort_id": "C1",
                     "method": "alternate roots",
                     "tested_roots": 9,
+                    "full_network_figure": "network.svg",
+                    "possible_network_figure": "network.svg",
                     "edges": [
                         {
                             "source": f"R{i}",
@@ -361,10 +363,10 @@ def test_large_geography_and_network_tables_are_collapsed_and_network_figure_is_
 
     assert "Frozen public catalogue: 87 records" in catalogue
     assert 'class="coverage-details"><summary>Frozen public catalogue' in catalogue
-    assert "Inferred country connections (72 links)" in network
+    assert "Inferred country connections (72 pairs)" in network
     assert network.index('src="network.svg"') < network.index("Inferred country connections")
-    assert "Root coverage fraction" in network
-    assert "not probability or confidence" in network
+    assert "Minimum changes" in network
+    assert "exact conditional counts" in network
 
 
 def test_neighbour_table_prioritises_formatted_normalized_distance(tmp_path: Path) -> None:
@@ -473,16 +475,21 @@ def test_fast_group_index_links_only_existing_contained_reports_and_escapes(tmp_
     assert '<img' not in html
 
 
-def test_network_viewer_filters_input_country_links_and_retains_all_nearest_ties(tmp_path: Path) -> None:
+def test_network_viewer_switches_weighted_reconstructions_and_retains_nearest_ties(tmp_path: Path) -> None:
     import json
     import re
 
     (tmp_path / "focus.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
     (tmp_path / "all.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
     output = write_profile_report({"location_network": [{
-        "cohort_id": "CG39", "input_countries": ["Greece"], "tested_roots": 5,
-        "network_figure": "focus.svg", "full_network_figure": "all.svg",
-        "edges": [{"source": "Greece", "target": "Italy"}, {"source": "India", "target": "France"}],
+        "cohort_id": "CG39", "input_countries": ["Greece"], "root_count": 5,
+        "minimum_total_changes": 4, "ambiguous_internal_node_count": 2,
+        "country_tree_figure": "all.svg", "network_figure": "focus.svg", "full_network_figure": "all.svg",
+        "possible_network_figure": "all.svg", "possible_input_network_figure": "focus.svg",
+        "edges": [{"source": "Greece", "target": "Italy", "representative_count": 2,
+                   "min_changes": 1, "max_changes": 3},
+                  {"source": "India", "target": "France", "representative_count": 0,
+                   "min_changes": 0, "max_changes": 2}],
         "nearest_edges": [{"source": "Greece", "target": "Italy", "comparison_count": 3,
             "allele_mismatches_min": 1, "allele_mismatches_max": 2,
             "shared_loci_min": 620, "shared_loci_max": 629}],
@@ -500,14 +507,18 @@ def test_network_viewer_filters_input_country_links_and_retains_all_nearest_ties
     assert 'src="all.svg"' in views[0]["all"]
     assert "India" not in views[0]["input"]
     assert "India" in views[0]["all"]
-    assert "1–2" in views[0]["input"]
+    assert "<td>1</td><td>3</td>" in views[0]["input"]
     assert "620–629" in views[0]["input"]
     assert "Unknown" in views[1]["input"]
+    assert '<option value="all">All country links</option>' in html
     assert '<option value="input">Input-country links</option>' in html
+    assert '<option value="possible">Include alternative possible links</option>' in html
+    assert "Minimum total changes" in views[0]["all"]
+    assert "Changes in displayed reconstruction" in views[0]["all"]
     assert '<option value="0">All inputs</option>' in html
     assert '<noscript>' in html
-    assert "not probability or confidence" in html
-    assert "estimation or sampling" in html
+    assert "not confidence or probabilities" in html
+    assert "fixed NJ topology" in html
 
 
 def test_network_viewer_excludes_foreign_missing_and_non_image_paths(tmp_path: Path) -> None:

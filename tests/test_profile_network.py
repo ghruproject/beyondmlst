@@ -108,3 +108,103 @@ def test_nearest_country_outside_comparability_cohort_kept_from_evidence():
             country='Germany', status='matched', allele_differences=1, shared_called_loci=629)])
     assert data['nearest_edges'][0]['target'] == 'Germany'
     assert data['views'][0]['nearest_edges'][0]['context_ids'] == ['outside']
+
+
+def _brute_force(t, countries):
+    """Independent enumeration oracle for tiny trees, including wildcard tips."""
+    from collections import Counter
+    from itertools import product
+
+    nodes = list(t.find_clades(order='preorder'))
+    states = sorted(set(countries.values()) - {None})
+    free = [n for n in nodes if not n.is_terminal() or countries.get(n.name) is None]
+    optimum, histories, assignments = float('inf'), [], []
+    for values in product(states, repeat=len(free)):
+        assigned = dict(zip(free, values))
+        assigned.update({n: countries[n.name] for n in nodes
+                         if n.is_terminal() and countries.get(n.name) is not None})
+        counts = Counter(tuple(sorted((assigned[n], assigned[c])))
+                         for n in nodes for c in n.clades if assigned[n] != assigned[c])
+        score = sum(counts.values())
+        if score < optimum:
+            optimum, histories, assignments = score, [], []
+        if score == optimum:
+            histories.append(counts)
+            assignments.append(assigned)
+    pairs = set().union(*(set(h) for h in histories))
+    return optimum, {pair: (min(h[pair] for h in histories), max(h[pair] for h in histories))
+                     for pair in pairs}, {i: {a[n] for a in assignments}
+                                         for i, n in enumerate(nodes)}
+
+
+def test_exact_ranges_match_all_optimal_tiny_histories():
+    from chronoclade.profile_network import _reconstruct
+
+    cases = [('((a,b),(c,d));', dict(a='A', b='B', c='C', d='A')),
+             ('(a,b,c,d);', dict(a='A', b='B', c='C', d=None)),
+             ('((a,b),c);', dict(a='A', b='A', c='B')),
+             ('((a,b),c);', dict(a='A', b=None, c='A'))]
+    for newick, countries in cases:
+        t = Phylo.read(StringIO(newick), 'newick')
+        locations = sorted(set(countries.values()) - {None})
+        counts, ranges, audit = _reconstruct(t, countries, locations)
+        optimum, expected, allowed = _brute_force(t, countries)
+        assert ranges == expected
+        assert sum(counts.values()) == optimum == audit['optimum_changes']
+        assert sum(b['changed'] for b in audit['branches']) == optimum
+        assert all(set(n['allowed_states']) == allowed[n['id']] for n in audit['nodes'])
+        by_id = {n['id']: n for n in audit['nodes']}
+        for branch in audit['branches']:
+            assert branch['source'] == by_id[branch['parent_id']]['inferred_state']
+            assert branch['target'] == by_id[branch['child_id']]['inferred_state']
+            if branch['unknown_tip']:
+                assert not branch['changed']
+                assert by_id[branch['child_id']]['state'] is None
+        assert (counts, ranges, audit) == _reconstruct(t, countries, locations)
+
+
+def test_tied_histories_keep_possible_only_pairs_and_nonjoint_ranges():
+    from chronoclade.profile_network import _reconstruct
+
+    t = Phylo.read(StringIO('(a,b,c);'), 'newick')
+    counts, ranges, audit = _reconstruct(t, dict(a='A', b='B', c='C'), ['A', 'B', 'C'])
+    assert ranges == {('A', 'B'): (0, 1), ('A', 'C'): (0, 1), ('B', 'C'): (0, 1)}
+    assert sum(counts.values()) == 2
+    assert len(counts) == 2  # The union of three pairs is not one coherent history.
+    assert set(audit['nodes'][0]['allowed_states']) == {'A', 'B', 'C'}
+
+
+def test_weighted_network_counts_are_coherent_and_palette_stable(tmp_path):
+    import json
+    from chronoclade.profile_network import country_palette, _weighted_layout
+
+    data = build_profile_network(tree(), records())
+    assert sum(e['representative_count'] for e in data['edges']) == data['optimum_changes']
+    assert all(e['min_changes'] <= e['representative_count'] <= e['max_changes']
+               for e in data['edges'])
+    assert all(view['country_colors'][name] == colour for view in data['views']
+               for name, colour in data['country_colors'].items()
+               if name in view['country_colors'])
+    assert country_palette(['Greece'])['Greece'] == data['country_colors']['Greece']
+    json.dumps(data)  # No NumPy scalar values or tree objects escape the audit.
+    positions = _weighted_layout(data['nodes'], data['edges'])
+    assert positions == _weighted_layout(data['nodes'], data['edges'])
+    changed_inputs = [dict(n, is_input_country=not n['is_input_country']) for n in data['nodes']]
+    assert positions == _weighted_layout(changed_inputs, data['edges'])
+    draw_profile_network(data, tmp_path / 'full.svg')
+    assert all(n['country'] in (tmp_path / 'full.svg').read_text() for n in data['nodes'])
+    draw_profile_network(data, tmp_path / 'possible.svg', include_possible=True)
+
+
+def test_repeated_changes_produce_weight_two_and_single_tip_zero():
+    from chronoclade.profile_network import _reconstruct
+
+    t = Phylo.read(StringIO('((a,b),(c,d));'), 'newick')
+    counts, ranges, audit = _reconstruct(t, dict(a='A', b='B', c='A', d='B'), ['A', 'B'])
+    assert counts == {('A', 'B'): 2}
+    assert ranges == {('A', 'B'): (2, 2)}
+    assert audit['optimum_changes'] == 2
+    one = Phylo.read(StringIO('a;'), 'newick')
+    counts, ranges, audit = _reconstruct(one, {'a': 'A'}, ['A'])
+    assert counts == ranges == {}
+    assert audit['optimum_changes'] == 0

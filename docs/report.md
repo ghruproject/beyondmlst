@@ -114,27 +114,35 @@ The view uses TreeTime's maximum-likelihood ancestral reconstruction, not
 StrainHub's parsimony algorithm. It is available after an unsupported dating
 result because it uses the rooted genetic tree and does not require dates.
 
-The current profile-first `fast` report has a separate, undirected network based
-on possible maximum-parsimony changes on the full selected cgMLST NJ tree. Its
-default view shows links involving input countries; controls switch to all
-country links or an input level-5 LIN subgroup within the selected context pool.
-Blue nodes contain input genomes, grey nodes contain only public comparisons,
-and node sizes count sampled genomes. These are not estimates of prevalence.
+The profile-first `fast` report shows a representative country history on the
+selected cgMLST NJ topology, alongside the same history mapped onto the tree.
+The default network includes all country pairs. Input-country links and
+alternative possible links are optional views, and each input LIN subgroup has
+its own viewer. Node colours identify country states; a dark outline marks a
+country containing input genomes. Unknown-country sample tips remain grey and
+unassigned. Link thickness counts changes in the displayed coherent history;
+dashed links show variation across equally optimal histories.
 
-Roots are chosen deterministically to cover input genomes, different countries
-and tree-distance diversity. Root coverage counts how often a country pair is
-possible across those roots. Dashed links indicate root sensitivity or ambiguous
-ancestral state choices. A solid link is still only a possible reconstructed
-connection; neither style is a probability or confirmation of transmission.
-This does not quantify tree-topology or sampling uncertainty. Unknown countries
-are counted separately and are not inferred as a geographic state.
+The reported minimum and maximum changes for every country pair are exact
+counts across all equally optimal parsimony assignments, conditional on the
+fixed NJ topology and observed tip countries. A possible-link view adds pairs
+whose maximum is nonzero even when the representative history has no such
+change. These ranges are not probabilities or confidence, and possible links
+do not all occur together in one history. Deterministic seeded tie-breaking
+selects a coherent representative without assigning ties by country name.
+Alternate roots are retained as a diagnostic and do not support the
+representative reconstruction. The calculation does not quantify tree
+topology, sampling or metadata uncertainty, and does not establish transmission,
+movement direction, acquisition location or prevalence. A nearest-country
+table separately reports observed input-to-relative comparisons from cgMLST
+distances, including ties and callable-locus denominators.
 
 A separate table reports input-country/nearest-relative-country comparisons
 from actual cgMLST distances, with all ties and callable-locus denominators.
 Subgroup filtering selects input genomes while retaining their nearest matches
 across the complete selected CG pool, even outside the subgroup tree. Unknown
 countries remain visible in this observed comparison table. Downloads retain
-both the reconstruction audit and the nearest-country comparison data.
+the reconstruction audit and nearest-country comparison data.
 
 Older assembly-based fast-screen reports do not include the full-report network.
 

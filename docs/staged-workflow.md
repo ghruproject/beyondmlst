@@ -117,16 +117,25 @@ interval midpoints; it is exploratory and never passes the final clock gate.
 The `finish` stage evaluates dates on the corrected genomic workflow and
 creates a calendar tree only when the configured temporal screen supports it.
 
-Fast location networks show undirected possible maximum-parsimony connections
-on the full selected profile tree, across roots chosen for input, country and
-genetic diversity. Root coverage records how often a possible country pair
-appears; it is not probability or confidence and does not estimate topology or
-sampling uncertainty. Dashed links also mark ambiguous ancestral states.
-The default input-country focus can be switched to the wider network or a
-version-compatible input level-5 LIN subgroup. Each CG retains one viewer.
-Actual nearest-relative country comparisons, including ties, appear separately
-and continue to use the complete selected CG pool. None of these connections
-prove transmission, direction of spread or acquisition location.
+Fast location networks show one coherent representative maximum-parsimony
+history on the selected profile NJ topology, with the same country states shown
+on the tree. All country links and the representative reconstruction are shown
+by default; controls offer input-country links and a view that adds alternative
+possible links. A subgroup selector follows the input level-5 LIN prefixes.
+Thickness counts changes in the displayed history, while dashed links mark
+variation across optimal assignments. The table retains every possible pair,
+including pairs with zero changes in the representative history.
+
+Minimum and maximum changes are exact counts over all equally optimal
+assignments, conditional on that fixed topology and the observed tip countries.
+Alternative possible links are an envelope: they do not occur simultaneously
+in one reconstruction. Deterministic seeded tie-breaking selects the displayed
+history without resolving ties by alphabetical country order. Alternate-root
+reconstructions remain a diagnostic, not support for this representative
+history. These results do not estimate probabilities, confidence, topology or
+sampling uncertainty, and do not prove transmission, direction of spread or
+acquisition location. Observed nearest-relative country comparisons, including
+ties, remain a separate table using the complete selected CG pool.
 
 ## Current typing-data availability
 

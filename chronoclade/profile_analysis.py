@@ -188,9 +188,10 @@ def _location_network(tree, rows, nearest_neighbours=None):
     return build_profile_network(tree, rows, nearest_neighbours)
 
 
-def write_profile_network_figures(output, cohort_id, network):
+def write_profile_network_figures(output, cohort_id, network, records=(), display_ids=None):
     """Export alternate views for one report viewer, with a complete audit."""
     from chronoclade.profile_network import draw_profile_network
+    from chronoclade.profile_country_tree import draw_country_tree
 
     output = Path(output)
     network.setdefault("id", "all")
@@ -202,6 +203,25 @@ def write_profile_network_figures(output, cohort_id, network):
         )
         model["full_network_figure"] = draw_profile_network(
             model, output / f"{stem}_location_network_all.svg", focus_inputs=False
+        )
+        model["possible_network_figure"] = draw_profile_network(
+            model, output / f"{stem}_location_network_possible.svg", focus_inputs=False,
+            include_possible=True,
+        )
+        model["possible_input_network_figure"] = draw_profile_network(
+            model, output / f"{stem}_location_network_input_possible.svg", focus_inputs=True,
+            include_possible=True,
+        )
+        nearest_ids = {ident for edge in model.get("nearest_edges", [])
+                       for ident in edge.get("context_ids", [])}
+        if records:
+            model["country_tree_figure"] = draw_country_tree(
+                model, records, output / f"{stem}_country_tree.svg",
+                display_ids=display_ids, nearest_ids=nearest_ids,
+            )
+        model["transition_counts_path"] = _csv(
+            output / f"{stem}_country_transition_counts.csv", model["edges"],
+            ["source", "target", "representative_count", "min_changes", "max_changes"],
         )
         model["nearest_country_connections_path"] = _csv(
             output / f"{stem}_nearest_country_connections.csv", model["nearest_edges"],
@@ -215,7 +235,7 @@ def write_profile_network_figures(output, cohort_id, network):
     return network["network_figure"]
 
 
-def _plots(output, cohort_id, coords, rows, network):
+def _plots(output, cohort_id, coords, rows, network, display_ids=None):
     import matplotlib
 
     matplotlib.use("Agg")
@@ -244,7 +264,9 @@ def _plots(output, cohort_id, coords, rows, network):
     fig.savefig(path)
     plt.close(fig)
     paths["country_figure"] = str(path)
-    paths["network_figure"] = write_profile_network_figures(output, cohort_id, network)
+    paths["network_figure"] = write_profile_network_figures(
+        output, cohort_id, network, rows, display_ids
+    )
     return paths
 
 
@@ -658,9 +680,13 @@ def analyse_profiles(
             cohort["warnings"].append("Single comparable profile: no NJ tree or date diagnostic.")
         network["cohort_id"] = cohort_id
         summary["location_network"].append(network)
-        cohort.update(_plots(output, cohort_id, coords, rows, network))
+        cohort.update(_plots(output, cohort_id, coords, rows, network,
+                             cohort.get("tree_display_sample_ids")))
         summary["paths"][f"{cohort_id}_network_audit"] = network["audit_path"]
         summary["paths"][f"{cohort_id}_nearest_country_connections"] = network["nearest_country_connections_path"]
+        summary["paths"][f"{cohort_id}_country_transitions"] = network["transition_counts_path"]
+        if network.get("country_tree_figure"):
+            summary["paths"][f"{cohort_id}_country_tree"] = network["country_tree_figure"]
         cohort["pcoa_csv"] = _csv(
             output / f"{cohort_id}_pcoa.csv",
             [
