@@ -455,8 +455,8 @@ def run(
         ),
     ] = 500,
     tree_limit: Annotated[
-        int, typer.Option("--tree-limit", min=2,
-                          help="Tips shown per fast NJ tree; all inputs and nearest ties are retained")
+        int, typer.Option("--tree-limit", min=2, hidden=True,
+                          help="Legacy option; staged trees use the shared --context-size selection")
     ] = 80,
     lin_min_context: Annotated[
         int, typer.Option("--lin-min-context", min=1,
@@ -465,7 +465,7 @@ def run(
     context_size: Annotated[
         int,
         typer.Option(
-            "--context-size", min=0, help="Context assemblies per lineage; queries are additional"
+            "--context-size", min=0, help="Public genomes per dataset in the shared tree selection; inputs are additional"
         ),
     ] = 50,
     nearest_per_query: Annotated[int, typer.Option("--nearest-per-query", min=1)] = 3,

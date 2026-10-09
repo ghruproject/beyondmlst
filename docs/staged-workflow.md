@@ -25,10 +25,9 @@ defaults are:
 | --- | ---: | --- |
 | `--mode` | `fast` | Stop after the profile report (`fast`), corrected-tree stage (`full`), or dating (`finish`) |
 | `--profile-limit` | `500` | Public profile cap for inputs without adaptive cgLIN context; `0` disables public context |
-| `--tree-limit` | `80` | Tips displayed per fast NJ tree; inputs and tied nearest relatives are always retained |
 | `--lin-min-context` | `20` | Public comparisons required for each represented LIN prefix before narrowing the context level |
-| `--context-size` | `50` | Maximum public context assemblies selected per lineage; focal query genomes are additional |
-| `--nearest-per-query` | `3` | Nearest public profile candidates considered for each query during assembly selection |
+| `--context-size` | `50` | Public genomes in the shared selection for the displayed NJ tree, full and finish; input genomes are additional |
+| `--nearest-per-query` | `3` | Nearest public profile candidates considered for each query during shared selection |
 | `--profile-bootstraps` | `10` | Requested locus-bootstrap replicates for descriptive group support |
 | `--group-distance` | `0.02` | Exploratory complete-linkage cgMLST mismatch fraction |
 | `--date-randomisations` | `100` | Tip-date permutations in `finish` |
@@ -55,9 +54,13 @@ The union of those context groups is deduplicated and its profiles are retrieved
 Nearest relatives are calculated from actual cgMLST mismatch fractions, with
 allele differences, callable denominators and all ties retained. Country/year
 tables use the complete chosen metadata pool; PCoA uses usable profiles. The NJ
-figure retains inputs and all nearest ties, then adds genetic diversity up to
-`--tree-limit`. The full NJ Newick remains available. The tree display cap does
-not restrict the nearest-neighbour search. Each ST/CG has one set of figures and
+figure uses one selection shared with full and finish: all inputs plus up to
+`--context-size` public genomes, chosen once from close relatives, genetic groups,
+years, locations and genetic diversity. `context_selection.json` records the IDs
+and reasons. The full-pool NJ Newick remains available. This selection does
+not restrict the nearest-neighbour search or country network. Selected genomes
+without comparable profiles are listed as absent from the NJ view and retained
+for assembly analysis. Each ST/CG has one set of figures and
 its own subsequent assembly/temporal analysis. Multiple datasets are linked
 from `fast/profile_report.html`.
 
@@ -68,7 +71,7 @@ pathway; their reports explicitly record missing evidence.
 | Mode | Work and report |
 | --- | --- |
 | `fast` | Types available query assemblies when configured, resolves query and bounded public typing context, and writes `fast/profile_report.html` plus `fast/profile_analysis.json` and supporting results. It does not download context assemblies or build a recombination-corrected tree. The report shows input/profile coverage, exclusions, country figures, PCoA and neighbour-joining views where available, descriptive groups, exploratory allele-unit root-to-tip summaries, and nearest profile relatives. |
-| `full` | Reuses the profile results to select up to 50 public context assemblies per lineage, with all focal query genomes retained, then runs the corrected genomic workflow. The stage landing page is `full.html`; lineage reports are saved as `report.full.html` beside the ordinary workflow outputs, with `supporting_results.full.zip`. This stage does not run date randomisations or create a time tree. |
+| `full` | Acquires assemblies for the exact genome IDs selected during fast for the displayed NJ tree, with all input genomes retained, then runs the corrected genomic workflow. The stage landing page is `full.html`; lineage reports are saved as `report.full.html` beside the ordinary workflow outputs, with `supporting_results.full.zip`. This stage does not run date randomisations or create a time tree. |
 | `finish` | Runs `full` and then the temporal tests. It writes `finish.html`, lineage `report.finish.html` files and `supporting_results.finish.zip`. A dated tree is produced only if the temporal evidence gate passes. |
 
 The top-level `index.html` links to completed stages. `stages.json` records

@@ -67,7 +67,7 @@ def draw_profile_tree(tree, records, labels, path, nearest_ids=()):
     if nearest_ids:
         handles.append(Line2D([], [], color="#e66101", marker="*", markersize=9,
                               markerfacecolor="white", markeredgewidth=1.5,
-                              linestyle="None", label="Nearest public relatives (ties included)"))
+                              linestyle="None", label="Nearest public relatives"))
     ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.01),
               frameon=False, ncol=len(handles))
     ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
@@ -274,6 +274,74 @@ def _plots(output, cohort_id, coords, rows, network, display_ids=None):
         output, cohort_id, network, rows, display_ids
     )
     return paths
+
+
+def set_tree_display_samples(analysis, records, selected_sample_ids):
+    """Display the shared assembly selection while keeping full-pool calculations.
+
+    Pruning is presentation only. The saved full NJ tree and reconstructed country
+    states remain the source of the complete-pool network and distance analyses.
+    """
+    from chronoclade.profile_country_tree import draw_country_tree
+
+    by_id = {row["sample_id"]: row for row in records}
+    requested = set(selected_sample_ids)
+    if requested - by_id.keys():
+        raise ValueError("Tree display selection contains genomes outside the dataset")
+    displayed = set()
+    for cohort in analysis.get("cohorts", []):
+        members = set(cohort["sample_ids"])
+        shown = members & requested
+        displayed.update(shown)
+        cohort["tree_display_sample_ids"] = sorted(shown)
+        cohort["tree_display_limit"] = len(requested)
+        cohort["tree_display_scope"] = "shared_full_finish_selection"
+        cohort["warnings"] = [warning for warning in cohort.get("warnings", [])
+                              if not warning.startswith(("Tree figure shows ", "Tree display limit exceeded"))]
+        if shown != members:
+            cohort["warnings"].append(
+                f"Tree figure shows {len(shown)} of {len(members)} comparable profiles, "
+                "using the same selected genomes as full and finish. "
+                "Distances, PCoA and the country network still use the complete profile pool."
+            )
+        nearest_ids = {item["context_id"] for item in analysis.get("nearest_neighbours", [])
+                       if item.get("status") == "matched"
+                       and item.get("cohort_id") == cohort["cohort_id"]}
+        figure = cohort.get("tree_figure")
+        if figure and shown:
+            tree = Phylo.read(cohort["tree_path"], "newick")
+            for tip in list(tree.get_terminals()):
+                if tip.name not in shown:
+                    tree.prune(tip)
+            draw_profile_tree(tree, [by_id[ident] for ident in sorted(shown)],
+                              analysis.get("sample_labels", {}), Path(figure), nearest_ids)
+        elif figure:
+            Path(figure).unlink(missing_ok=True)
+            cohort.pop("tree_figure", None)
+        network = next((row for row in analysis.get("location_network", [])
+                        if row.get("cohort_id") == cohort["cohort_id"]), None)
+        if network is None:
+            continue
+        for model in [network, *network.get("views", [])]:
+            country_figure = model.get("country_tree_figure")
+            if country_figure:
+                result = draw_country_tree(model, [by_id[ident] for ident in sorted(members)],
+                                           Path(country_figure), display_ids=shown,
+                                           nearest_ids=nearest_ids)
+                if result is None:
+                    Path(country_figure).unlink(missing_ok=True)
+                    model.pop("country_tree_figure", None)
+        for model in [network, *network.get("views", [])]:
+            if model.get("audit_path"):
+                Path(model["audit_path"]).write_text(json.dumps(model, indent=2) + "\n")
+        if not network.get("country_tree_figure"):
+            analysis.get("paths", {}).pop(f"{cohort['cohort_id']}_country_tree", None)
+    analysis["tree_display_selection"] = {
+        "requested_sample_ids": sorted(requested),
+        "displayed_sample_ids": sorted(displayed),
+        "without_comparable_profiles": sorted(requested - displayed),
+        "scope": "Same planned genome selection for fast tree display, full and finish",
+    }
 
 
 def analyse_profiles(

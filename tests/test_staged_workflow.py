@@ -76,7 +76,7 @@ def test_pins_aliases_budget_and_background_without_profiles(tmp_path):
 
 @pytest.fixture
 def stage_mocks(monkeypatch):
-    calls = {"resolve": [], "analysis": [], "materialise": [], "workflow": []}
+    calls = {"resolve": [], "analysis": [], "display": [], "materialise": [], "workflow": []}
     inputs = {
         "queries": [row("q", origin="local")],
         "context": [row("c", accession="ERR123")],
@@ -96,6 +96,10 @@ def stage_mocks(monkeypatch):
         path = directory / "report.html"
         path.write_text("fast profiles only")
         return path
+
+    def display(analysis, records, selected_sample_ids):
+        calls["display"].append(list(selected_sample_ids))
+        analysis["tree_display"] = {"sample_ids": list(selected_sample_ids)}
 
     def index(output, stages):
         (output / "index.html").write_text(json.dumps(stages))
@@ -127,6 +131,7 @@ def stage_mocks(monkeypatch):
     monkeypatch.setattr("chronoclade.profile_inputs.resolve_profile_inputs", resolve)
     monkeypatch.setattr("chronoclade.profile_inputs.materialise_assemblies", materialise)
     monkeypatch.setattr("chronoclade.profile_analysis.analyse_profiles", analyse)
+    monkeypatch.setattr("chronoclade.profile_analysis.set_tree_display_samples", display)
     monkeypatch.setattr("chronoclade.profile_report.write_profile_report", report)
     monkeypatch.setattr("chronoclade.profile_report.write_stage_index", index)
     monkeypatch.setattr("chronoclade.workflow.run_workflow", workflow)
@@ -206,21 +211,23 @@ def test_changed_selection_invalidates_stale_dated_outputs(tmp_path, stage_mocks
     assert not dated.exists()
 
 
-def test_invalid_pin_rejected_before_any_assembly_download(tmp_path, stage_mocks):
+@pytest.mark.parametrize("mode", ["fast", "full", "finish"])
+def test_invalid_pin_rejected_before_any_assembly_download(tmp_path, stage_mocks, mode):
     calls, _ = stage_mocks
     with pytest.raises(WorkflowError, match="absent|pool|Requested"):
         run_staged_workflow(
-            None, collection="id", output=tmp_path, mode="full", include_genomes=["missing"]
+            None, collection="id", output=tmp_path, mode=mode, include_genomes=["missing"]
         )
     assert calls["materialise"] == []
 
 
-def test_pin_outside_query_lineage_is_not_silently_ignored(tmp_path, stage_mocks):
+@pytest.mark.parametrize("mode", ["fast", "full"])
+def test_pin_outside_query_lineage_is_not_silently_ignored(tmp_path, stage_mocks, mode):
     calls, inputs = stage_mocks
     inputs["context"].append(row("other", lineage="ST1"))
     with pytest.raises(WorkflowError, match="lineage|select|Requested"):
         run_staged_workflow(
-            None, collection="id", output=tmp_path, mode="full", include_genomes=["other"]
+            None, collection="id", output=tmp_path, mode=mode, include_genomes=["other"]
         )
     assert calls["materialise"] == []
 
@@ -365,3 +372,71 @@ def test_cg_datasets_remain_separate_through_assembly_selection(tmp_path, stage_
         frozenset({"q", "c"}), frozenset({"q2", "c2"})}
     assert {r["lineage"] for group in calls["materialise"] for r in group} == {
         "ST147_CG147", "ST147_CG2"}
+
+
+@pytest.mark.parametrize("mode", ["fast", "full", "finish"])
+def test_all_stages_share_one_selection_with_pins_and_distance_ties(
+    tmp_path, stage_mocks, monkeypatch, mode
+):
+    calls, inputs = stage_mocks
+    inputs["context"] = [row("c4"), row("c2"), row("c3", accession="PIN"), row("c1")]
+    selection_calls = []
+    original_selector = select_assembly_context
+
+    def select(*args, **kwargs):
+        selection_calls.append(kwargs)
+        return original_selector(*args, **kwargs)
+
+    def analyse(records, *, output, **kwargs):
+        calls["analysis"].append(records)
+        return pair_table(output / "pairs.csv", [("q", "c1", 0.01), ("q", "c2", 0.01),
+                                                ("q", "c3", 0.9), ("q", "c4", 0.7)])
+
+    monkeypatch.setattr("chronoclade.staged_workflow.select_assembly_context", select)
+    monkeypatch.setattr("chronoclade.profile_analysis.analyse_profiles", analyse)
+    result = run_staged_workflow(
+        None, collection="id", output=tmp_path, mode=mode, context_size=3,
+        nearest_per_query=2, include_genomes=["PIN"], tree_limit=2,
+    )
+    selection = result["context_selections"][0]
+    assert len(selection_calls) == 1
+    assert selection_calls[0]["nearest_per_query"] == 2
+    assert selection["selected_context_ids"][:2] == ["c3", "c1"]
+    selected_ids = ["q"] + selection["selected_context_ids"]
+    assert calls["display"] == [selected_ids]
+    saved_fast = json.loads((tmp_path / "fast" / "profile_analysis.json").read_text())
+    assert saved_fast["shared_selection"]["selected_sample_ids"] == selected_ids
+    assert saved_fast["context_selections"] == result["context_selections"]
+    assert json.loads((tmp_path / "context_selection.json").read_text()) == result["context_selections"]
+    assert {r["sample_id"] for r in calls["analysis"][0]} == {"q", "c1", "c2", "c3", "c4"}
+    if mode != "fast":
+        assert [r["sample_id"] for r in calls["materialise"][0]] == selected_ids
+        assert calls["materialise"][0][1]["selection_reason"] == "user_requested"
+        assert calls["workflow"] == (["corrected", "full"] if mode == "finish" else ["corrected"])
+    else:
+        assert calls["materialise"] == []
+
+
+@pytest.mark.parametrize("corruption", ["duplicate", "different_pool", "missing_query"])
+def test_staged_rejects_inconsistent_saved_shared_selection(
+    tmp_path, stage_mocks, monkeypatch, corruption
+):
+    from chronoclade.fast_workflow import run_fast_datasets
+
+    calls, _ = stage_mocks
+
+    def corrupt(*args, **kwargs):
+        analysis, report, datasets = run_fast_datasets(*args, **kwargs)
+        selection = analysis["context_selections"][0]
+        if corruption == "duplicate":
+            selection["selected_context_ids"].append("c")
+        elif corruption == "different_pool":
+            selection["available_context_ids"] = ["different"]
+        else:
+            selection["selected_sample_ids"] = ["c"]
+        return analysis, report, datasets
+
+    monkeypatch.setattr("chronoclade.fast_workflow.run_fast_datasets", corrupt)
+    with pytest.raises(WorkflowError, match="Shared context selection"):
+        run_staged_workflow(None, collection="id", output=tmp_path, mode="full")
+    assert calls["materialise"] == []

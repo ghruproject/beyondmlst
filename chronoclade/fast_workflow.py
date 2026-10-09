@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from chronoclade.adaptive_context import annotate_cglin_datasets
+from chronoclade.errors import WorkflowError
 from chronoclade.metadata import slugify_lineage
 
 
@@ -45,16 +46,31 @@ def geography(rows):
 
 
 def run_fast_datasets(inputs, output, *, seed, bootstrap_replicates,
-                      distance_threshold, tree_limit=80):
-    from chronoclade.profile_analysis import analyse_profiles, _date_interval
+                      distance_threshold, tree_limit=80, context_size=50,
+                      nearest_per_query=3, include_genomes=None):
+    from chronoclade.profile_analysis import analyse_profiles, _date_interval, set_tree_display_samples
     from chronoclade.profile_report import write_profile_report, write_fast_group_index
     from chronoclade.report import write_supporting_bundle
+    from chronoclade.staged_workflow import select_assembly_context
 
     groups = defaultdict(list)
     for row in inputs["queries"]:
         groups[(row["species"], row["lineage"])].append(row)
+    selectable = [r for r in inputs["context"] if (r["species"], r["lineage"]) in groups]
+    if len({r["sample_id"] for r in inputs["queries"] + selectable}) != len(inputs["queries"] + selectable):
+        raise WorkflowError("Duplicate sample identifiers in query lineage pools")
+    requested = {}
+    for identifier in include_genomes or []:
+        matches = [r for r in selectable if identifier in {
+            r["sample_id"], str(r.get("source_genome_id", "")), str(r.get("accession", ""))}]
+        if len(matches) != 1:
+            raise WorkflowError(
+                f"Requested context genome {identifier!r} is not uniquely in a query lineage pool"
+            )
+        requested[identifier] = (matches[0]["species"], matches[0]["lineage"])
     output = Path(output)
-    reports, results, pairs = [], [], []
+    output.mkdir(parents=True, exist_ok=True)
+    reports, results, pairs, selections = [], [], [], []
     for key, queries in sorted(groups.items()):
         context = [r for r in inputs["context"] if (r["species"], r["lineage"]) == key]
         catalogue = [r for r in inputs.get("catalogue_rows", [])
@@ -64,10 +80,29 @@ def run_fast_datasets(inputs, output, *, seed, bootstrap_replicates,
                                     bootstrap_replicates=bootstrap_replicates,
                                     distance_threshold=distance_threshold,
                                     tree_limit=tree_limit)
+        selected, selection = select_assembly_context(
+            queries, context, analysis, size=context_size,
+            nearest_per_query=nearest_per_query,
+            include=[identifier for identifier, dataset in requested.items() if dataset == key],
+            seed=seed,
+        )
+        selection.update(
+            selected_context_ids=[r["sample_id"] for r in selected],
+            selected_sample_ids=[r["sample_id"] for r in queries + selected],
+            available_context_ids=sorted(r["sample_id"] for r in context),
+            query_ids=[r["sample_id"] for r in queries],
+        )
+        set_tree_display_samples(analysis, queries + context, selection["selected_sample_ids"])
+        analysis["shared_selection"] = selection
+        selections.append(dict(species=key[0], lineage=key[1], **selection))
+        selection_path = directory / "context_selection.json"
+        selection_path.write_text(json.dumps(selection, indent=2) + "\n")
+        analysis.setdefault("paths", {})["context_selection"] = str(selection_path)
         analysis.update(species=key[0], lineage=key[1],
                         metadata_geography=geography(queries + context),
                         public_catalogue_geography=geography(catalogue))
         provenance = deepcopy(inputs["provenance"])
+        provenance["shared_selection"] = selection
         provenance["coverage"] = {
             label: {"total": len(rows),
                     "profiles_available": sum(bool(r.get("cgmlst_profile") or r.get("cgmlst_novel_alleles")) for r in rows)}
@@ -104,10 +139,14 @@ def run_fast_datasets(inputs, output, *, seed, bootstrap_replicates,
             with Path(pair_path).open() as handle:
                 pairs.extend(csv.DictReader(handle))
     if len(results) == 1:
+        results[0]["context_selections"] = selections
+        (output / "profile_analysis.json").write_text(json.dumps(results[0], indent=2) + "\n")
+        write_supporting_bundle(output)
         return results[0], Path(reports[0]["report"]), reports
-    # Native assembly selection consumes this pooled distance table, but never
-    # selects across dataset boundaries. Figures remain separate per dataset.
-    combined = {"nearest_neighbours": [], "cohorts": [], "genetic_groups": [], "paths": {}}
+    # Keep complete-pool distance evidence together for downstream inspection;
+    # selections and figures remain separate per dataset.
+    combined = {"nearest_neighbours": [], "cohorts": [], "genetic_groups": [], "paths": {},
+                "context_selections": selections}
     for result in results:
         combined["nearest_neighbours"].extend(result.get("nearest_neighbours", []))
         combined["cohorts"].extend(result.get("cohorts", []))
@@ -119,6 +158,10 @@ def run_fast_datasets(inputs, output, *, seed, bootstrap_replicates,
             writer.writeheader()
             writer.writerows(pairs)
         combined["paths"]["pairwise_distances"] = str(pair_path)
-    report = write_fast_group_index(output, reports, provenance=inputs["provenance"])
+    selection_path = output / "context_selection.json"
+    selection_path.write_text(json.dumps(selections, indent=2) + "\n")
+    combined["paths"]["context_selection"] = str(selection_path)
+    report = write_fast_group_index(output, reports,
+                                    provenance=dict(inputs["provenance"], shared_selection=selections))
     (output / "profile_analysis.json").write_text(json.dumps(combined, indent=2) + "\n")
     return combined, report, reports

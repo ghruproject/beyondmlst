@@ -121,6 +121,12 @@ It shows that representative history on the selected rooted cgMLST NJ tree.
 The complete network is interactive by default, using the same vis-network
 repulsion layout approach as StrainHub. Countries can be dragged, the view can
 be zoomed and panned, and selecting a country highlights its direct neighbours.
+The displayed NJ tree and its country-coloured version use the same selected
+genome IDs planned for full and finish. Selection occurs once during fast and is
+recorded in `context_selection.json`; the country network, PCoA and neighbour
+comparisons still use the complete usable profile pool. The full-pool NJ Newick
+is retained. Selected genomes without comparable profiles are explicitly listed
+as absent from the NJ display and retained for assembly analysis.
 Node sizes follow the selected centrality metric: indegree, outdegree, degree,
 betweenness, closeness or source/hub ratio. The JavaScript library is bundled
 locally; the report requires no Internet connection. Static figures remain
