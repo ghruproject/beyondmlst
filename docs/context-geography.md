@@ -63,7 +63,9 @@ the deduplicated counts reconcile with group plus assignment-coverage totals.
 Horizontal count and percentage plots export publication-sized SVG and 180 dpi PNG.
 Groups paginate at 24 per figure. The visual displays the top 11 named countries by
 full public-catalogue sample count, plus Unknown; remaining countries form Other.
-This fixed rule applies across cohorts and depths, and the full table remains available.
+This fixed public-country rule applies across depths. Bounded selected/focal cohorts
+show all named countries when at most 12 are present; their captions expose the rule.
+The full table remains available.
 Country colours are deterministic across runs and panels; Unknown and Other have
 distinct reserved colours. Figures label sample-unit denominators, known/Unknown N,
 singletons and small groups. Empty cohorts or unsupported/missing annotation show a
