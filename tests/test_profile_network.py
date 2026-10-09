@@ -271,9 +271,38 @@ def test_directed_network_metrics_and_renderer(tmp_path):
         dict(source='A', target='C', representative_count=0),
     ])
     assert metrics[0] == dict(country='A', in_degree=1, out_degree=1,
-                              in_changes=1, out_changes=2, source_hub_ratio=2 / 3)
+                              degree=2, betweenness=0.0, closeness=1.0,
+                              in_changes=1, out_changes=2, source_hub_ratio=0.5)
     assert metrics[-1]['source_hub_ratio'] is None
+    assert metrics[-1]['closeness'] is None
     draw_profile_network(data, tmp_path / 'directed.svg')
     assert 'Directed country-state changes' in (tmp_path / 'directed.svg').read_text()
     assert 'root-dependent' in (tmp_path / 'directed.svg').read_text()
     draw_profile_network(data, tmp_path / 'directed_possible.svg', include_possible=True)
+
+
+def test_network_metrics_match_directed_unweighted_strainhub_definitions():
+    from chronoclade.profile_network import _network_metrics
+
+    metrics = _network_metrics(['A', 'B', 'C', 'D', 'isolated'], [
+        dict(source='C', target='A', representative_count=1),
+        dict(source='A', target='B', representative_count=5),
+        dict(source='B', target='C', representative_count=2),
+        dict(source='B', target='D', representative_count=3),
+    ])
+    by_country = {metric['country']: metric for metric in metrics}
+
+    # Degree and SHR count links; in/out changes retain representative weights.
+    assert (by_country['A']['in_degree'], by_country['A']['out_degree'],
+            by_country['A']['degree']) == (1, 1, 2)
+    assert by_country['A']['source_hub_ratio'] == 0.5
+    assert (by_country['A']['in_changes'], by_country['A']['out_changes']) == (1, 5)
+    assert by_country['A']['source_hub_ratio'] != 5 / 6
+
+    # Directed shortest paths pass through A and B; mode="all" closeness uses
+    # undirected distances and remains unnormalised.
+    assert [by_country[c]['betweenness'] for c in ['A', 'B', 'C', 'D']] == [2.0, 3.0, 1.0, 0.0]
+    assert [by_country[c]['closeness'] for c in ['A', 'B', 'C', 'D']] == [0.25, 1 / 3, 0.25, 0.2]
+    assert by_country['isolated']['betweenness'] == 0.0
+    assert by_country['isolated']['closeness'] is None
+    assert by_country['isolated']['source_hub_ratio'] is None

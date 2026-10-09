@@ -221,18 +221,71 @@ def _nearest(rows, comparisons):
 
 
 def _network_metrics(locations, edges):
-    """Descriptive degree/strength of the representative reconstruction only."""
-    result = []
+    """Unweighted directed graph metrics plus weighted representative counts."""
     representative = [edge for edge in edges if edge["representative_count"] > 0]
+    vertices = list(locations)
+    outgoing = {country: set() for country in vertices}
+    incoming = {country: set() for country in vertices}
+    weights_out = {country: 0 for country in vertices}
+    weights_in = {country: 0 for country in vertices}
+    for edge in representative:
+        source, target = edge["source"], edge["target"]
+        outgoing[source].add(target)
+        incoming[target].add(source)
+        weights_out[source] += edge["representative_count"]
+        weights_in[target] += edge["representative_count"]
+
+    # Brandes' algorithm for directed, unweighted betweenness. Like igraph's
+    # default, values are unnormalised and paths follow edge direction.
+    betweenness = {country: 0.0 for country in vertices}
+    for source in vertices:
+        stack, predecessors = [], {country: [] for country in vertices}
+        paths = {country: 0 for country in vertices}
+        distance = {country: -1 for country in vertices}
+        paths[source], distance[source] = 1, 0
+        queue = [source]
+        for vertex in queue:
+            stack.append(vertex)
+            for neighbour in sorted(outgoing[vertex]):
+                if distance[neighbour] < 0:
+                    queue.append(neighbour)
+                    distance[neighbour] = distance[vertex] + 1
+                if distance[neighbour] == distance[vertex] + 1:
+                    paths[neighbour] += paths[vertex]
+                    predecessors[neighbour].append(vertex)
+        dependency = {country: 0.0 for country in vertices}
+        while stack:
+            vertex = stack.pop()
+            for parent in predecessors[vertex]:
+                dependency[parent] += (paths[parent] / paths[vertex]) * (1 + dependency[vertex])
+            if vertex != source:
+                betweenness[vertex] += dependency[vertex]
+
+    # igraph closeness(mode="all"): traverse the undirected adjacency and use
+    # the reciprocal of the sum of reachable distances, without normalization.
+    adjacency = {country: outgoing[country] | incoming[country] for country in vertices}
+    closeness = {}
+    for source in vertices:
+        distances = {source: 0}
+        queue = [source]
+        for vertex in queue:
+            for neighbour in sorted(adjacency[vertex]):
+                if neighbour not in distances:
+                    distances[neighbour] = distances[vertex] + 1
+                    queue.append(neighbour)
+        distance_sum = sum(distances.values())
+        closeness[source] = 1 / distance_sum if distance_sum else None
+
+    result = []
     for country in locations:
-        incoming = [edge for edge in representative if edge["target"] == country]
-        outgoing = [edge for edge in representative if edge["source"] == country]
-        in_weight = sum(edge["representative_count"] for edge in incoming)
-        out_weight = sum(edge["representative_count"] for edge in outgoing)
-        total = in_weight + out_weight
-        result.append(dict(country=country, in_degree=len(incoming), out_degree=len(outgoing),
+        in_degree, out_degree = len(incoming[country]), len(outgoing[country])
+        total_degree = in_degree + out_degree
+        in_weight, out_weight = weights_in[country], weights_out[country]
+        result.append(dict(country=country, in_degree=in_degree, out_degree=out_degree,
+                           degree=total_degree, betweenness=betweenness[country],
+                           closeness=closeness[country],
                            in_changes=in_weight, out_changes=out_weight,
-                           source_hub_ratio=out_weight / total if total else None))
+                           source_hub_ratio=out_degree / total_degree if total_degree else None))
     return result
 
 
