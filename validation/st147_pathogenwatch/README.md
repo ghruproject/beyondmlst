@@ -10,10 +10,12 @@ The public metadata catalogue frozen on **9 October 2026** contains 7,807 genome
 records, 5,721 accession-deduplicated units before QC, and 7,711 explicitly QC-passing
 records. It measures 7,734 records with country/73 Unknown, and date precision of
 4,596 day, 46 month, 2,871 year, 260 missing and 34 invalid. These are raw record counts,
-not patients or infections. The initial complete source envelope's content hash is
-`2a9d9bacb6d6967b0fbcd855758192ce8a365abbfd98c4ea8cc0971ca3365701`.
-Country-alias normalisation refinements change this hash; use the final run's saved
-manifest/provenance rather than treating this historical snapshot as current.
+not patients or infections. The complete source envelope content hash after canonical Myanmar/UAE alias
+normalisation is
+`f8142089ed06ed4e3dc15fd9816353e693bd26920d98881e4b2883b2362759d4`.
+Raw responses are unchanged; re-normalisation removed all 39 apparent country
+conflicts because those values differed only by aliases. Use the saved run
+manifest/provenance to verify the actual input file hashes.
 
 The full annotated **QC-passing** public catalogue deduplicates to 5,647 sample units.
 Measured coverage and group sizes are:

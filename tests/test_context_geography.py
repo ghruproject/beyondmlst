@@ -148,3 +148,12 @@ def test_empty_missing_unsupported(tmp_path):
     assert all(s["assigned_units"] == 0 for s in missing["summaries"])
     with pytest.raises(ValueError, match="5, 6 and 7"):
         geography_tables([], depths=(8,))
+
+
+def test_duplicate_assignment_conflict_never_inherits_representative_lineage():
+    result = geography_tables([row('a', 'India', biosample='SAM1'),
+        row('b', 'India', biosample='SAM1', cgst='different')])
+    assert result['sample_units'] == 1
+    assert all(r['assignment_category'] == 'assignment_coverage' for r in result['rows'])
+    assert all(r['assignment_status'] == 'conflict' for r in result['rows'])
+    assert all(r['cglin_conflict'] for r in result['duplicate_audit'])

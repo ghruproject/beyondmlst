@@ -100,11 +100,18 @@ def _deduplicate(rows: list[dict]) -> tuple[list[dict], list[dict]]:
         countries = {str(r.get('country') or 'Unknown') for r in members}
         if len(countries) > 1:
             unit['country'] = 'Unknown'
-        # Conflicting assignments must not quietly borrow the first record's code.
+        # Conflicting biological-sample assignments remain unresolved at every depth.
+        signatures = {(str(r.get('cglin_raw', '')).replace(',', '.').replace('_', '.'),
+                       str(r.get('cgst', '')), str(r.get('cglin_provisional', '')),
+                       str(r.get('cglin_scheme', '')), str(r.get('cglin_scheme_version', '')))
+                      for r in members}
+        assignment_conflict = len(signatures) > 1
+        if assignment_conflict:
+            unit['cglin_status'] = 'conflict'
         for depth in DEPTHS:
             keys = {r.get(f'cglin_group_{depth}') for r in members
                     if r.get(f'cglin_group_{depth}')}
-            if len(keys) > 1:
+            if assignment_conflict or len(keys) > 1:
                 unit[f'cglin_group_{depth}'] = ''
                 unit[f'cglin_status_{depth}'] = 'conflict'
         for member in members:
@@ -114,6 +121,7 @@ def _deduplicate(rows: list[dict]) -> tuple[list[dict], list[dict]]:
                           'raw_country': member.get('country_raw', member.get('country', '')),
                           'normalised_country': member.get('country') or 'Unknown',
                           'country_conflict': len(countries) > 1,
+                          'cglin_conflict': assignment_conflict,
                           'biosample_conflict': len(biosamples) > 1,
                           'identity_resolved': bool(biosamples) or bool(unit.get('identity_resolved')),
                           'raw_records_in_unit': unit['_raw_n']})

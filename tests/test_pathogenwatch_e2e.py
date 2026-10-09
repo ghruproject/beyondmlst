@@ -190,3 +190,20 @@ def test_explicit_legacy_atb_cli_fixture(tmp_path, monkeypatch):
     audit = json.loads((tmp_path / 'legacy/context_selection.json').read_text())
     assert audit['context_source'] == 'atb'
     assert audit['candidate_pool'] == 1
+
+
+def test_interval_date_candidate_retains_bounds_and_filters_explicitly(tmp_path):
+    from chronoclade.context import filter_candidates, stratified_candidate_pool
+    normalized = {'source_genome_id': 'interval', 'country': 'India', 'biosample': 'SAMN1',
+                  'dated_cohort_eligible': True, 'date_precision': 'interval',
+                  'date_start': '2018-01-01', 'date_end': '2019-12-31',
+                  'collection_date': '2018/2019'}
+    candidate = provider._candidate(normalized, species='Klebsiella pneumoniae',
+                lineage='ST147', scheme='klebsiella', st='147', snapshot='fixture',
+                catalogue_path=tmp_path / 'frozen.json')
+    assert candidate.collection_date.startswith('[2018.')
+    assert candidate.date_start == '2018-01-01' and candidate.date_end == '2019-12-31'
+    assert candidate.year == '2018'
+    assert filter_candidates([candidate], year_from=2018, year_to=2019) == [candidate]
+    assert filter_candidates([candidate], year_to=2017) == []
+    assert stratified_candidate_pool([candidate], limit=8, seed=7) == [candidate]
