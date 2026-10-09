@@ -3,8 +3,7 @@
 ChronoClade supports the **Klebsiella pneumoniae species complex
 scgMLST629_S** nomenclature mirrored by Pathogenwatch from BIGSdb-Pasteur.
 An available genome or an MLST ST does not establish cgLIN capability.
-Other organisms/schemes receive an explicit unsupported status. ATB cgLIN
-annotation is deferred until a comparable versioned assignment route exists.
+Other organisms and schemes receive an explicit unsupported status.
 
 ## Meaning and indexing
 

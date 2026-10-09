@@ -247,7 +247,7 @@ def test_dry_run_without_download_credentials_and_tampered_snapshot(tmp_path, mo
     assert failed.exit_code != 0 and "hash mismatch" in failed.output
 
 
-def test_unsupported_species_does_not_silently_fallback(tmp_path):
+def test_unsupported_species_is_rejected(tmp_path):
     focal, catalogue, export = make_fixture(tmp_path)
     focal.write_text(focal.read_text().replace("Klebsiella pneumoniae", "Escherichia coli"))
     result = CliRunner().invoke(
@@ -255,62 +255,33 @@ def test_unsupported_species_does_not_silently_fallback(tmp_path):
     )
     assert result.exit_code != 0
     assert "currently supports Klebsiella pneumoniae" in result.output
+    assert "ATB" not in result.output and "--context-source" not in result.output
 
 
-def test_explicit_legacy_atb_cli_fixture(tmp_path, monkeypatch):
-    import pyarrow as pa
-    import pyarrow.parquet as pq
-    import chronoclade.context as context
-
-    focal, _, _ = make_fixture(tmp_path)
-    snapshot = tmp_path / "legacy.parquet"
-    pq.write_table(
-        pa.Table.from_pylist(
-            [
-                {
-                    "sample_id": "SAMN99999",
-                    "species": "Klebsiella pneumoniae",
-                    "mlst_scheme": "klebsiella",
-                    "mlst_st": "147",
-                    "mlst_status": "PERFECT",
-                    "collection_date": "2020",
-                    "country": "United Kingdom",
-                    "host": "",
-                    "isolation_source": "",
-                    "hq_filter": "PASS",
-                    "completeness": 99.0,
-                    "contamination": 0.0,
-                    "genome_size": 5_000_000,
-                    "contig_n50": 100_000,
-                    "aws_url": "https://example.invalid/fixture.fasta.gz",
-                }
-            ]
-        ),
-        snapshot,
-    )
-    monkeypatch.setattr(context, "atbfetcher_version", lambda *_: "offline-legacy-fixture")
+@pytest.mark.parametrize(
+    "option,value",
+    [("--source", "aws"), ("--context-source", "atb"), ("--metadata-table", "legacy.parquet")],
+)
+def test_removed_provider_options_are_rejected(tmp_path, option, value):
+    focal, catalogue, export = make_fixture(tmp_path)
+    output = tmp_path / "removed-option"
     result = CliRunner().invoke(
-        app,
-        [
-            "prepare-context",
-            str(focal),
-            "--scheme",
-            "klebsiella",
-            "--context-source",
-            "atb",
-            "--metadata-table",
-            str(snapshot),
-            "--source",
-            "aws",
-            "--output",
-            str(tmp_path / "legacy"),
-            "--dry-run",
-        ],
+        app, prepare_args(focal, catalogue, export, output, dry=True) + [option, value]
     )
+    assert result.exit_code != 0
+    assert "No such option" in result.output
+    assert not output.exists()
+
+
+def test_context_help_exposes_only_pathogenwatch_route():
+    from click import unstyle
+
+    result = CliRunner().invoke(app, ["prepare-context", "--help"], color=True)
     assert result.exit_code == 0, result.output
-    audit = json.loads((tmp_path / "legacy/context_selection.json").read_text())
-    assert audit["context_source"] == "atb"
-    assert audit["candidate_pool"] == 1
+    text = unstyle(result.output)
+    assert "--catalogue" in text
+    for removed in ("--source", "--context-source", "--metadata-table", "atbfetcher"):
+        assert removed not in text
 
 
 def test_interval_date_candidate_retains_bounds_and_filters_explicitly(tmp_path):

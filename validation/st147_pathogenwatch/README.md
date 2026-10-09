@@ -76,11 +76,11 @@ A failed dating gate is valid: retain topology/context and catalogue geography w
 claiming a supported dated tree. Full-public, selected-context and focal denominators
 remain separate. Composition reflects available sequenced records and surveillance/
 submission bias, not prevalence, incidence or transmission. The actual bounded
-acquisition/native-analysis result, raw-count check and optional ATB comparison must
-be recorded before calling this pilot biologically validated. CI fixture success alone
+acquisition/native-analysis result and raw-count check must be recorded before
+calling this pilot biologically validated. CI fixture success alone
 does not establish those results.
 
-## Checked group and migration comparison
+## Checked group composition
 
 The conflict-aware depth-7 focal prefix has **N=1,767 sample units**, including
 Unknown=15 (known-country N=1,752). An independently counted subset is United
@@ -88,20 +88,6 @@ States=1,024, Slovenia=213, Italy=181, Oman=29 and Singapore=1; all named-countr
 counts, including Unknown, sum to N. Counts derive from the full explicitly
 QC-passing, accession-deduplicated catalogue before any candidate selection,
 not from the selected tree tips.
-
-The limited legacy comparison uses bundled **2025-05** Klebsiella ST147 ATB data:
-3,336 already HQ-selected downloadable assemblies with perfect MLST assignment,
-2,643 known-country records, and 2,473 dates accepted by the preserved legacy
-parser (2,475 under the raw conservative date interpretation). ATB catalogue file
-SHA-256 is `43cf66810c4f995d449b90661e4252ffc6980effaad3e12781d5ac1eb494df6b`.
-Strong BioSample overlap is 2,873, with 463 ATB-only and 2,848 Pathogenwatch-only
-BioSamples. These are unmatched accession sets, not proof of biological absence.
-An illustrative seeded country/year-balanced pool of 24 from each provider shares
-one BioSample (`SAMN22959219`); this compares pre-download pools, not final
-SKA-selected genomes. Provider QC pipelines, upstream sampling and retrieval
-times differ. Zero failures in an already HQ-selected ATB catalogue cannot
-establish universal upstream ATB QC success; missing raw-failure coverage is
-explicitly unavailable. No ATB cgLIN assignment pipeline is implied.
 
 The committed `frozen_catalogue.json.gz` is a permitted compact public freeze with
 all 5,647 units and the verified three focal stand-ins. It preserves source UUIDs,

@@ -307,7 +307,7 @@ def build_neighbourhood_evidence(
             source = sources.get(context.sample_id, {})
             provenance = (
                 "verified_provider"
-                if source.get("source") in {"pathogenwatch", "atb"}
+                if source.get("source") == "pathogenwatch"
                 else "unverified_supplied_context"
             )
             record = {

@@ -17,7 +17,6 @@ dependencies = [
   "biopython>=1.80,<2",
   "matplotlib>=3.8,<4",
   "numpy>=1.26,<3",
-  "pyarrow>=14,<26",
   "rich>=14,<15",
   "typer>=0.19,<1",
 ]

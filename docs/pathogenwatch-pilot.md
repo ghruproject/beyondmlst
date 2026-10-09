@@ -1,8 +1,7 @@
 # Reproducible ST147 pilot on a laptop and SLURM
 
-Pathogenwatch is the primary context route. ATB is an explicit legacy option;
-its cgLIN annotation remains deferred. The pilot freezes metadata and annotations
-once, downloads a bounded pool before SKA screening, and retains the same-ST,
+Pathogenwatch is the public context provider. The pilot freezes metadata and
+annotations once, downloads a bounded pool before SKA screening, and retains the same-ST,
 divergence, recombination and temporal-signal checks. A failed dating gate is a
 valid result: catalogue country composition and a topology/context report remain
 useful without claiming a supported dated tree.
@@ -120,8 +119,8 @@ QC failure, singleton and a deliberately failed candidate download. It invokes
 the real `prepare-context` CLI with download/SKA transports substituted, validates
 manifest/combined metadata, checks full-public and selected geography, and replays
 selected IDs/reasons plus every country table row without live credentials.
-An explicit ATB miniature Parquet invocation protects the legacy route. These
-fixtures are plumbing/contract tests, not evidence for biological accuracy.
+These fixtures are plumbing/contract tests, not evidence for biological
+accuracy.
 
 An opt-in upstream contract smoke test is separate from ordinary CI:
 
@@ -149,15 +148,6 @@ unresolved coverage. Inspect `context/context_geography/index.html`, the integra
 report, exported SVG/PNG and supporting archive at readable size. The full public
 catalogue denominator includes undated QC-pass records and is never replaced by
 the selected tree tips. Keep separate public, selected and focal denominators.
-
-## Migration audit and interpretation
-
-Where a comparable same-ST ATB catalogue is available, compare strong accession
-sets, overlap/unmatched counts, provider-specific QC, valid-date/country coverage
-and candidate/selected pools. Label ATB HQ PASS separately from Pathogenwatch QC;
-missing accessions are unmatched, not confirmed absent from the source. This audit
-does not require an ATB cgLIN assignment pipeline or two primary workflows.
-Document missing comparison data explicitly rather than fabricating equivalence.
 
 The figures measure composition of available sequenced records, not prevalence,
 incidence, migration direction or transmission. Submission/surveillance bias,

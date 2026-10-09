@@ -112,10 +112,11 @@ dated tree, or on the corrected genetic tree when temporal signal is absent.
 This reconstruction is exploratory. Its result depends on how locations were
 defined and sampled.
 
-The primary context workflow freezes a full public Pathogenwatch same-ST
-catalogue with source IDs, accessions, QC, raw metadata, date precision and
-retrieval hashes. It starts with *K. pneumoniae*; genome availability does not
-imply cgLIN support for other organisms. ATB remains an explicit legacy route.
+The context workflow freezes a full public Pathogenwatch same-ST catalogue with
+source IDs, accessions, QC, raw metadata, date precision and retrieval hashes.
+It currently supports *K. pneumoniae*; other organisms and schemes return an
+explicit unsupported-provider error. Genome availability does not imply cgLIN
+support for other organisms.
 QC-passing records are deduplicated by accession-supported sample units,
 without claiming unique patients or infections. Undated records remain in
 country summaries but are excluded from the dated analysis cohort. It balances the candidate pool

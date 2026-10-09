@@ -20,10 +20,9 @@ for it, without changing the metadata contract or CLI.
 ## MVP boundary
 
 The MVP starts from assembled genomes. Read QC and assembly belong upstream in
-BactScout and GHRU-assembly. Contextual genomes may be acquired with
-[`atbfetcher`](https://github.com/happykhan/atbfetcher), but ChronoClade does not
-select them as an unreviewed random sample. The choice and balance of context
-materially affect conclusions about introductions.
+BactScout and GHRU-assembly. Public contextual genomes are acquired from
+Pathogenwatch for the currently supported *K. pneumoniae* scheme. The choice
+and balance of context materially affect conclusions about introductions.
 
 The pipeline performs:
 
@@ -44,33 +43,22 @@ The pipeline performs:
 
 ## Contextual-genome acquisition
 
-The repository includes a compact, all-species AllTheBacteria metadata snapshot
-for discovery and filtering. `atbfetcher` remains the assembly
-acquisition layer. This avoids making every user install the full ATB metadata
-database. For an analysis of a focal ST, ChronoClade will:
+For an analysis of a focal ST, ChronoClade:
 
-1. Obtain the complete high-quality same-ST candidate list from the versioned
-   compact Parquet snapshot.
+1. Freeze the complete public same-ST catalogue and its metadata from
+   Pathogenwatch.
 2. Intersect it with reviewable geography, collection-period, host and source
-   strata stored in that snapshot.
-3. Fetch the candidate assemblies by accession.
+   strata in that catalogue.
+3. Download the candidate assemblies from Pathogenwatch.
 4. Use a fast SKA distance screen to retain close neighbours of every focal
    isolate within the bounded downloaded pool, plus a reproducible stratified
    background across location and time.
 5. Freeze the selected accessions in a context manifest before tree inference.
 
-The manifest records the `atbfetcher` version, ATB metadata snapshot, MLST
-scheme and ST, filters, random seed, accession, provenance, collection-date
-precision, quality fields and the reason each genome was retained. A user may
-provide an updated compact table with `--metadata-table` or provide the final
-context manifest manually.
-
-The bundled 2025-05 snapshot contains all high-quality, downloadable ATB
-bacterial assemblies with a perfect assigned ST, across every represented
-species and MLST scheme. Its generator, source URLs, row counts, licence and
-SHA-256 digest are versioned beside it. The full 27 GB SQLite database is needed
-only by a maintainer when generating a new snapshot, not by analysts running
-ChronoClade.
+The manifest records the Pathogenwatch catalogue snapshot, MLST scheme and ST,
+filters, random seed, source IDs, provenance, collection-date precision,
+quality fields and the reason each genome was retained. A user may supply a
+verified frozen Pathogenwatch catalogue or final context manifest.
 
 The bounded pool does not guarantee retrieval of the globally nearest public
 genomes when an ST contains thousands of records. Reports state this
@@ -83,8 +71,8 @@ therefore explicitly provisional.
 
 1. Validate the full run against one dominant *K. pneumoniae* lineage and one
    *E. coli* lineage from the GHRU data.
-2. Validate the `atbfetcher` acquisition and down-selection defaults against
-   large public *K. pneumoniae* and *E. coli* ST collections.
+2. Validate context acquisition and down-selection defaults against large
+   public *K. pneumoniae* ST collections.
 3. Export a combined Microreact project with metadata, tree and timeline.
 4. Extend the current one-isolate-per-patient distance view to full topology
    reruns, contextual subsampling and alternative-reference sensitivity.

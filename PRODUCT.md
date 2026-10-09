@@ -44,8 +44,8 @@ or used as supporting material in public-health review.
 - TreeTime is a maximum-likelihood method. Confidence evidence includes clock
   fit, rate uncertainty, node-date intervals, permutation results, and sensitivity
   to sampling and model choices.
-- Public contextual genomes may be fetched with atbfetcher, but context selection
-  remains explicit because sampling changes introduction-oriented interpretation.
+- Public context is retrieved from Pathogenwatch, currently for *K. pneumoniae*.
+  Selection remains explicit because sampling changes introduction-oriented interpretation.
 - Automated public-health scenarios are provisional and require epidemiological
   review. The workflow does not establish direct transmission or exact numbers of
   introduction events.

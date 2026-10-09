@@ -40,10 +40,9 @@ pixi run python validation/komori2024_st131/prepare_dataset.py --download
 
 The provenance table uses `pass`, `review` and `fail` deliberately. Missing
 NCBI dates and country aliases remain visible for review; they do not replace
-the authors' curated metadata. A different organism is a hard failure. ATB
-availability is recorded for context, but this validation downloads the exact
-GenBank chromosomes used by the paper rather than substituting a different
-assembly of the same BioSample.
+the authors' curated metadata. A different organism is a hard failure. This
+validation downloads the exact GenBank chromosomes used by the paper rather
+than substituting a different assembly of the same BioSample.
 
 ## Analysis
 

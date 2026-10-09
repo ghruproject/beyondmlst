@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import os
 import random
@@ -11,15 +10,9 @@ import re
 import subprocess
 from collections import defaultdict
 from dataclasses import asdict, dataclass, fields
-from datetime import datetime
 from pathlib import Path
 
-import pyarrow.parquet as pq
-
 from chronoclade.metadata import Sample
-
-
-DEFAULT_CONTEXT_METADATA = Path(__file__).parent / "data" / "atb_context_202505.parquet"
 
 
 class ContextError(RuntimeError):
@@ -39,10 +32,6 @@ class ContextCandidate:
     country: str = ""
     host: str = ""
     isolation_source: str = ""
-    hq_filter: str = ""
-    aws_url: str = ""
-    completeness: str = ""
-    contamination: str = ""
     genome_size: str = ""
     contig_n50: str = ""
     assembly: str = ""
@@ -51,7 +40,7 @@ class ContextCandidate:
     mismatch_proportion: float | None = None
     selection_reason: str = ""
 
-    source: str = "atb"
+    source: str = "pathogenwatch"
     source_genome_id: str = ""
     source_numeric_id: str = ""
     sample_accession: str = ""
@@ -106,9 +95,6 @@ MANIFEST_FIELDS = [
     "country",
     "host",
     "isolation_source",
-    "hq_filter",
-    "completeness",
-    "contamination",
     "genome_size",
     "contig_n50",
     "assembly",
@@ -116,7 +102,6 @@ MANIFEST_FIELDS = [
     "min_ska_distance",
     "mismatch_proportion",
     "selection_reason",
-    "aws_url",
 ]
 
 MANIFEST_FIELDS.extend(
@@ -143,173 +128,6 @@ def _run_capture(
         detail = completed.stderr.strip() or completed.stdout.strip() or "no diagnostic output"
         raise ContextError(f"Command failed ({command[0]}): {detail}")
     return completed
-
-
-def atbfetcher_version(executable: str = "atbfetcher") -> str:
-    """Return the installed atbfetcher version string."""
-
-    completed = _run_capture([executable, "--version"])
-    return completed.stdout.strip() or completed.stderr.strip() or "unknown"
-
-
-def resolve_context_metadata(requested: Path | None = None) -> Path:
-    """Resolve the bundled or explicitly supplied compact ATB metadata table."""
-
-    result = (requested or DEFAULT_CONTEXT_METADATA).expanduser().resolve()
-    if not result.is_file():
-        raise ContextError(f"Context metadata table not found: {result}")
-    return result
-
-
-def context_metadata_provenance(path: Path) -> dict[str, object]:
-    """Return an auditable description of one compact context snapshot."""
-
-    manifest_path = path.with_suffix(".json")
-    manifest: dict[str, object] = {}
-    if manifest_path.is_file():
-        try:
-            loaded = json.loads(manifest_path.read_text(encoding="utf-8"))
-            if isinstance(loaded, dict):
-                manifest = loaded
-        except (OSError, json.JSONDecodeError):
-            manifest = {}
-    with path.open("rb") as handle:
-        digest = hashlib.file_digest(handle, "sha256").hexdigest()
-    try:
-        rows = pq.ParquetFile(path).metadata.num_rows
-    except (OSError, ValueError) as error:
-        raise ContextError(f"Could not read context metadata table {path}: {error}") from error
-    return {
-        "path": str(path),
-        "name": path.name,
-        "size_bytes": path.stat().st_size,
-        "sha256": digest,
-        "rows": rows,
-        "release": manifest.get("atb_release", "unknown"),
-        "species": manifest.get("species", "unknown"),
-        "mlst_scheme_count": manifest.get("mlst_scheme_count", "unknown"),
-        "usable_collection_date_rows": manifest.get("usable_collection_date_rows", "unknown"),
-        "source_manifest": str(manifest_path) if manifest_path.is_file() else None,
-    }
-
-
-def normalise_collection_date(value: str) -> str:
-    """Return a ChronoClade-compatible public collection date or an empty string."""
-
-    value = value.strip()
-    if not value:
-        return ""
-    value = value.split("T", 1)[0].split(" ", 1)[0]
-    patterns = (
-        (r"^(\d{4})$", "%Y"),
-        (r"^(\d{4})-(\d{2})$", "%Y-%m"),
-        (r"^(\d{4})-(\d{2})-(\d{2})$", "%Y-%m-%d"),
-    )
-    for pattern, date_format in patterns:
-        if not re.fullmatch(pattern, value):
-            continue
-        try:
-            parsed = datetime.strptime(value, date_format)
-        except ValueError:
-            return ""
-        if 1800 <= parsed.year <= 2200:
-            return value
-    return ""
-
-
-def _normalise_species(value: str) -> str:
-    """Normalise GTDB suffixes and underscore-separated user metadata."""
-
-    without_gtdb_suffix = re.sub(r"_[A-Z]\b", "", value)
-    return " ".join(without_gtdb_suffix.replace("_", " ").casefold().split())
-
-
-def _text(value: object) -> str:
-    return "" if value is None else str(value)
-
-
-def load_same_st_candidates(
-    metadata_table: Path,
-    *,
-    species: str,
-    lineage: str,
-    scheme: str,
-    st: str,
-) -> tuple[list[str], list[ContextCandidate]]:
-    """Load all and dated same-ST candidates from the compact ATB snapshot."""
-
-    try:
-        table = pq.read_table(
-            metadata_table,
-            filters=[
-                ("mlst_scheme", "=", scheme),
-                ("mlst_st", "=", str(st)),
-            ],
-        )
-    except (OSError, ValueError) as error:
-        raise ContextError(
-            f"Could not query context metadata table {metadata_table}: {error}"
-        ) from error
-
-    required = {
-        "sample_id",
-        "species",
-        "mlst_scheme",
-        "mlst_st",
-        "collection_date",
-        "country",
-        "host",
-        "isolation_source",
-        "hq_filter",
-        "completeness",
-        "contamination",
-        "genome_size",
-        "contig_n50",
-        "aws_url",
-    }
-    missing = required - set(table.column_names)
-    if missing:
-        raise ContextError(
-            "Context metadata table is missing required columns: " + ", ".join(sorted(missing))
-        )
-
-    rows = [
-        row
-        for row in table.to_pylist()
-        if _normalise_species(_text(row.get("species"))) == _normalise_species(species)
-        and _text(row.get("hq_filter")) == "PASS"
-    ]
-    accessions = sorted({_text(row.get("sample_id")) for row in rows if row.get("sample_id")})
-    if not accessions:
-        raise ContextError(
-            f"No high-quality {species} ST{st} records were found in {metadata_table.name}"
-        )
-    candidates: list[ContextCandidate] = []
-    for row in rows:
-        collection_date = normalise_collection_date(_text(row.get("collection_date")))
-        if not collection_date:
-            continue
-        candidates.append(
-            ContextCandidate(
-                sample_id=_text(row.get("sample_id")),
-                species=species,
-                lineage=lineage,
-                mlst_scheme=scheme,
-                mlst_st=str(st),
-                collection_date=collection_date,
-                country=_text(row.get("country")),
-                host=_text(row.get("host")),
-                isolation_source=_text(row.get("isolation_source")),
-                hq_filter=_text(row.get("hq_filter")),
-                aws_url=_text(row.get("aws_url")),
-                completeness=_text(row.get("completeness")),
-                contamination=_text(row.get("contamination")),
-                genome_size=_text(row.get("genome_size")),
-                contig_n50=_text(row.get("contig_n50")),
-            )
-        )
-    candidates.sort(key=lambda candidate: candidate.sample_id)
-    return accessions, candidates
 
 
 def filter_candidates(
@@ -377,79 +195,6 @@ def stratified_candidate_pool(
         if not progressed:
             break
     return result
-
-
-def write_accessions(path: Path, candidates: list[ContextCandidate]) -> Path:
-    path.write_text(
-        "".join(f"{candidate.sample_id}\n" for candidate in candidates), encoding="utf-8"
-    )
-    return path
-
-
-def download_candidates(
-    candidates: list[ContextCandidate],
-    *,
-    accessions_path: Path,
-    output: Path,
-    cache_dir: Path,
-    source: str,
-    threads: int,
-    executable: str = "atbfetcher",
-    log: Path | None = None,
-) -> None:
-    """Fetch a frozen candidate accession list with atbfetcher."""
-
-    if not candidates:
-        raise ContextError("No context candidates remain to download")
-    output.mkdir(parents=True, exist_ok=True)
-    command = [
-        executable,
-        "accessions",
-        str(accessions_path),
-        "--output",
-        str(output),
-        "--cache-dir",
-        str(cache_dir),
-        "--source",
-        source,
-        "--threads",
-        str(threads),
-    ]
-    _run_capture(command, log=log)
-
-
-def _assembly_identifier(path: Path) -> str:
-    name = path.name
-    if name.endswith(".gz"):
-        name = name[:-3]
-    for extension in (".fasta", ".fna", ".fa"):
-        if name.endswith(extension):
-            return name[: -len(extension)]
-    return ""
-
-
-def attach_downloaded_assemblies(
-    candidates: list[ContextCandidate], output: Path
-) -> tuple[list[ContextCandidate], list[str]]:
-    """Attach downloaded FASTA paths and report missing accessions."""
-
-    paths: dict[str, Path] = {}
-    for path in output.rglob("*"):
-        if not path.is_file():
-            continue
-        identifier = _assembly_identifier(path)
-        if identifier:
-            paths.setdefault(identifier, path.resolve())
-    found: list[ContextCandidate] = []
-    missing: list[str] = []
-    for candidate in candidates:
-        assembly = paths.get(candidate.sample_id)
-        if assembly is None:
-            missing.append(candidate.sample_id)
-            continue
-        candidate.assembly = str(assembly)
-        found.append(candidate)
-    return found, missing
 
 
 def write_ska_inputs(path: Path, focal: list[Sample], candidates: list[ContextCandidate]) -> Path:
@@ -723,7 +468,6 @@ def prepare_context(
     st: str,
     output: Path,
     cache_dir: Path,
-    metadata_table: Path | None,
     countries: list[str] | None,
     year_from: int | None,
     year_to: int | None,
@@ -734,11 +478,8 @@ def prepare_context(
     nearest_per_focal: int,
     seed: int,
     threads: int,
-    source: str,
     dry_run: bool,
-    atbfetcher_executable: str = "atbfetcher",
     ska_executable: str = "ska",
-    context_source: str = "pathogenwatch",
     catalogue: Path | None = None,
     cglin_export: Path | None = None,
     focal_crosswalk: Path | None = None,
@@ -746,172 +487,35 @@ def prepare_context(
 ) -> dict[str, object]:
     """Prepare a frozen, distance-screened public context set for one lineage."""
 
-    if context_source == "pathogenwatch":
-        from chronoclade.pathogenwatch_context import prepare_pathogenwatch_context
+    from chronoclade.cglin import CGLINError
+    from chronoclade.pathogenwatch import PathogenwatchError
+    from chronoclade.pathogenwatch_context import prepare_pathogenwatch_context
 
-        if metadata_table is not None or source != "auto":
-            raise ContextError("--metadata-table and --source aws/osf require --context-source atb")
-        from chronoclade.cglin import CGLINError
-        from chronoclade.pathogenwatch import PathogenwatchError
-
-        try:
-            return prepare_pathogenwatch_context(
-                focal,
-                species=species,
-                lineage=lineage,
-                scheme=scheme,
-                st=st,
-                output=output,
-                cache_dir=cache_dir,
-                countries=countries,
-                year_from=year_from,
-                year_to=year_to,
-                host=host,
-                isolation_source=isolation_source,
-                candidate_pool=candidate_pool,
-                max_context=max_context,
-                nearest_per_focal=nearest_per_focal,
-                seed=seed,
-                threads=threads,
-                dry_run=dry_run,
-                ska_executable=ska_executable,
-                catalogue=catalogue,
-                cglin_export=cglin_export,
-                focal_crosswalk=focal_crosswalk,
-                refresh_catalogue=refresh_catalogue,
-            )
-        except (CGLINError, PathogenwatchError) as error:
-            raise ContextError(str(error)) from None
-
-    if context_source != "atb":
-        raise ContextError("--context-source must be pathogenwatch or atb")
-    if (
-        catalogue is not None
-        or cglin_export is not None
-        or focal_crosswalk is not None
-        or refresh_catalogue
-    ):
-        raise ContextError("Pathogenwatch catalogue/cgLIN options cannot be used with ATB")
-    if not focal:
-        raise ContextError("No focal samples were supplied for context preparation")
-    output = output.expanduser().resolve()
-    output.mkdir(parents=True, exist_ok=True)
-    logs = output / "logs"
-    cache_dir = cache_dir.expanduser().resolve()
-    resolved_metadata = resolve_context_metadata(metadata_table)
-    tool_version = atbfetcher_version(atbfetcher_executable)
-
-    raw_accessions, metadata_candidates = load_same_st_candidates(
-        resolved_metadata,
-        species=species,
-        lineage=lineage,
-        scheme=scheme,
-        st=st,
-    )
-    focal_ids = {sample.sample_id for sample in focal}
-    raw_accessions = [accession for accession in raw_accessions if accession not in focal_ids]
-    metadata_candidates = [
-        candidate for candidate in metadata_candidates if candidate.sample_id not in focal_ids
-    ]
-    (output / "same_st_accessions.txt").write_text(
-        "".join(f"{accession}\n" for accession in raw_accessions), encoding="utf-8"
-    )
-
-    filtered = filter_candidates(
-        metadata_candidates,
-        countries=countries,
-        year_from=year_from,
-        year_to=year_to,
-        host=host,
-        isolation_source=isolation_source,
-    )
-    if not filtered:
-        raise ContextError("No dated same-ST candidates passed the requested metadata filters")
-    pool = stratified_candidate_pool(filtered, limit=candidate_pool, seed=seed)
-    write_candidate_table(output / "candidate_pool.tsv", pool)
-    accessions_path = write_accessions(output / "candidate_accessions.txt", pool)
-
-    audit: dict[str, object] = {
-        "species": species,
-        "lineage": lineage,
-        "mlst_scheme": scheme,
-        "mlst_st": st,
-        "context_source": "atb",
-        "atbfetcher_version": tool_version,
-        "metadata_discovery": "bundled_or_supplied_parquet",
-        "context_metadata_snapshot": context_metadata_provenance(resolved_metadata),
-        "filters": {
-            "countries": countries or [],
-            "year_from": year_from,
-            "year_to": year_to,
-            "host": host,
-            "isolation_source": isolation_source,
-        },
-        "seed": seed,
-        "same_st_accessions": len(raw_accessions),
-        "dated_hq_metadata_candidates": len(metadata_candidates),
-        "metadata_filtered_candidates": len(filtered),
-        "candidate_pool_limit": candidate_pool,
-        "candidate_pool": len(pool),
-        "dry_run": dry_run,
-    }
-    if dry_run:
-        audit["next_step"] = "Rerun without --dry-run to fetch, screen and select assemblies."
-        write_audit(output / "context_selection.json", audit)
-        return audit
-
-    assemblies = output / "assemblies"
-    download_candidates(
-        pool,
-        accessions_path=accessions_path,
-        output=assemblies,
-        cache_dir=cache_dir,
-        source=source,
-        threads=threads,
-        executable=atbfetcher_executable,
-        log=logs / "atbfetcher_download.log",
-    )
-    downloaded, missing = attach_downloaded_assemblies(pool, assemblies)
-    if not downloaded:
-        raise ContextError("atbfetcher completed but no candidate FASTA assemblies were found")
-
-    ska_inputs = write_ska_inputs(output / "ska_inputs.tsv", focal, downloaded)
-    distance_path = run_ska_screen(
-        inputs=ska_inputs,
-        output_dir=output,
-        threads=threads,
-        executable=ska_executable,
-    )
-    distance_values = parse_ska_distances(distance_path)
-    selected, selection_audit = select_context(
-        downloaded,
-        [sample.sample_id for sample in focal],
-        distance_values,
-        max_context=max_context,
-        nearest_per_focal=nearest_per_focal,
-        seed=seed,
-    )
-    if not selected:
-        raise ContextError("SKA screening did not yield any usable contextual genomes")
-
-    screened = annotate_screening_distances(
-        downloaded, [sample.sample_id for sample in focal], distance_values
-    )
-    write_candidate_table(output / "screened_candidates.tsv", screened)
-    manifest = write_candidate_table(output / "context_manifest.tsv", selected)
-    combined = write_combined_metadata(output / "combined_metadata.csv", focal, selected)
-    audit.update(selection_audit)
-    audit.update(
-        {
-            "downloaded_candidates": len(downloaded),
-            "missing_downloads": missing,
-            "source": source,
-            "outputs": {
-                "manifest": str(manifest),
-                "combined_metadata": str(combined),
-                "ska_distances": str(distance_path),
-            },
-        }
-    )
-    write_audit(output / "context_selection.json", audit)
-    return audit
+    try:
+        return prepare_pathogenwatch_context(
+            focal,
+            species=species,
+            lineage=lineage,
+            scheme=scheme,
+            st=st,
+            output=output,
+            cache_dir=cache_dir,
+            countries=countries,
+            year_from=year_from,
+            year_to=year_to,
+            host=host,
+            isolation_source=isolation_source,
+            candidate_pool=candidate_pool,
+            max_context=max_context,
+            nearest_per_focal=nearest_per_focal,
+            seed=seed,
+            threads=threads,
+            dry_run=dry_run,
+            ska_executable=ska_executable,
+            catalogue=catalogue,
+            cglin_export=cglin_export,
+            focal_crosswalk=focal_crosswalk,
+            refresh_catalogue=refresh_catalogue,
+        )
+    except (CGLINError, PathogenwatchError) as error:
+        raise ContextError(str(error)) from None

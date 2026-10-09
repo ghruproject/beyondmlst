@@ -143,8 +143,7 @@ def prepare_pathogenwatch_context(
     if normalized != "klebsiella pneumoniae" or scheme not in {"klebsiella", "mlst"}:
         raise ContextError(
             "Pathogenwatch context currently supports Klebsiella pneumoniae "
-            "with --scheme klebsiella (cgLIN is organism-specific); "
-            "use --context-source atb for the legacy route"
+            "with --scheme klebsiella (cgLIN is organism-specific)"
         )
     if min(candidate_pool, max_context, nearest_per_focal, threads) < 1:
         raise ContextError("Context pool, selection and thread settings must be positive")

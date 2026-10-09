@@ -180,8 +180,6 @@ def main(argv=None) -> int:
             str(args.focal.resolve()),
             "--scheme",
             "klebsiella",
-            "--context-source",
-            "pathogenwatch",
             "--catalogue",
             str(args.catalogue.resolve()),
             "--cglin-export",
