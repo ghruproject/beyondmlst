@@ -330,7 +330,43 @@ def context_evidence(
         subset_path = directory / "context_manifest.tsv"
         fieldnames = list(relevant_rows[0])
         _write_csv(subset_path, fieldnames, relevant_rows, delimiter="\t")
+    geography = None
+    catalogue_paths = {row.get("catalogue_path", "") for row in relevant_rows
+                       if row.get("source") == "pathogenwatch" and row.get("catalogue_path")}
+    if len(catalogue_paths) > 1:
+        raise WorkflowError("Context manifest refers to multiple frozen catalogues")
+    if catalogue_paths:
+        from chronoclade.context_geography import generate_context_geography
+        from chronoclade.pathogenwatch import content_hash
+        frozen_path = Path(next(iter(catalogue_paths)))
+        if not frozen_path.is_file():
+            raise WorkflowError("Frozen Pathogenwatch catalogue required by manifest is missing")
+        payload = json.loads(frozen_path.read_text(encoding="utf-8"))
+        expected = payload.pop("snapshot_sha256", "")
+        if not expected or content_hash(payload) != expected or any(
+            row.get("catalogue_sha256") != expected for row in relevant_rows
+            if row.get("source") == "pathogenwatch"
+        ):
+            raise WorkflowError("Frozen Pathogenwatch catalogue hash does not match manifest")
+        provenance = payload.get("provenance", {})
+        geography = generate_context_geography(
+            payload["rows"], directory / "context_geography",
+            selected_source_ids=[row["source_genome_id"] for row in relevant_rows
+                                 if row.get("source_genome_id")],
+            focal_rows=payload.get("focal_rows", []),
+            scope={"description": f"Public same-ST Pathogenwatch catalogue: "
+                   f"{members[0].species} {members[0].lineage}",
+                   "snapshot": provenance.get("retrieved_at", "unknown"),
+                   "filters": "QC pass; accession-deduplicated; undated records retained"},
+        )
+        (directory / "context_catalogue.json").write_text(
+            json.dumps({**payload, "snapshot_sha256": expected}, indent=2) + "\n",
+            encoding="utf-8")
+        selection = frozen_path.parent / "context_selection.json"
+        if selection.is_file():
+            (directory / "context_selection.json").write_bytes(selection.read_bytes())
     return {
+        "geography_available": geography is not None,
         "local_samples": len(local),
         "context_samples": len(contexts),
         "retrospective_samples": origins.get("retrospective", 0),

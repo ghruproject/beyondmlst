@@ -112,12 +112,26 @@ dated tree, or on the corrected genetic tree when temporal signal is absent.
 This reconstruction is exploratory. Its result depends on how locations were
 defined and sampled.
 
-The optional context workflow queries a compact AllTheBacteria metadata
-snapshot for high-quality same-ST assemblies. It balances the candidate pool
+The primary context workflow freezes a full public Pathogenwatch same-ST
+catalogue with source IDs, accessions, QC, raw metadata, date precision and
+retrieval hashes. It starts with *K. pneumoniae*; genome availability does not
+imply cgLIN support for other organisms. ATB remains an explicit legacy route.
+QC-passing records are deduplicated by accession-supported sample units,
+without claiming unique patients or infections. Undated records remain in
+country summaries but are excluded from the dated analysis cohort. It balances the candidate pool
 across country and year, screens candidates against every focal sample with SKA
 distance, then retains nearby genomes and a stratified background. The manifest
 records the bounded search. "Nearest" means nearest within the downloaded pool,
 not nearest among all public bacterial genomes.
+
+Country proportions describe available sequenced public records within each
+scheme/version-scoped full cgLIN prefix. Unknown country contributes to the
+denominator. Incomplete/provisional codes retain their status and missing codes
+are assignment coverage, not a single lineage. Prefix depth is not a pairwise
+SNP threshold. These figures do not estimate prevalence, incidence, migration,
+transmission or country of acquisition. Submission bias, missing annotations and
+date uncertainty constrain interpretation. See [cgLIN](cglin.md) and
+[geography](context-geography.md).
 
 ## References
 

@@ -9,7 +9,7 @@ import random
 import re
 import subprocess
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from datetime import datetime
 from pathlib import Path
 
@@ -50,6 +50,38 @@ class ContextCandidate:
     mismatch_proportion: float | None = None
     selection_reason: str = ""
 
+    source: str = "atb"
+    source_genome_id: str = ""
+    source_numeric_id: str = ""
+    sample_accession: str = ""
+    run_accession: str = ""
+    assembly_accession: str = ""
+    study_accession: str = ""
+    counting_unit: str = ""
+    country_raw: str = ""
+    date_start: str = ""
+    date_end: str = ""
+    date_precision: str = ""
+    pathogenwatch_qc: str = ""
+    assembly_sha256: str = ""
+    catalogue_sha256: str = ""
+    catalogue_path: str = ""
+    cglin_raw: str = ""
+    cglin_status: str = ""
+    cglin_resolved_depth: str = ""
+    cgst: str = ""
+    cglin_provisional: str = ""
+    cglin_scheme: str = ""
+    cglin_scheme_version: str = ""
+    cglin_export_sha256: str = ""
+    cglin_retrieved_at: str = ""
+    cglin_group_5: str = ""
+    cglin_group_6: str = ""
+    cglin_group_7: str = ""
+    cglin_status_5: str = ""
+    cglin_status_6: str = ""
+    cglin_status_7: str = ""
+
     @property
     def year(self) -> str:
         return self.collection_date[:4] if len(self.collection_date) >= 4 else "Unknown"
@@ -81,6 +113,9 @@ MANIFEST_FIELDS = [
     "selection_reason",
     "aws_url",
 ]
+
+MANIFEST_FIELDS.extend(field.name for field in fields(ContextCandidate)
+                       if field.name not in MANIFEST_FIELDS)
 
 
 def _run_capture(
@@ -693,9 +728,30 @@ def prepare_context(
     dry_run: bool,
     atbfetcher_executable: str = "atbfetcher",
     ska_executable: str = "ska",
+    context_source: str = "pathogenwatch",
+    catalogue: Path | None = None,
+    cglin_export: Path | None = None,
+    focal_crosswalk: Path | None = None,
+    refresh_catalogue: bool = False,
 ) -> dict[str, object]:
     """Prepare a frozen, distance-screened public context set for one lineage."""
 
+    if context_source == "pathogenwatch":
+        from chronoclade.pathogenwatch_context import prepare_pathogenwatch_context
+        if metadata_table is not None or source != "auto":
+            raise ContextError("--metadata-table and --source aws/osf require --context-source atb")
+        return prepare_pathogenwatch_context(
+            focal, species=species, lineage=lineage, scheme=scheme, st=st, output=output,
+            cache_dir=cache_dir, countries=countries, year_from=year_from, year_to=year_to,
+            host=host, isolation_source=isolation_source, candidate_pool=candidate_pool,
+            max_context=max_context, nearest_per_focal=nearest_per_focal, seed=seed,
+            threads=threads, dry_run=dry_run, ska_executable=ska_executable,
+            catalogue=catalogue, cglin_export=cglin_export, focal_crosswalk=focal_crosswalk,
+            refresh_catalogue=refresh_catalogue)
+    if context_source != "atb":
+        raise ContextError("--context-source must be pathogenwatch or atb")
+    if catalogue is not None or cglin_export is not None or focal_crosswalk is not None:
+        raise ContextError("Pathogenwatch catalogue/cgLIN options cannot be used with ATB")
     if not focal:
         raise ContextError("No focal samples were supplied for context preparation")
     output = output.expanduser().resolve()
@@ -740,6 +796,7 @@ def prepare_context(
         "lineage": lineage,
         "mlst_scheme": scheme,
         "mlst_st": st,
+        "context_source": "atb",
         "atbfetcher_version": tool_version,
         "metadata_discovery": "bundled_or_supplied_parquet",
         "context_metadata_snapshot": context_metadata_provenance(resolved_metadata),

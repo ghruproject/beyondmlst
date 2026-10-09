@@ -1,0 +1,66 @@
+import io
+import json
+import zipfile
+
+import pytest
+
+from chronoclade.pathogenwatch_download import (
+    DownloadError,
+    download_assemblies,
+    unpack_bulk,
+    validate_fasta,
+)
+
+
+def test_download_resume_verifies_content_and_recovers_corruption(tmp_path):
+    calls = []
+
+    def fetch(source):
+        calls.append(source)
+        return b">contig\nACGTN\n"
+
+    arguments = dict(
+        rows=[{"source_genome_id": "UUID1"}],
+        output=tmp_path / "out",
+        cache_dir=tmp_path / "cache",
+        api_key="secret",
+        fetch=fetch,
+    )
+    paths, ledger = download_assemblies(**arguments)
+    assert paths["UUID1"].read_bytes() == b">contig\nACGTN\n"
+    assert ledger[0]["status"] == "downloaded"
+    _, ledger = download_assemblies(**arguments)
+    assert calls == ["UUID1"] and ledger[0]["status"] == "cached"
+    meta = json.loads((tmp_path / "cache/UUID1.json").read_text())
+    (tmp_path / "cache" / f"{meta['sha256']}.fasta").write_text("corrupt")
+    _, ledger = download_assemblies(**arguments)
+    assert calls == ["UUID1", "UUID1"] and ledger[0]["status"] == "downloaded"
+    assert "secret" not in json.dumps(ledger)
+
+
+def test_failures_preserve_successful_downloads(tmp_path):
+    paths, ledger = download_assemblies(
+        [{"source_genome_id": "a"}, {"source_genome_id": "b"}],
+        output=tmp_path / "out",
+        cache_dir=tmp_path / "cache",
+        api_key="secret",
+        fetch=lambda source: b">ok\nACGT\n" if source == "a" else b"<html>error</html>",
+    )
+    assert set(paths) == {"a"}
+    assert [row["status"] for row in ledger] == ["downloaded", "failed"]
+    assert not (tmp_path / "out/b.fasta").exists()
+
+
+def test_bulk_matches_ids_not_archive_order_and_retains_partial_batch():
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, "w") as archive:
+        archive.writestr("b.fasta", ">b\nACGT\n")
+    assert set(unpack_bulk(stream.getvalue(), {"a": "UUIDa", "b": "UUIDb"})) == {"UUIDb"}
+    with pytest.raises(DownloadError, match="joined"):
+        unpack_bulk(stream.getvalue(), {"a": "UUIDa"})
+
+
+@pytest.mark.parametrize("data", [b"", b">a\n", b"<html>", b">a\nACGTX\n", b">a\nACGT\n>b\n"])
+def test_invalid_fasta_rejected(data):
+    with pytest.raises(DownloadError):
+        validate_fasta(data)

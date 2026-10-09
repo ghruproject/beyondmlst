@@ -42,6 +42,11 @@ nav:
       - Input data: input-data.md
       - Running an analysis: running.md
   - Worked example: worked-example.md
+  - Pathogenwatch context:
+      - Frozen metadata: pathogenwatch.md
+      - cgLIN assignments: cglin.md
+      - Country figures: context-geography.md
+      - Laptop and SLURM pilot: pathogenwatch-pilot.md
   - Reading the report: report.md
   - Methods: methods.md
   - Interpretation: interpretation.md

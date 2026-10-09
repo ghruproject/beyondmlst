@@ -95,30 +95,44 @@ machine-readable results used in that report.
 
 ## Public context genomes
 
-ChronoClade includes a compact index of high-quality assemblies from the
-AllTheBacteria 2025-05 release. The `prepare-context` command finds dated
-same-ST candidates, balances the screening pool across place and time, downloads
-assemblies with [atbfetcher](https://github.com/happykhan/atbfetcher), and retains
-nearby genomes plus a stratified background.
+Pathogenwatch is the primary public-context provider, initially for
+*Klebsiella pneumoniae*. ChronoClade freezes the full public same-ST catalogue,
+imports comparable cgLIN assignments, then downloads a bounded country/year
+balanced candidate pool for SKA screening. Country figures use QC-passing,
+accession-deduplicated public records, including undated records, before
+selection. cgLIN depths are prefix levels, not SNP cutoffs or transmission groups.
 
 ```bash
 pixi run chronoclade prepare-context focal_metadata.csv \
-  --scheme ecoli_achtman_4 \
-  --st 131 \
-  --output context/ST131 \
-  --candidate-pool 500 \
-  --max-context 150 \
-  --nearest-per-focal 3 \
-  --threads 8
+  --scheme klebsiella --st 147 --output context/ST147 \
+  --candidate-pool 40 --max-context 12 --threads 4 --dry-run
 
-pixi run chronoclade run context/ST131/combined_metadata.csv \
-  --context-manifest context/ST131/context_manifest.tsv \
-  --output chronoclade_results
+# Inspect the frozen catalogue and audit, then rerun without --dry-run.
+pixi run chronoclade prepare-context focal_metadata.csv \
+  --scheme klebsiella --st 147 --output context/ST147 \
+  --candidate-pool 40 --max-context 12 --threads 4
+
+pixi run chronoclade run context/ST147/combined_metadata.csv \
+  --context-manifest context/ST147/context_manifest.tsv \
+  --output chronoclade_results --threads 4
 ```
 
-The downloaded set is a bounded sample of public genomes. ChronoClade records
-the candidate pool, screening distances and final selection so that the limits
-of the context search remain visible.
+Downloads use `PATHOGENWATCH_API_KEY` or a user-only configuration file; see the
+[provider documentation](docs/pathogenwatch.md). A validated `--cglin-export`
+and `--focal-crosswalk` can supply assignments without uploading focal genomes.
+Missing assignments remain explicit. See the [country figures](docs/context-geography.md)
+and [laptop/SLURM pilot](docs/pathogenwatch-pilot.md).
+
+AllTheBacteria is retained as an explicit legacy/deferred route:
+
+```bash
+pixi run chronoclade prepare-context focal_metadata.csv \
+  --context-source atb --scheme ecoli_achtman_4 --st 131 \
+  --source auto --output context/ST131
+```
+
+`--source` continues to select the ATB transport (`auto`, `aws`, `osf`).
+Unsupported Pathogenwatch organisms do not silently fall back to ATB.
 
 ## Worked example
 

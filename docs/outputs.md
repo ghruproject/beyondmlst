@@ -63,3 +63,15 @@ candidate pool, SKA screening distances, the selected context manifest,
 combined metadata and a JSON audit of the selection process. Keep these files
 with the analysis. A different public context sample can change the apparent
 placement of focal isolates.
+
+The Pathogenwatch route also writes the full frozen raw catalogue
+`pathogenwatch_catalogue.json`, annotated `context_catalogue.json`,
+`download_ledger.json` (successes, failures, checksums, bytes and timing), and
+`context_geography/` with count/percentage SVG and PNG figures, source tables,
+assignment coverage, deduplication audit and standalone HTML. The public panel
+uses the full QC-eligible catalogue; selected-context and focal panels have
+separate denominators. These outputs remain usable when dating is unsupported.
+Manifests retain source IDs, accessions, cgLIN prefix keys and catalogue hashes.
+Keep the referenced frozen catalogue together with the manifest. Lineage reports
+copy the annotated catalogue, selection audit and figure tables to supporting
+results archives.
