@@ -110,7 +110,7 @@ def test_nearest_country_outside_comparability_cohort_kept_from_evidence():
     assert data['views'][0]['nearest_edges'][0]['context_ids'] == ['outside']
 
 
-def _brute_force(t, countries):
+def _brute_force(t, countries, directed=False):
     """Independent enumeration oracle for tiny trees, including wildcard tips."""
     from collections import Counter
     from itertools import product
@@ -123,7 +123,8 @@ def _brute_force(t, countries):
         assigned = dict(zip(free, values))
         assigned.update({n: countries[n.name] for n in nodes
                          if n.is_terminal() and countries.get(n.name) is not None})
-        counts = Counter(tuple(sorted((assigned[n], assigned[c])))
+        counts = Counter((assigned[n], assigned[c]) if directed else
+                         tuple(sorted((assigned[n], assigned[c])))
                          for n in nodes for c in n.clades if assigned[n] != assigned[c])
         score = sum(counts.values())
         if score < optimum:
@@ -208,3 +209,71 @@ def test_repeated_changes_produce_weight_two_and_single_tip_zero():
     counts, ranges, audit = _reconstruct(one, {'a': 'A'}, ['A'])
     assert counts == ranges == {}
     assert audit['optimum_changes'] == 0
+
+
+def test_ordered_pair_ranges_match_bruteforce_and_same_coherent_audit():
+    from collections import Counter
+    from chronoclade.profile_network import _reconstruct
+
+    for newick, countries in [
+        ('((a,b),(c,d));', dict(a='A', b='B', c='C', d='A')),
+        ('(a,b,c,d);', dict(a='A', b='B', c='C', d=None)),
+        ('((a,b),(c,d));', dict(a='A', b='B', c='A', d='B')),
+        ('((a,b),c);', dict(a='A', b=None, c='A')),
+    ]:
+        t = Phylo.read(StringIO(newick), 'newick')
+        locations = sorted(set(countries.values()) - {None})
+        counts, ranges, audit = _reconstruct(t, countries, locations, directed=True)
+        optimum, expected, allowed = _brute_force(t, countries, directed=True)
+        assert ranges == expected
+        assert sum(counts.values()) == optimum == audit['optimum_changes']
+        undirected_counts, _, undirected_audit = _reconstruct(t, countries, locations)
+        assert audit == undirected_audit
+        collapsed = Counter()
+        for (a, b), count in counts.items():
+            collapsed[tuple(sorted((a, b)))] += count
+        assert collapsed == undirected_counts
+        assert counts == Counter((b['source'], b['target']) for b in audit['branches'] if b['changed'])
+        assert all(set(n['allowed_states']) == allowed[n['id']] for n in audit['nodes'])
+        assert all('Unknown' not in pair and None not in pair for pair in ranges)
+        assert all(not b['changed'] for b in audit['branches'] if b['unknown_tip'])
+        assert (counts, ranges, audit) == _reconstruct(t, countries, locations, directed=True)
+
+
+def test_directed_count_ranges_depend_on_displayed_root():
+    import copy
+    from chronoclade.profile_network import _reconstruct
+
+    t = Phylo.read(StringIO('((a,b),(c,d));'), 'newick')
+    countries = dict(a='A', b='A', c='B', d='B')
+    _, original, _ = _reconstruct(t, countries, ['A', 'B'], directed=True)
+    assert original == {('A', 'B'): (0, 1), ('B', 'A'): (0, 1)}
+    a_root, b_root = copy.deepcopy(t), copy.deepcopy(t)
+    a_root.root_with_outgroup('a')
+    b_root.root_with_outgroup('c')
+    a_counts, a_ranges, a_audit = _reconstruct(a_root, countries, ['A', 'B'], directed=True)
+    b_counts, b_ranges, b_audit = _reconstruct(b_root, countries, ['A', 'B'], directed=True)
+    assert a_counts == {('A', 'B'): 1} and a_ranges == {('A', 'B'): (1, 1)}
+    assert b_counts == {('B', 'A'): 1} and b_ranges == {('B', 'A'): (1, 1)}
+    assert a_audit['optimum_changes'] == b_audit['optimum_changes'] == 1
+
+
+def test_directed_network_metrics_and_renderer(tmp_path):
+    from chronoclade.profile_network import _network_metrics
+
+    data = build_profile_network(tree(), records())
+    assert sum(e['representative_count'] for e in data['directed_edges']) == data['optimum_changes']
+    assert sum(m['in_changes'] for m in data['network_metrics']) == data['optimum_changes']
+    assert sum(m['out_changes'] for m in data['network_metrics']) == data['optimum_changes']
+    metrics = _network_metrics(['A', 'B', 'C', 'isolated'], [
+        dict(source='A', target='B', representative_count=2),
+        dict(source='B', target='A', representative_count=1),
+        dict(source='A', target='C', representative_count=0),
+    ])
+    assert metrics[0] == dict(country='A', in_degree=1, out_degree=1,
+                              in_changes=1, out_changes=2, source_hub_ratio=2 / 3)
+    assert metrics[-1]['source_hub_ratio'] is None
+    draw_profile_network(data, tmp_path / 'directed.svg')
+    assert 'Directed country-state changes' in (tmp_path / 'directed.svg').read_text()
+    assert 'root-dependent' in (tmp_path / 'directed.svg').read_text()
+    draw_profile_network(data, tmp_path / 'directed_possible.svg', include_possible=True)

@@ -220,8 +220,13 @@ def write_profile_network_figures(output, cohort_id, network, records=(), displa
                 display_ids=display_ids, nearest_ids=nearest_ids,
             )
         model["transition_counts_path"] = _csv(
-            output / f"{stem}_country_transition_counts.csv", model["edges"],
+            output / f"{stem}_country_transition_counts.csv",
+            model.get("directed_edges", model["edges"]),
             ["source", "target", "representative_count", "min_changes", "max_changes"],
+        )
+        model["network_metrics_path"] = _csv(
+            output / f"{stem}_country_network_metrics.csv", model.get("network_metrics", []),
+            ["country", "in_degree", "out_degree", "in_changes", "out_changes", "source_hub_ratio"],
         )
         model["nearest_country_connections_path"] = _csv(
             output / f"{stem}_nearest_country_connections.csv", model["nearest_edges"],
@@ -685,6 +690,7 @@ def analyse_profiles(
         summary["paths"][f"{cohort_id}_network_audit"] = network["audit_path"]
         summary["paths"][f"{cohort_id}_nearest_country_connections"] = network["nearest_country_connections_path"]
         summary["paths"][f"{cohort_id}_country_transitions"] = network["transition_counts_path"]
+        summary["paths"][f"{cohort_id}_network_metrics"] = network["network_metrics_path"]
         if network.get("country_tree_figure"):
             summary["paths"][f"{cohort_id}_country_tree"] = network["country_tree_figure"]
         cohort["pcoa_csv"] = _csv(

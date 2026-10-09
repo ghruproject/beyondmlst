@@ -117,9 +117,11 @@ interval midpoints; it is exploratory and never passes the final clock gate.
 The `finish` stage evaluates dates on the corrected genomic workflow and
 creates a calendar tree only when the configured temporal screen supports it.
 
-Fast location networks show one coherent representative maximum-parsimony
-history on the selected profile NJ topology, with the same country states shown
-on the tree. All country links and the representative reconstruction are shown
+Fast location networks mimic StrainHub: maximum-parsimony ancestral country
+assignments produce parent-to-child state changes on the tree, aggregated into
+directed country links weighted by their branch-change counts. The same
+representative history is shown on the country-coloured NJ tree.
+All country links and the representative reconstruction are shown
 by default; controls offer input-country links and a view that adds alternative
 possible links. A subgroup selector follows the input level-5 LIN prefixes.
 Thickness counts changes in the displayed history, while dashed links mark
@@ -127,7 +129,11 @@ variation across optimal assignments. The table retains every possible pair,
 including pairs with zero changes in the representative history.
 
 Minimum and maximum changes are exact counts over all equally optimal
-assignments, conditional on that fixed topology and the observed tip countries.
+assignments for each ordered source-to-target pair, conditional on that fixed
+rooted topology and the observed tip countries. The fast NJ root is arbitrary;
+the arrow directions are conditional on it. Incoming/outgoing link counts,
+incoming/outgoing branch-change counts and the source/hub ratio are reported in
+the network metrics table and CSV.
 Alternative possible links are an envelope: they do not occur simultaneously
 in one reconstruction. Deterministic seeded tie-breaking selects the displayed
 history without resolving ties by alphabetical country order. Alternate-root

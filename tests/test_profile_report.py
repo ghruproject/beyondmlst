@@ -518,7 +518,25 @@ def test_network_viewer_switches_weighted_reconstructions_and_retains_nearest_ti
     assert '<option value="0">All inputs</option>' in html
     assert '<noscript>' in html
     assert "not confidence or probabilities" in html
-    assert "fixed NJ topology" in html
+    assert "fixed rooted NJ tree" in html
+
+
+def test_state_transition_report_uses_ordered_changes_and_network_metrics(tmp_path):
+    html = write_profile_report({"location_network": [{
+        "cohort_id": "CG39", "input_countries": ["Greece"],
+        "edges": [{"source": "ignored-undirected", "target": "ignored-undirected"}],
+        "directed_edges": [
+            {"source": "Greece", "target": "Germany", "representative_count": 2,
+             "min_changes": 1, "max_changes": 2},
+            {"source": "Germany", "target": "Greece", "representative_count": 1,
+             "min_changes": 0, "max_changes": 1}],
+        "network_metrics": [{"country": "Greece", "in_degree": 1, "out_degree": 1,
+                             "in_changes": 1, "out_changes": 2, "source_hub_ratio": 2 / 3}],
+    }]}, directory=tmp_path).read_text()
+    assert "From ancestral country" in html and "To descendant country" in html
+    assert "ignored-undirected" not in html
+    assert "Country network metrics" in html and "Source/hub ratio" in html
+    assert "Arrows follow ancestral-to-descendant state changes" in html
 
 
 def test_network_viewer_excludes_foreign_missing_and_non_image_paths(tmp_path: Path) -> None:

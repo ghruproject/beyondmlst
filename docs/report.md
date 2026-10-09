@@ -114,18 +114,24 @@ The view uses TreeTime's maximum-likelihood ancestral reconstruction, not
 StrainHub's parsimony algorithm. It is available after an unsupported dating
 result because it uses the rooted genetic tree and does not require dates.
 
-The profile-first `fast` report shows a representative country history on the
-selected cgMLST NJ topology, alongside the same history mapped onto the tree.
+The profile-first `fast` report follows the StrainHub state-change workflow:
+reconstruct countries at ancestral nodes, record parent-to-child country changes
+on branches, then aggregate those changes into a directed, weighted network.
+It shows that representative history on the selected rooted cgMLST NJ tree.
 The default network includes all country pairs. Input-country links and
 alternative possible links are optional views, and each input LIN subgroup has
 its own viewer. Node colours identify country states; a dark outline marks a
 country containing input genomes. Unknown-country sample tips remain grey and
-unassigned. Link thickness counts changes in the displayed coherent history;
+unassigned. Arrows run from the ancestral country to the descendant country.
+Link thickness counts changes in the displayed coherent history;
 dashed links show variation across equally optimal histories.
 
 The reported minimum and maximum changes for every country pair are exact
-counts across all equally optimal parsimony assignments, conditional on the
-fixed NJ topology and observed tip countries. A possible-link view adds pairs
+counts for ordered source-to-target pairs across all equally optimal parsimony
+assignments, conditional on the fixed rooted NJ tree and observed tip countries.
+The fast NJ root is arbitrary; arrows describe transitions conditional on that
+root, rather than independently establishing epidemiological direction.
+A possible-link view adds pairs
 whose maximum is nonzero even when the representative history has no such
 change. These ranges are not probabilities or confidence, and possible links
 do not all occur together in one history. Deterministic seeded tie-breaking
@@ -136,6 +142,13 @@ topology, sampling or metadata uncertainty, and does not establish transmission,
 movement direction, acquisition location or prevalence. A nearest-country
 table separately reports observed input-to-relative comparisons from cgMLST
 distances, including ties and callable-locus denominators.
+
+An expandable metrics table and CSV report incoming/outgoing connections,
+incoming/outgoing branch changes and the source/hub ratio. The ratio uses
+outgoing changes divided by incoming plus outgoing changes in the displayed
+history; it is undefined for an isolated country. The network method follows
+[StrainHub](https://github.com/abschneider/StrainHub), while the exact conditional
+count ranges retain ancestral-state ambiguity instead of silently fixing ties.
 
 A separate table reports input-country/nearest-relative-country comparisons
 from actual cgMLST distances, with all ties and callable-locus denominators.

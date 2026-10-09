@@ -1,4 +1,4 @@
-"""Weighted undirected country changes and exact optimal-history count ranges.
+"""Directed country-state changes and exact optimal-history count ranges.
 
 Ranges condition on a fixed tree. Root agreement is a separate sensitivity audit,
 never transmission probability.
@@ -85,7 +85,7 @@ def country_palette(countries):
             for country in countries}
 
 
-def _reconstruct(tree, countries, locations, seed=1729):
+def _reconstruct(tree, countries, locations, seed=1729, directed=False):
     """Primary Sankoff optimum and exact independent pair-count extrema.
 
     Secondary objectives only traverse primary-optimal child transitions. The
@@ -101,7 +101,8 @@ def _reconstruct(tree, countries, locations, seed=1729):
     ids = {node: i for i, node in enumerate(nodes)}
     parents = {child: node for node in nodes for child in node.clades}
     k = len(locations)
-    pairs = [(a, b) for i, a in enumerate(locations) for b in locations[i + 1:]]
+    pairs = ([(a, b) for a in locations for b in locations if a != b] if directed else
+             [(a, b) for i, a in enumerate(locations) for b in locations[i + 1:]])
     pair_index = {pair: i for i, pair in enumerate(pairs)}
     state_index = {state: i for i, state in enumerate(locations)}
     p = len(pairs)
@@ -134,7 +135,8 @@ def _reconstruct(tree, countries, locations, seed=1729):
                     upper = highs[child][targets].copy()
                 for i, target in enumerate(targets):
                     if source != target:
-                        col = pair_index[tuple(sorted((locations[source], locations[target])))]
+                        pair = (locations[source], locations[target])
+                        col = pair_index[pair if directed else tuple(sorted(pair))]
                         lower[i, col] += 1
                         upper[i, col] += 1
                 lows[node][source] += lower.min(axis=0)
@@ -160,7 +162,8 @@ def _reconstruct(tree, countries, locations, seed=1729):
                 global_states[child] = {int(t) for s in global_states[node]
                                         for t in allowed[child][s]}
                 if source != target:
-                    counts[tuple(sorted((locations[source], locations[target])))] += 1
+                    pair = (locations[source], locations[target])
+                    counts[pair if directed else tuple(sorted(pair))] += 1
     audit_nodes, branches = [], []
     for node in nodes:
         state = locations[assigned[node]] if k else None
@@ -217,6 +220,22 @@ def _nearest(rows, comparisons):
     return result
 
 
+def _network_metrics(locations, edges):
+    """Descriptive degree/strength of the representative reconstruction only."""
+    result = []
+    representative = [edge for edge in edges if edge["representative_count"] > 0]
+    for country in locations:
+        incoming = [edge for edge in representative if edge["target"] == country]
+        outgoing = [edge for edge in representative if edge["source"] == country]
+        in_weight = sum(edge["representative_count"] for edge in incoming)
+        out_weight = sum(edge["representative_count"] for edge in outgoing)
+        total = in_weight + out_weight
+        result.append(dict(country=country, in_degree=len(incoming), out_degree=len(outgoing),
+                           in_changes=in_weight, out_changes=out_weight,
+                           source_hub_ratio=out_weight / total if total else None))
+    return result
+
+
 def _network(tree, rows, nearest):
     tip_ids = {tip.name for tip in tree.get_terminals()}
     rows = [r for r in rows if r["sample_id"] in tip_ids]
@@ -224,6 +243,14 @@ def _network(tree, rows, nearest):
     locations = sorted(set(countries.values()) - {None})
     roots = _roots(tree, rows) if locations else []
     representative, ranges, audit = _reconstruct(tree, countries, locations)
+    directed_counts, directed_ranges, directed_audit = _reconstruct(
+        tree, countries, locations, directed=True)
+    assert audit == directed_audit  # Both objectives use precisely the same seeded history.
+    assert sum(directed_counts.values()) == audit["optimum_changes"]
+    directed_edges = [dict(source=a, target=b, representative_count=directed_counts[(a, b)],
+                           min_changes=low, max_changes=high, uncertain=True,
+                           count_ambiguous=low != high)
+                      for (a, b), (low, high) in sorted(directed_ranges.items())]
     counts, ambiguity_counts, ambiguity = Counter(), Counter(), 0
     for root in roots:
         possible, ambiguous_pairs, root_ambiguity = _possible_pairs(tree, countries, locations, root)
@@ -237,11 +264,14 @@ def _network(tree, rows, nearest):
         nodes.append(dict(country=country, count=len(subset), input_count=inputs,
                           context_count=len(subset) - inputs, is_input_country=bool(inputs)))
     return dict(
-        method="weighted undirected changes in one coherent optimal parsimony history",
+        method="weighted directed parent-to-child country-state changes in one optimal parsimony history",
+        directed_edges=directed_edges, network_metrics=_network_metrics(locations, directed_edges),
+        direction_scope="original rooted NJ tree; directions can change under rerooting",
         reconstruction=audit, country_colors=country_palette(locations),
         optimum_changes=audit["optimum_changes"],
         interpretation="Representative counts describe one optimal history; exact pair ranges span "
-        "all optimal histories on the fixed tree and need not be jointly attainable. "
+        "all optimal histories on the fixed rooted tree and need not be jointly attainable. "
+        "Arrows follow parent-to-child country-state changes; directions depend on the root. "
         "Location changes are not demonstrated transmission. Root fractions "
         "measure sensitivity on a fixed tree, not probability or confidence; sampling and tree "
         "uncertainty are not estimated.",
@@ -309,7 +339,9 @@ def _weighted_layout(nodes, edges, seed=1729):
     weights = np.zeros((n, n))
     for edge in edges:
         i, j = index[edge["source"]], index[edge["target"]]
-        weights[i, j] = weights[j, i] = 0.65 * math.log1p(edge.get("representative_count", 0))
+        weights[i, j] += edge.get("representative_count", 0)
+        weights[j, i] += edge.get("representative_count", 0)
+    weights = 0.65 * np.log1p(weights)
     positions = np.random.default_rng(seed).uniform(-1, 1, (n, 2))
     ideal = math.sqrt(1 / n)
     for iteration in range(160):
@@ -384,9 +416,11 @@ def draw_profile_network(network, path, focus_inputs=False, include_possible=Fal
     """Plot weighted coherent history; exact numerical counts live in the audit/table."""
     import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
+    from matplotlib.patches import FancyArrowPatch
 
+    directed = "directed_edges" in network
     inputs = set(network["input_countries"])
-    edges = [e for e in network["edges"] if (include_possible or e["representative_count"] > 0)
+    edges = [e for e in network["directed_edges" if directed else "edges"] if (include_possible or e["representative_count"] > 0)
              and (not focus_inputs or e["source"] in inputs or e["target"] in inputs)]
     visible = inputs | {e[key] for e in edges for key in ("source", "target")}
     nodes = [n for n in network["nodes"] if not focus_inputs or n["country"] in visible]
@@ -394,13 +428,24 @@ def draw_profile_network(network, path, focus_inputs=False, include_possible=Fal
     colours = network.get("country_colors") or country_palette(n["country"] for n in nodes)
     fig, ax = plt.subplots(figsize=(12, 10))
     fig.subplots_adjust(left=0.035, right=0.965, bottom=0.18, top=0.93)
+    pairs = {(e["source"], e["target"]) for e in edges}
+    node_counts = {n["country"]: n["count"] for n in nodes}
     for edge in edges:
         a, b = positions[edge["source"]], positions[edge["target"]]
         count = edge["representative_count"]
         ambiguous = edge["min_changes"] != edge["max_changes"]
-        ax.plot([a[0], b[0]], [a[1], b[1]], color="#888888", alpha=0.6 if count else 0.25,
-                linewidth=0.7 + 1.2 * math.sqrt(count),
-                linestyle="--" if ambiguous else "-", zorder=1)
+        style = dict(color="#888888", alpha=0.65 if count else 0.25,
+                     linewidth=0.7 + 1.2 * math.sqrt(count),
+                     linestyle="--" if ambiguous else "-", zorder=1)
+        if directed:
+            reciprocal = (edge["target"], edge["source"]) in pairs
+            ax.add_patch(FancyArrowPatch(
+                a, b, arrowstyle="-|>", mutation_scale=13 + math.sqrt(count),
+                connectionstyle=f"arc3,rad={0.16 if reciprocal else 0.035}",
+                shrinkA=math.sqrt(60 + 6 * node_counts[edge["source"]]) / 2 + 2,
+                shrinkB=math.sqrt(60 + 6 * node_counts[edge["target"]]) / 2 + 2, **style))
+        else:
+            ax.plot([a[0], b[0]], [a[1], b[1]], **style)
     for node in nodes:
         x, y = positions[node["country"]]
         ax.scatter(x, y, s=60 + 6 * node["count"], color=colours[node["country"]],
@@ -422,12 +467,13 @@ def draw_profile_network(network, path, focus_inputs=False, include_possible=Fal
                               label=f"{count} reconstructed change" + ("s" if count != 1 else "")))
     fig.legend(handles=handles, loc="center", bbox_to_anchor=(0.5, 0.105),
                ncol=3, frameon=False, fontsize=9, columnspacing=2.0, handlelength=2.8)
-    ax.set_title("Reconstructed country changes · " +
+    ax.set_title(("Directed country-state changes · " if directed else "Reconstructed country changes · ") +
                  ("input-country focus" if focus_inputs else "all sampled countries"), fontsize=14, pad=18)
+    direction_note = ("Arrows: parent → child states on the rooted tree; root-dependent, not proven transmission. "
+                      if directed else "One optimal history on a fixed tree; links are not demonstrated transmission. ")
     fig.text(0.5, 0.035, "Node area: sampled genomes. Width: representative change count. "
              "Exact counts and ranges: accompanying table/CSV.\n"
-             "One optimal history on a fixed tree; links are not demonstrated transmission. "
-             f"Unknown tips: {network['unknown_country_count']} (wildcards).",
+             + direction_note + f"Unknown tips: {network['unknown_country_count']} (wildcards).",
              ha="center", va="center", fontsize=9, linespacing=1.6)
     ax.axis("off")
     fig.savefig(path)
