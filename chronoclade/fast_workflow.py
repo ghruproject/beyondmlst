@@ -13,7 +13,15 @@ from chronoclade.metadata import slugify_lineage
 def route_datasets(inputs):
     """Use CG dataset names for downstream stages, preserving the original ST."""
     result = deepcopy(inputs)
-    result["context"] = annotate_cglin_datasets(result["context"], result["queries"])
+    for name in ("queries", "context", "catalogue_rows"):
+        for row in result.get(name, []):
+            normalized = " ".join(row.get("species", "").replace("_", " ").split()).lower()
+            row["species"] = normalized[:1].upper() + normalized[1:]
+    # Public fallback rows retain their original ST pathway. Only explicit user
+    # comparisons need CG assignment here; selected adaptive rows are labelled.
+    for index, row in enumerate(result["context"]):
+        if row.get("provided_context") and not row.get("analysis_dataset"):
+            result["context"][index] = annotate_cglin_datasets([row], result["queries"])[0]
     result["catalogue_rows"] = annotate_cglin_datasets(
         result.get("catalogue_rows", []), result["queries"]
     )

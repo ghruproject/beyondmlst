@@ -944,6 +944,10 @@ def resolve_profile_inputs(
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
         provided_context = _frozen_cglin(provided_context, cglin_assignments)
+    queries_with_existing_profiles = {
+        row["sample_id"] for row in queries
+        if row.get("cgmlst_profile") or row.get("cgmlst_novel_alleles")
+    }
     if not collection and any(
         str(row.get("numeric_source_id", "")).isdigit()
         and not row.get("cgmlst_profile")
@@ -971,6 +975,24 @@ def resolve_profile_inputs(
                     row.update(by_sample[row["sample_id"]])
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
+    # An available allele profile does not imply the LIN assignment is present.
+    # Obtain only missing query LIN codes before defining the contextual pool.
+    frozen_typing_only = client is None and catalogue is not None and (
+        public_typing is not None or query_typing is not None
+    )
+    if not cglin_export and not frozen_typing_only and any(
+        row["sample_id"] in queries_with_existing_profiles
+        and str(row.get("numeric_source_id", "")).isdigit()
+        and "klebsiella" in row["species"].casefold()
+        and not row.get("cglin_raw")
+        for row in queries
+    ):
+        client = client or PathogenwatchClient()
+        if client.api_key:
+            queries = _grouped_analysis_exports(
+                queries, client, output / "query_lin_exports", provenance,
+                download_names={"klebsiella-lincodes"},
+            )
     scopes = {(row["species"].casefold(), row["lineage"]) for row in queries}
     context = [
         _canonical(dict(row, sample_id="PW_" + row["source_genome_id"]), origin="context")
@@ -1104,7 +1126,7 @@ def resolve_profile_inputs(
         )
         by_id = {row["source_genome_id"]: row for row in exported}
         context = [by_id.get(row["source_genome_id"], row) for row in context]
-    context.extend(provided_context)
+    context.extend(dict(row, provided_context=True) for row in provided_context)
     if cglin_export:
         queries = _frozen_cglin(queries, cglin_assignments)
         context = _frozen_cglin(context, cglin_assignments)
