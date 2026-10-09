@@ -19,7 +19,7 @@ def draw_country_tree(network, records, path, *, display_ids=None, nearest_ids=(
     by_id = {row["sample_id"]: row for row in records}
     labels = sample_labels(records)
     tips = [node for node in nodes.values() if node["is_tip"]]
-    shown = set(display_ids) if display_ids else {node["name"] for node in tips}
+    shown = set(display_ids) if display_ids is not None else {node["name"] for node in tips}
     shown &= {node["name"] for node in tips}
     nearest_ids = set(nearest_ids)
     root_id = reconstruction["root_id"]

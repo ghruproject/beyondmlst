@@ -1,3 +1,5 @@
+import csv
+import json
 from pathlib import Path
 
 from chronoclade.adaptive_context import adaptive_cglin_context
@@ -61,3 +63,34 @@ def test_species_case_normalization_keeps_selected_context_in_dataset(tmp_path):
     assert len(analysis["nearest_neighbours"]) == 1
     assert datasets[0]["context_count"] == 1
     assert {r["species"] for r in inputs["queries"] + inputs["context"]} == {"Klebsiella pneumoniae"}
+
+
+def test_fast_uses_assembly_selection_and_retains_full_pool_evidence(tmp_path):
+    queries = [record("q", 0, "local")]
+    context = [record("a", 0, calls=[2, 1, 1, 1]),
+               record("b", 0, calls=[2, 1, 1, 1]),
+               record("c", 0, calls=[2, 2, 2, 2]),
+               record("d", 0, calls=[1, 2, 2, 1]),
+               record("e", 0, calls=[1, 2, 1, 2])]
+    context[2]["accession"] = "PINNED_ACCESSION"
+    inputs = dict(queries=queries, context=context, provenance={})
+    analysis, _, _ = run_fast_datasets(
+        inputs, tmp_path, seed=42, bootstrap_replicates=0, distance_threshold=0.02,
+        tree_limit=2, context_size=3, include_genomes=["PINNED_ACCESSION"],
+    )
+    selection = analysis["shared_selection"]
+    assert selection["selected_context_ids"][:2] == ["c", "a"]
+    assert len(selection["selected_context_ids"]) == 3
+    assert selection["selected_sample_ids"] == ["q"] + selection["selected_context_ids"]
+    assert analysis["tree_display_selection"]["displayed_sample_ids"] == sorted(selection["selected_sample_ids"])
+    assert analysis["cohorts"][0]["tree_display_limit"] == 4
+    assert selection["available_context_ids"] == ["a", "b", "c", "d", "e"]
+    assert selection["decisions"][0] == {"sample_id": "c", "reason": "user_requested"}
+    assert analysis["context_selections"] == [dict(species="Klebsiella pneumoniae", lineage="ST39", **selection)]
+    assert json.loads((tmp_path / "context_selection.json").read_text()) == selection
+    assert json.loads((tmp_path / "profile_provenance.json").read_text())["shared_selection"] == selection
+    # Selection changes the displayed tree, while distances still cover every record.
+    with Path(analysis["paths"]["pairwise_distances"]).open() as handle:
+        pairs = list(csv.DictReader(handle))
+    assert len(pairs) == 15
+    assert {pair["sample_id_1"] for pair in pairs} | {pair["sample_id_2"] for pair in pairs} == {"q", "a", "b", "c", "d", "e"}

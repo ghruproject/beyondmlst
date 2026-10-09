@@ -659,6 +659,22 @@ def _nearest_neighbour_table(rows: list[dict[str, Any]]) -> str:
     )
 
 
+def _shared_tree_selection_summary(data: dict[str, Any]) -> str:
+    selection = _mapping(data.get("shared_selection"))
+    if not selection:
+        return ""
+    queries = len(_items(selection.get("query_ids")))
+    contexts = len(_items(selection.get("selected_context_ids")))
+    text = (f'<p>The displayed NJ tree, full analysis and finish analysis use one shared selection: '
+            f'<strong>{queries} input genomes and {contexts} public context genomes</strong>. '
+            'Nearest-neighbour comparisons, PCoA and the country network still use the complete usable profile pool.</p>')
+    missing = _items(_mapping(data.get("tree_display_selection")).get("without_comparable_profiles"))
+    if missing:
+        text += (f'<p class="caution">{len(missing)} selected genomes have no comparable cgMLST profiles '
+                 'and cannot appear in the NJ view. They remain in the shared selection for assembly analysis.</p>')
+    return text
+
+
 def _adaptive_context_summary(provenance: dict[str, Any]) -> str:
     audit = _mapping(provenance.get("adaptive_context_selection"))
     datasets = _records(audit.get("datasets"))
@@ -950,7 +966,7 @@ def write_profile_report(
     catalogue_heading = "Full public clonal-group pool" if adaptive_selection else "Frozen public catalogue"
     figure_scope = (
         "Country and collection-year tables describe the complete chosen context pool, including records without usable profiles. "
-        "PCoA and nearest-neighbour comparisons use usable profiles; the NJ tree may show a smaller selection. "
+        "PCoA and nearest-neighbour comparisons use usable profiles; the displayed NJ tree uses the shared full/finish genome selection. "
         "The full public clonal-group pool has a separate denominator. Unknown countries and regions remain visible."
         if adaptive_selection else
         "Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. "
@@ -995,6 +1011,7 @@ def write_profile_report(
         f'<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{message}{warnings}{_metric_cards(summary_values)}'
         f'<p>{escape(input_description)}</p><p>Public comparison typing: {escape(context_description)}.</p>'
         f'{_adaptive_context_summary(prov)}'
+        f'{_shared_tree_selection_summary(data)}'
         '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic relationships and concentration in time and place are reported separately.</p></div></section>',
         f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
         f'{_adaptive_context_metadata(prov)}'

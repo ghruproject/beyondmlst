@@ -31,3 +31,13 @@ def test_country_tree_without_reconstruction_has_no_misleading_image(tmp_path):
     path = tmp_path / "country_tree.svg"
     assert draw_country_tree({}, [], path) is None
     assert not path.exists()
+
+
+def test_empty_display_selection_does_not_show_the_complete_pool(tmp_path):
+    tree = Phylo.read(StringIO("(q:0.1,c:0.1);"), "newick")
+    rows = [dict(sample_id="q", origin="query", country="Greece"),
+            dict(sample_id="c", origin="context", country="Italy")]
+    network = build_profile_network(tree, rows)
+    path = tmp_path / "empty.svg"
+    assert draw_country_tree(network, rows, path, display_ids=[]) is None
+    assert not path.exists()

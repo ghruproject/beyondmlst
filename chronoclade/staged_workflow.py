@@ -344,14 +344,50 @@ def run_staged_workflow(
         inputs, output / "fast", seed=seed,
         bootstrap_replicates=bootstrap_replicates,
         distance_threshold=distance_threshold, tree_limit=tree_limit,
+        context_size=context_size, nearest_per_query=nearest_per_query,
+        include_genomes=include_genomes,
     )
+    query_groups = defaultdict(list)
+    for row in queries:
+        query_groups[(row["species"], row.get("lineage") or "Unassigned")].append(row)
+    selections = analysis.get("context_selections", [])
+    selections_by_dataset = {}
+    selected_by_dataset = {}
+    for selection in selections:
+        key = (selection["species"], selection["lineage"])
+        if key in selections_by_dataset or key not in query_groups:
+            raise WorkflowError("Shared context selection has duplicate or unknown datasets")
+        group = query_groups[key]
+        candidates = [r for r in context if (r["species"], r.get("lineage") or "Unassigned") == key]
+        by_id = {r["sample_id"]: r for r in candidates}
+        context_ids = selection.get("selected_context_ids", [])
+        sample_ids = selection.get("selected_sample_ids", [])
+        query_ids = [r["sample_id"] for r in group]
+        if (len(by_id) != len(candidates)
+                or selection.get("available_context_ids") != sorted(by_id)
+                or selection.get("query_ids") != query_ids
+                or len(context_ids) != len(set(context_ids))
+                or not set(context_ids).issubset(by_id)
+                or sample_ids != query_ids + context_ids
+                or len(sample_ids) != len(set(sample_ids))):
+            raise WorkflowError("Shared context selection does not match the resolved query lineage pool")
+        decisions = selection.get("decisions", [])
+        if [decision["sample_id"] for decision in decisions] != context_ids:
+            raise WorkflowError("Shared context selection decisions do not match selected identifiers")
+        selections_by_dataset[key] = selection
+        selected_by_dataset[key] = [dict(by_id[d["sample_id"]], selection_reason=d["reason"])
+                                    for d in decisions]
+    if set(selections_by_dataset) != set(query_groups):
+        raise WorkflowError("Shared context selection is missing a query dataset")
     fingerprint = content_hash(
         {
             "resolved_records_sha256": inputs["provenance"].get(
                 "resolved_records_sha256", content_hash({"queries": queries, "context": context})
             ),
             "context_size": context_size,
-            "tree_limit": tree_limit,
+            "shared_selection": [{"species": row["species"], "lineage": row["lineage"],
+                                  "selected_sample_ids": row["selected_sample_ids"]}
+                                 for row in selections],
             "seed": seed,
             "nearest_per_query": nearest_per_query,
             "include_genomes": include_genomes or [],
@@ -390,53 +426,19 @@ def run_staged_workflow(
         "fingerprint": fingerprint,
         "stages": stages,
         "provenance": inputs["provenance"],
-        "context_selections": [],
+        "context_selections": selections,
         "fast_datasets": fast_datasets,
     }
+    _write_json(output / "context_selection.json", selections)
     _write_json(previous_path, result)
     write_stage_index(output, stages)
     if mode == "fast":
         return result
-    query_groups = defaultdict(list)
-    for row in queries:
-        query_groups[(row["species"], row.get("lineage") or "Unassigned")].append(row)
-    requested = set(include_genomes or [])
-    selectable = [r for r in context
-                  if (r["species"], r.get("lineage") or "Unassigned") in query_groups]
-    for identifier in requested:
-        matches = [r for r in selectable if identifier in {
-            r["sample_id"], str(r.get("source_genome_id", "")), str(r.get("accession", ""))}]
-        if len(matches) != 1:
-            raise WorkflowError(
-                f"Requested context genome {identifier!r} is not uniquely in a query lineage pool"
-            )
     samples = []
     selected_records = []
     used = set()
     for key, group in sorted(query_groups.items()):
-        candidates = [r for r in context if (r["species"], r.get("lineage") or "Unassigned") == key]
-        selected, selection = select_assembly_context(
-            group,
-            candidates,
-            analysis,
-            size=context_size,
-            nearest_per_query=nearest_per_query,
-            include=[
-                identifier
-                for identifier in include_genomes or []
-                if any(
-                    identifier
-                    in {
-                        r["sample_id"],
-                        str(r.get("source_genome_id", "")),
-                        str(r.get("accession", "")),
-                    }
-                    for r in candidates
-                )
-            ],
-            seed=seed,
-        )
-        result["context_selections"].append({"species": key[0], "lineage": key[1], **selection})
+        selected = selected_by_dataset[key]
         members = group + selected
         labels_path = output / "assembly" / slugify_lineage(*key) / "sample_labels.json"
         _write_json(labels_path, sample_labels(members))
@@ -446,7 +448,6 @@ def run_staged_workflow(
                 raise WorkflowError("Selected sample occurs in more than one analysis lineage")
             used.add(row["sample_id"])
         samples.extend(materialise_assemblies(members, output=output / "assemblies", client=client))
-    _write_json(output / "context_selection.json", result["context_selections"])
     # Preserve selection reasons even when no legacy context manifest was supplied.
     if context_manifest is None and selected_records:
         context_manifest = output / "selected_context.tsv"
