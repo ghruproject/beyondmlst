@@ -80,26 +80,38 @@ def group_key(scheme: str, version: str, components: Iterable[int], depth: int) 
 
 
 def normalise_assignment(
-    row: Mapping[str, Any], *, scheme: str = DEFAULT_SCHEME,
-    scheme_version: str = "unknown", retrieved_at: str = "", export_sha256: str = "",
+    row: Mapping[str, Any],
+    *,
+    scheme: str = DEFAULT_SCHEME,
+    scheme_version: str = "unknown",
+    retrieved_at: str = "",
+    export_sha256: str = "",
     depths: Iterable[int] = DEFAULT_DEPTHS,
 ) -> dict[str, Any]:
     raw = _field(row, "cglin_raw", "LIN code", "LINcode", "cgLIN", "code")
     cgst = _text(_field(row, "cgst", "cgST", "scgST"))
     components, status = parse_code(raw)
     provisional_value = _field(row, "cglin_provisional", "provisional")
-    provisional = (provisional_value is True or _text(provisional_value).lower() in
-                   {"true", "1", "yes"} or cgst.startswith("*") or
-                   bool(re.fullmatch(r"[0-9a-fA-F]{40}", cgst)) or "*" in _text(raw))
+    provisional = (
+        provisional_value is True
+        or _text(provisional_value).lower() in {"true", "1", "yes"}
+        or cgst.startswith("*")
+        or bool(re.fullmatch(r"[0-9a-fA-F]{40}", cgst))
+        or "*" in _text(raw)
+    )
     scheme = _text(_field(row, "cglin_scheme", "scheme")) or scheme
-    version = _text(_field(row, "cglin_scheme_version", "scheme_version", "version")) or scheme_version
+    version = (
+        _text(_field(row, "cglin_scheme_version", "scheme_version", "version")) or scheme_version
+    )
     if scheme != DEFAULT_SCHEME:
         components, status = (), "unsupported"
     result = {
         "source_genome_id": _text(_field(row, "source_genome_id", "genome_id", "genome id", "id")),
         "cglin_raw": raw,
         "cgst": cgst,
-        "cglin_status": "provisional" if provisional and status in {"complete", "partial"} else status,
+        "cglin_status": "provisional"
+        if provisional and status in {"complete", "partial"}
+        else status,
         "cglin_code_status": status,
         "cglin_resolved_depth": len(components),
         "cglin_provisional": provisional,
@@ -120,8 +132,12 @@ def normalise_assignment(
 
 
 def load_cglin_export(
-    path: str | Path, *, scheme: str = DEFAULT_SCHEME, scheme_version: str = "unknown",
-    retrieved_at: str = "", depths: Iterable[int] = DEFAULT_DEPTHS,
+    path: str | Path,
+    *,
+    scheme: str = DEFAULT_SCHEME,
+    scheme_version: str = "unknown",
+    retrieved_at: str = "",
+    depths: Iterable[int] = DEFAULT_DEPTHS,
 ) -> list[dict[str, Any]]:
     """Import UTF-8 JSON records or header-bearing CSV/TSV; retain exact-byte hash.
 
@@ -133,16 +149,20 @@ def load_cglin_export(
     text = data.decode("utf-8-sig")
     if text.lstrip().startswith(("[", "{")):
         payload = json.loads(text)
-        rows = payload.get("assignments", payload.get("rows")) if isinstance(payload, dict) else payload
+        rows = (
+            payload.get("assignments", payload.get("rows"))
+            if isinstance(payload, dict)
+            else payload
+        )
         if not isinstance(rows, list):
             raise CGLINError("cgLIN JSON export must contain a list of records")
     else:
         first_line = text.splitlines()[0] if text.splitlines() else ""
         reader = csv.DictReader(io.StringIO(text), delimiter="\t" if "\t" in first_line else ",")
         headers = {re.sub(r"[^a-z0-9]", "", str(key).lower()) for key in reader.fieldnames or []}
-        if not headers.intersection({"sourcegenomeid", "genomeid", "id"}) or not headers.intersection(
-            {"cglinraw", "lincode", "cglin", "code"}
-        ):
+        if not headers.intersection(
+            {"sourcegenomeid", "genomeid", "id"}
+        ) or not headers.intersection({"cglinraw", "lincode", "cglin", "code"}):
             raise CGLINError("cgLIN CSV/TSV requires source genome ID and LIN code columns")
         rows = list(reader)
         if not first_line:
@@ -151,8 +171,14 @@ def load_cglin_export(
     for index, row in enumerate(rows, 1):
         if not isinstance(row, dict):
             raise CGLINError(f"cgLIN record {index} is not an object")
-        assignment = normalise_assignment(row, scheme=scheme, scheme_version=scheme_version,
-                                          retrieved_at=retrieved_at, export_sha256=digest, depths=depths)
+        assignment = normalise_assignment(
+            row,
+            scheme=scheme,
+            scheme_version=scheme_version,
+            retrieved_at=retrieved_at,
+            export_sha256=digest,
+            depths=depths,
+        )
         if not assignment["source_genome_id"]:
             raise CGLINError(f"cgLIN record {index} has no source genome ID; name joins are unsafe")
         assignments.append(assignment)
@@ -161,13 +187,19 @@ def load_cglin_export(
 
 def _signature(row: Mapping[str, Any]) -> tuple[str, ...]:
     components, status = parse_code(row.get("cglin_raw"))
-    return (str(components), status, *tuple(_text(row.get(key)) for key in (
-        "cgst", "cglin_provisional", "cglin_scheme", "cglin_scheme_version"
-    )))
+    return (
+        str(components),
+        status,
+        *tuple(
+            _text(row.get(key))
+            for key in ("cgst", "cglin_provisional", "cglin_scheme", "cglin_scheme_version")
+        ),
+    )
 
 
 def annotate_catalogue(
-    rows: Iterable[Mapping[str, Any]], assignments: Iterable[Mapping[str, Any]],
+    rows: Iterable[Mapping[str, Any]],
+    assignments: Iterable[Mapping[str, Any]],
     depths: Iterable[int] = DEFAULT_DEPTHS,
 ) -> list[dict[str, Any]]:
     """Left join all catalogue records; conflicting exports leave no group key."""
@@ -176,8 +208,9 @@ def annotate_catalogue(
     for row in assignments:
         assignment = normalise_assignment(row, depths=depths)
         if row.get("cglin_status") == "conflict":
-            assignment.update(cglin_status="conflict", cglin_code_status="conflict",
-                              cglin_resolved_depth=0)
+            assignment.update(
+                cglin_status="conflict", cglin_code_status="conflict", cglin_resolved_depth=0
+            )
             for depth in depths:
                 assignment[f"cglin_group_{depth}"] = ""
                 assignment[f"cglin_status_{depth}"] = "conflict"
@@ -191,13 +224,20 @@ def annotate_catalogue(
         ident = _text(row.get("source_genome_id"))
         ids = row.get("source_genome_ids") or [ident]
         matches = [a for item in ids for a in by_id.get(_text(item), [])]
-        annotation = (dict(matches[0]) if matches else
-                      normalise_assignment({"source_genome_id": ident}, depths=depths))
+        annotation = (
+            dict(matches[0])
+            if matches
+            else normalise_assignment({"source_genome_id": ident}, depths=depths)
+        )
         annotation.pop("source_genome_id", None)
         annotation["cglin_export_record_count"] = len(matches)
         if len({_signature(a) for a in matches}) > 1:
-            annotation.update(cglin_status="conflict", cglin_code_status="conflict",
-                              cglin_resolved_depth=0, cglin_conflicting_assignments=matches)
+            annotation.update(
+                cglin_status="conflict",
+                cglin_code_status="conflict",
+                cglin_resolved_depth=0,
+                cglin_conflicting_assignments=matches,
+            )
             for depth in depths:
                 annotation[f"cglin_group_{depth}"] = ""
                 annotation[f"cglin_status_{depth}"] = "conflict"
@@ -212,8 +252,15 @@ _STRONG_ACCESSION = re.compile(r"(?:SAM[NED][A-Z]?\d+|[SED]RR\d+|GC[AF]_\d+(?:\.
 def strong_accessions(row: Mapping[str, Any]) -> set[str]:
     """Use BioSample/run/assembly evidence, excluding study IDs and plain names."""
     found: set[str] = set()
-    for key in ("biosample", "biosample_accession", "run_accessions", "assembly_accessions",
-                "accession", "sample_id", "aliases"):
+    for key in (
+        "biosample",
+        "biosample_accession",
+        "run_accessions",
+        "assembly_accessions",
+        "accession",
+        "sample_id",
+        "aliases",
+    ):
         values = row.get(key) or []
         if not isinstance(values, (list, tuple, set)):
             values = re.split(r"[;,\s]+", str(values))
@@ -225,8 +272,11 @@ def strong_accessions(row: Mapping[str, Any]) -> set[str]:
 
 
 def resolve_focal_assignments(
-    focal_rows: Iterable[Mapping[str, Any]], annotated_catalogue: Iterable[Mapping[str, Any]],
-    crosswalk: Iterable[Mapping[str, Any]] | None = None, *, depths: Iterable[int] = DEFAULT_DEPTHS,
+    focal_rows: Iterable[Mapping[str, Any]],
+    annotated_catalogue: Iterable[Mapping[str, Any]],
+    crosswalk: Iterable[Mapping[str, Any]] | None = None,
+    *,
+    depths: Iterable[int] = DEFAULT_DEPTHS,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Resolve focal rows through explicit IDs or strong accessions, auditing every join.
 
@@ -275,9 +325,17 @@ def resolve_focal_assignments(
         own_raw = _field(focal, "cglin_raw", "LINcode", "cgLIN")
         own = normalise_assignment(focal, depths=depths)
         provenance = bool(_field(focal, "cglin_scheme", "scheme")) and bool(
-            _field(focal, "cglin_export_sha256", "cglin_retrieved_at", "cglin_scheme_version", "scheme_version")
+            _field(
+                focal,
+                "cglin_export_sha256",
+                "cglin_retrieved_at",
+                "cglin_scheme_version",
+                "scheme_version",
+            )
         )
-        own_valid = own["cglin_code_status"] in {"complete", "partial"} and bool(own_raw) and provenance
+        own_valid = (
+            own["cglin_code_status"] in {"complete", "partial"} and bool(own_raw) and provenance
+        )
         if own_raw and not provenance:
             own["cglin_status"] = "missing_provenance"
             for depth in depths:
@@ -288,27 +346,39 @@ def resolve_focal_assignments(
             own_prefix, _ = parse_code(own["cglin_raw"])
             matched_prefix, _ = parse_code(matched.get("cglin_raw"))
             overlap = min(len(own_prefix), len(matched_prefix))
-            if (own["cglin_scheme"] != matched.get("cglin_scheme") or
-                own["cglin_scheme_version"] != matched.get("cglin_scheme_version") or
-                own_prefix[:overlap] != matched_prefix[:overlap] or
-                (own["cgst"] and matched.get("cgst") and own["cgst"] != matched["cgst"])):
+            if (
+                own["cglin_scheme"] != matched.get("cglin_scheme")
+                or own["cglin_scheme_version"] != matched.get("cglin_scheme_version")
+                or own_prefix[:overlap] != matched_prefix[:overlap]
+                or (own["cgst"] and matched.get("cgst") and own["cgst"] != matched["cgst"])
+            ):
                 status = "conflict"
         result = dict(focal)
         if own_raw or not matched:
             result.update({k: v for k, v in own.items() if k != "source_genome_id"})
         else:
-            result.update({k: v for k, v in matched.items() if k.startswith("cglin_") or k == "cgst"})
+            result.update(
+                {k: v for k, v in matched.items() if k.startswith("cglin_") or k == "cgst"}
+            )
         result["cglin_join_status"] = status
-        result["cglin_matched_source_genome_id"] = next(iter(matches)) if status == "matched" else ""
+        result["cglin_matched_source_genome_id"] = (
+            next(iter(matches)) if status == "matched" else ""
+        )
         if status in {"ambiguous", "conflict"} and not own_valid:
             result["cglin_status"] = status
             for depth in depths:
                 result[f"cglin_group_{depth}"] = ""
                 result[f"cglin_status_{depth}"] = status
         output.append(result)
-        audit.append({"sample_id": sample, "status": status,
-                      "accessions": sorted(evidence), "candidate_source_genome_ids": sorted(matches),
-                      "retained_focal_assignment": own_valid})
+        audit.append(
+            {
+                "sample_id": sample,
+                "status": status,
+                "accessions": sorted(evidence),
+                "candidate_source_genome_ids": sorted(matches),
+                "retained_focal_assignment": own_valid,
+            }
+        )
     return output, audit
 
 
@@ -318,10 +388,18 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 def download_cglin_export(
-    rows: Iterable[Mapping[str, Any]], destination: str | Path, *, api_key: str,
-    job: str = "lincodes-3390273-2", scheme_version: str = "unknown",
-    base_url: str = "https://pathogen.watch", batch_size: int = 100,
-    retries: int = 2, timeout: float = 60, transport: Any = None, sleep: Any = time.sleep,
+    rows: Iterable[Mapping[str, Any]],
+    destination: str | Path,
+    *,
+    api_key: str,
+    job: str = "lincodes-3390273-2",
+    scheme_version: str = "unknown",
+    base_url: str = "https://pathogen.watch",
+    batch_size: int = 100,
+    retries: int = 2,
+    timeout: float = 60,
+    transport: Any = None,
+    sleep: Any = time.sleep,
 ) -> dict[str, Any]:
     """Download bounded analysis exports using the verified numeric-ID contract.
 
@@ -353,7 +431,7 @@ def download_cglin_export(
     retrieved_at = datetime.now(timezone.utc).isoformat()
     items = sorted(numeric_to_uuid, key=int)
     for start in range(0, len(items), batch_size):
-        numeric_ids = items[start:start + batch_size]
+        numeric_ids = items[start : start + batch_size]
         requested = {numeric_to_uuid[item] for item in numeric_ids}
         for attempt in range(retries + 1):
             try:
@@ -380,7 +458,9 @@ def download_cglin_export(
                             host == urlsplit(base_url).hostname or host.endswith(".amazonaws.com")
                         ):
                             raise CGLINError("cgLIN export returned an unsupported redirect host")
-                        response = urlopen(Request(location, headers={"Accept": "text/csv"}), timeout=timeout)
+                        response = urlopen(
+                            Request(location, headers={"Accept": "text/csv"}), timeout=timeout
+                        )
                     with response:
                         data = response.read()
                 if data.startswith(b"\x1f\x8b"):
@@ -392,13 +472,15 @@ def download_cglin_export(
             except (URLError, TimeoutError, OSError):
                 if attempt == retries:
                     raise CGLINError("Pathogenwatch cgLIN export transport failed") from None
-            sleep(min(2 ** attempt, 30))
+            sleep(min(2**attempt, 30))
         batch_path = destination / f"batch_{start // batch_size:04d}.csv"
         # Only a fully validated batch becomes a frozen completed file.
         temporary = batch_path.with_suffix(".csv.tmp")
         temporary.write_bytes(data)
         try:
-            parsed = load_cglin_export(temporary, scheme_version=scheme_version, retrieved_at=retrieved_at)
+            parsed = load_cglin_export(
+                temporary, scheme_version=scheme_version, retrieved_at=retrieved_at
+            )
             for assignment in parsed:
                 assignment["cglin_source"] = "pathogenwatch"
             exported = [record["source_genome_id"] for record in parsed]
@@ -411,17 +493,33 @@ def download_cglin_export(
             temporary.unlink(missing_ok=True)
             raise
         assignments.extend(parsed)
-        batches.append({"file": batch_path.name, "sha256": hashlib.sha256(data).hexdigest(),
-                        "numeric_request_ids": numeric_ids, "requested_source_genome_ids": sorted(requested),
-                        "returned_source_genome_ids": exported, "missing_source_genome_ids": sorted(requested-set(exported)),
-                        "attempts": attempt + 1, "bytes": len(data)})
+        batches.append(
+            {
+                "file": batch_path.name,
+                "sha256": hashlib.sha256(data).hexdigest(),
+                "numeric_request_ids": numeric_ids,
+                "requested_source_genome_ids": sorted(requested),
+                "returned_source_genome_ids": exported,
+                "missing_source_genome_ids": sorted(requested - set(exported)),
+                "attempts": attempt + 1,
+                "bytes": len(data),
+            }
+        )
     returned = {record["source_genome_id"] for record in assignments}
-    manifest = {"schema_version": 1, "source": "pathogenwatch", "job": job,
-                "scheme": DEFAULT_SCHEME, "scheme_version": scheme_version,
-                "retrieved_at": retrieved_at, "requested_count": len(rows),
-                "returned_count": len(returned), "batches": batches,
-                "missing_source_genome_ids": sorted(set(numeric_to_uuid.values()) - returned),
-                "assignments": assignments, "complete": len(returned) == len(rows)}
+    manifest = {
+        "schema_version": 1,
+        "source": "pathogenwatch",
+        "job": job,
+        "scheme": DEFAULT_SCHEME,
+        "scheme_version": scheme_version,
+        "retrieved_at": retrieved_at,
+        "requested_count": len(rows),
+        "returned_count": len(returned),
+        "batches": batches,
+        "missing_source_genome_ids": sorted(set(numeric_to_uuid.values()) - returned),
+        "assignments": assignments,
+        "complete": len(returned) == len(rows),
+    }
     target = destination / "cglin_export.json"
     temporary = target.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(manifest, sort_keys=True, indent=2), encoding="utf-8")

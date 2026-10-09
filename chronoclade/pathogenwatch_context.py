@@ -194,6 +194,7 @@ def prepare_pathogenwatch_context(
     public, duplicate_audit = deduplicate_catalogue(
         [row for row in rows if row.get("qc_pass") is True]
     )
+    public = annotate_catalogue(public, assignments)
     crosswalk = _read_crosswalk(focal_crosswalk)
     focal_rows = [
         {
@@ -221,6 +222,7 @@ def prepare_pathogenwatch_context(
             if row.get(key):
                 focal_aliases.add(row[key])
     eligible, focal_duplicate_audit = deduplicate_catalogue(rows, focal_aliases=focal_aliases)
+    eligible = annotate_catalogue(eligible, assignments)
     qc = [row for row in eligible if row.get("qc_pass") is True]
     dated = [row for row in qc if row.get("dated_cohort_eligible")]
     annotated_path = output / "context_catalogue.json"

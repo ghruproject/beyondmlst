@@ -310,6 +310,10 @@ _COUNTRY_ALIASES = {
     "russian federation": "Russia",
     "viet nam": "Vietnam",
     "czech republic": "Czechia",
+    "myanmar": "Myanmar (Burma)",
+    "burma": "Myanmar (Burma)",
+    "uae": "United Arab Emirates",
+    "u.a.e.": "United Arab Emirates",
     "turkey": "Türkiye",
     "unknown region": "Unknown",
 }

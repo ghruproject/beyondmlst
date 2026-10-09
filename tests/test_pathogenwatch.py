@@ -253,3 +253,9 @@ def test_malformed_metadata_pairs_fail_explicitly():
     record["metadata"] = [["Country", "GB", "extra"]]
     with pytest.raises(PathogenwatchError, match="metadata pairs"):
         normalize_record(search_row(), record, organism_id="573", st="147")
+
+
+def test_real_country_aliases_do_not_split_groups():
+    assert normalize_country("Myanmar") == normalize_country("MM")
+    assert normalize_country("Myanmar (Burma)") == normalize_country("MM")
+    assert normalize_country("UAE") == normalize_country("AE")
