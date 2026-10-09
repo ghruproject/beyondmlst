@@ -54,13 +54,26 @@ genomic results.
 
 ## Read the profile report
 
-ChronoClade separates two descriptions of genetic groups. **Persistence across
-years** reports the observed collection years represented by a group.
-**Concentration in time and place** reports the observed year/location cells
-and their share among records with both kinds of metadata. Both are descriptive
-summaries of sampled records. Observations across years do not establish
-uninterrupted persistence, and a concentrated cell does not establish an
-outbreak or transmission link.
+The report uses **Recurrence and persistence in sampled genomes (REP-inspired)**
+to connect descriptive observations with [CDC's Reoccurring, Emerging, and
+Persisting (REP) framework](https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html).
+CDC's framework concerns patterns of illness in enteric bacterial strains.
+ChronoClade does not assign official CDC REP designations, including to
+Klebsiella.
+
+| REP term | Epidemiological meaning | Status in the genome analysis |
+| --- | --- | --- |
+| Reoccurring | Repeated acute outbreaks separated by periods of little or no illness | Not assessed: collection-year observations do not establish outbreaks or quiet surveillance periods |
+| Emerging | A previously novel or rare strain increasingly causes illness or has that potential | Not assessed: selected genome counts provide no surveillance denominators, illness trend or evidence of increasing illness potential |
+| Persisting | Illness continues consistently over a long period | Not assessed: sampled presence across years does not establish consistent illness or uninterrupted circulation |
+
+Three questions remain separate. **Genetic group stability** describes
+locus-bootstrap co-assignment. **Observation across collection years** lists
+the years represented by a group. **Concentration in time and place** reports
+the observed year/location cells and their share among records with both kinds
+of metadata. The latter two describe sampled records. Gaps do not establish
+uninterrupted presence; a concentrated cell does not establish an outbreak or
+transmission link. Sampling frequency is not population prevalence.
 
 The report separates query and public-context record counts and profile
 coverage. Records without a usable profile remain in input coverage and the

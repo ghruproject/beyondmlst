@@ -3,6 +3,7 @@ import gzip
 import hashlib
 import io
 import json
+from pathlib import Path
 
 import pytest
 
@@ -324,6 +325,8 @@ def test_offline_accessions_exact_identity_imported_profiles(tmp_path, monkeypat
     assert result["context"][0]["source_genome_id"] == "B"
     assert result["context"][0]["sample_id"] == "PW_B"
     assert "assembly" not in result["context"][0]
+    assert {row["source_genome_id"] for row in result["catalogue_rows"]} == {"A", "B"}
+    assert all(row["cgmlst_profile"] == {"g1": "1", "g2": "2"} for row in result["catalogue_rows"])
 
 
 def test_accession_never_substitutes_a_near_match(tmp_path):
@@ -664,3 +667,229 @@ def test_query_context_cglin_exports_share_advertised_job_scope_without_database
     assert chosen[0]["cglin_database_version_status"] == "unavailable"
     assert not chosen[0].get("cglin_database_sha256")
     assert audit["lineages"][0]["audit"]["counts"]["priority_eligible"] == 1
+
+
+@pytest.mark.parametrize("query_provider", ["export", "native"])
+def test_explicit_frozen_cglin_survives_query_typing_and_context_live_exports(
+    tmp_path, monkeypatch, query_provider
+):
+    """Use frozen groups before selection and retain them after allele acquisition."""
+    from chronoclade.cglin import normalise_assignment
+
+    assembly = tmp_path / "q.fa"
+    assembly.write_text(">q\nACGT\n")
+    metadata = tmp_path / "metadata.csv"
+    metadata.write_text(
+        "sample_id,source_genome_id,numeric_source_id,assembly,species,lineage,collection_date,location\n"
+        "q,A,1,q.fa,Klebsiella pneumoniae,ST147,2019,Greece\n"
+    )
+    frozen = tmp_path / "cglin.csv"
+    frozen.write_text(
+        "source_genome_id,cglin_raw,cglin_scheme,cglin_scheme_version,cglin_source\n"
+        "A,1_2_3_4_5_6_7_8_9_10,scgMLST629_S,unknown,provided_pathogenwatch_export\n"
+        "B,9_2_3_4_5_6_7_8_9_10,scgMLST629_S,unknown,provided_pathogenwatch_export\n"
+        "C,1_2_3_4_5_6_7_8_9_10,scgMLST629_S,unknown,provided_pathogenwatch_export\n"
+    )
+    client, _ = client_fixture([], api_key="fixture")
+    monkeypatch.setattr(
+        client,
+        "supported_organisms",
+        lambda: [{"fullName": "Klebsiella pneumoniae", "organismId": "573"}],
+    )
+    monkeypatch.setattr(
+        client,
+        "freeze_catalogue",
+        lambda *a, **k: {
+            "rows": [
+                {
+                    "source_genome_id": ident,
+                    "numeric_source_id": number,
+                    "species": "Klebsiella pneumoniae",
+                    "lineage": "ST147",
+                    "country": "Greece",
+                    "collection_date": "2019",
+                    "aliases": [ident],
+                    "qc_pass": True,
+                }
+                for ident, number in [("B", 2), ("C", 3)]
+            ],
+            "provenance": {},
+        },
+    )
+    exported = []
+
+    def live_typing(rows, *args, **kwargs):
+        result = []
+        for row in rows:
+            exported.append(row["source_genome_id"])
+            assignment = normalise_assignment(
+                {
+                    "source_genome_id": row["source_genome_id"],
+                    "cglin_raw": "8_8_8_8_8_8_8_8_8_8",
+                    "cglin_scheme_version": "current-live-release",
+                    "cglin_source": "live_export",
+                }
+            )
+            assignment.pop("source_genome_id")
+            assignment.update(
+                cglin_scope_source="server_advertised_analysis_job",
+                cglin_database_sha256="live-database-fingerprint",
+            )
+            if row["origin"] == "context" or query_provider == "export":
+                assignment["cgmlst_profile"] = {"g1": "1"}
+            result.append(dict(row, **assignment))
+        return result
+
+    monkeypatch.setattr("chronoclade.profile_inputs._grouped_analysis_exports", live_typing)
+    typing_config = None
+    if query_provider == "native":
+        typing_config = tmp_path / "config.json"
+        typing_config.write_text("{}")
+        monkeypatch.setattr(
+            "chronoclade.profile_inputs.type_query_assemblies",
+            lambda *a, **k: [
+                dict(
+                    normalise_assignment(
+                        {
+                            "source_genome_id": "A",
+                            "cglin_raw": "7_7_7_7_7_7_7_7_7_7",
+                            "cglin_scheme_version": "native-release",
+                        }
+                    ),
+                    sample_id="q",
+                    cgmlst_profile={"g1": "1"},
+                )
+            ],
+        )
+    result = resolve_profile_inputs(
+        metadata,
+        cglin_export=frozen,
+        typing_config=typing_config,
+        output=tmp_path / "out",
+        client=client,
+        profile_limit=1,
+    )
+    assert exported == ["A", "C"]
+    assert result["context"][0]["source_genome_id"] == "C"
+    assert result["context"][0]["profile_pool_selection_reason"] == "lineage_priority:q"
+    for row in result["queries"] + result["context"]:
+        assert row["cglin_raw"] == "1_2_3_4_5_6_7_8_9_10"
+        assert row["cglin_scheme_version"] == "unknown"
+        assert row["cglin_source"] == "provided_pathogenwatch_export"
+        assert row["cglin_scope_source"] == "user_frozen_export"
+        assert row["cglin_database_version_status"] == "unavailable"
+        assert row["cglin_frozen_export_sha256"] == hashlib.sha256(frozen.read_bytes()).hexdigest()
+        assert "cglin_database_sha256" not in row
+        assert row["cgmlst_profile"] == {"g1": "1"}
+        assert row["profile_status"] == "available"
+    authority = result["provenance"]["cglin_authority"]
+    assert authority["matched_records"] == {"queries": 1, "context": 1, "catalogue_rows": 2}
+    assert authority["scheme_versions"] == ["unknown"]
+    assert authority["database_version_inferred_from_live_jobs"] is False
+    assert {row["source_genome_id"] for row in result["catalogue_rows"]} == {"B", "C"}
+    assert all(
+        row["cglin_scope_source"] == "user_frozen_export" for row in result["catalogue_rows"]
+    )
+    assert all(row["cglin_export_record_count"] == 1 for row in result["catalogue_rows"])
+    assert all(not row.get("cgmlst_profile") for row in result["catalogue_rows"])
+
+
+def test_explicit_frozen_cglin_unmatched_ids_cannot_keep_live_namespace():
+    from chronoclade.cglin import normalise_assignment
+    from chronoclade.profile_inputs import _frozen_cglin
+
+    live = normalise_assignment(
+        {
+            "source_genome_id": "unmatched",
+            "cglin_raw": "1_2_3_4_5_6_7_8_9_10",
+            "cglin_scheme_version": "live-version",
+            "cgst": "42",
+        }
+    )
+    live.update(cgmlst_profile={"g1": "1"}, cglin_database_sha256="live-fingerprint")
+    frozen = normalise_assignment(
+        {
+            "source_genome_id": "another",
+            "cglin_raw": "1_2_3_4_5_6_7_8_9_10",
+            "cglin_scheme_version": "unknown",
+        }
+    )
+    row = _frozen_cglin([live], [frozen])[0]
+    assert row["cglin_status"] == "missing"
+    assert row["cglin_group_5"] == ""
+    assert row["cglin_scheme_version"] == "unknown"
+    assert row["cglin_scope_source"] == "user_frozen_export"
+    assert row["cglin_export_record_count"] == 0
+    assert row["cgst"] == ""
+    assert "cglin_database_sha256" not in row
+    assert row["cgmlst_profile"] == {"g1": "1"}
+
+
+@pytest.mark.parametrize("mismatch_count", [1, 3])
+def test_cgmlst_identity_mismatch_retries_exact_batch_without_accepting_foreign_calls(
+    tmp_path, monkeypatch, mismatch_count
+):
+    from chronoclade.profile_inputs import _analysis_exports
+
+    wrong = export([{"Genome ID": "foreign", "Gene": "g1", "Allele ID": "9"}])
+    correct = export([{"Genome ID": "A", "Gene": "g1", "Allele ID": "1"}])
+    requests, waits = [], []
+
+    def fetch(route, **kwargs):
+        requests.append((route, kwargs["body"]))
+        return wrong if len(requests) <= mismatch_count else correct
+
+    monkeypatch.setattr("chronoclade.profile_inputs.request_download", fetch)
+    monkeypatch.setattr("chronoclade.profile_inputs.time.sleep", waits.append)
+    provenance = {}
+    rows = _analysis_exports(
+        [{"source_genome_id": "A", "numeric_source_id": 17}],
+        [{"name": "cgmlst", "job": "cgmlst-573-2"}],
+        PathogenwatchClient(api_key="fixture"),
+        tmp_path,
+        provenance,
+    )
+    assert all(
+        request == ("/api/downloads/cgmlst?job=cgmlst-573-2", {"ids": "17"}) for request in requests
+    )
+    rejected = provenance["analysis_export_identity_retries"]
+    assert len(rejected) == mismatch_count
+    for item in rejected:
+        assert item["requested_source_ids"] == ["A"]
+        assert item["rejected_export_sha256"] == hashlib.sha256(wrong).hexdigest()
+        assert Path(item["rejected_export"]).read_bytes() == wrong
+    assert len({item["rejected_export"] for item in rejected}) == mismatch_count
+    if mismatch_count == 1:
+        assert rows[0]["cgmlst_profile"] == {"g1": "1"}
+        assert len(requests) == 2
+        assert waits == [1]
+        assert provenance["analysis_exports"][-1]["status"] == "downloaded"
+    else:
+        assert not rows[0].get("cgmlst_profile")
+        assert len(requests) == 3
+        assert waits == [1, 2]
+        assert provenance["analysis_exports"][-1]["status"] == "unavailable"
+
+
+def test_cgmlst_malformed_locus_is_not_retried_as_transient_identity(tmp_path, monkeypatch):
+    from chronoclade.profile_inputs import _analysis_exports
+
+    requests = []
+
+    def fetch(*args, **kwargs):
+        requests.append(kwargs["body"])
+        return export([{"Genome ID": "A", "Gene": "", "Allele ID": "1"}])
+
+    monkeypatch.setattr("chronoclade.profile_inputs.request_download", fetch)
+    provenance = {}
+    result = _analysis_exports(
+        [{"source_genome_id": "A", "numeric_source_id": 17}],
+        [{"name": "cgmlst", "job": "cgmlst-573-2"}],
+        PathogenwatchClient(api_key="fixture"),
+        tmp_path,
+        provenance,
+    )
+    assert requests == [{"ids": "17"}]
+    assert not result[0].get("cgmlst_profile")
+    assert "analysis_export_identity_retries" not in provenance
+    assert provenance["analysis_exports"][-1]["reason"] == "cgMLST export contains an empty locus"

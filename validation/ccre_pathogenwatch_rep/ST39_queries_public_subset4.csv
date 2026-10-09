@@ -1,0 +1,5 @@
+sample_id,biosample,sample_accession,run_accession,source_genome_id,numeric_source_id,collection_date,country,location,hospital,hospital_code,region,nuts2,species,lineage,origin,is_reference,patient_id
+SAMEA8262495,SAMEA8262495,SAMEA8262495,ERR8772318,41C6LG1kCCrbWvCMLccL9u,3578200,2019-07-23,Greece,Greece,GR03,GR03,,EL30,Klebsiella pneumoniae,ST39,local,false,
+SAMEA8263207,SAMEA8263207,SAMEA8263207,ERR8772422,hb2bX5iRHLzpFEahUmGtQ3,3578563,2019-05-03,Greece,Greece,GR05,GR05,,EL30,Klebsiella pneumoniae,ST39,local,false,
+SAMEA8263684,SAMEA8263684,SAMEA8263684,ERR8772774,fJ5TFA5tZ9fTgFTm6c7kGL,3578765,2019-06-12,Greece,Greece,GR15,GR15,,EL63,Klebsiella pneumoniae,ST39,local,false,
+SAMEA9455447,SAMEA9455447,SAMEA9455447,ERR8774712,xrPmLYnEoLuysCMoh6xGHZ,3579875,2019-10-11,Greece,Greece,GR01,GR01,,EL30,Klebsiella pneumoniae,ST39,local,false,

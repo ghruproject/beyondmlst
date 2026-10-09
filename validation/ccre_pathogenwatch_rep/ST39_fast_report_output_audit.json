@@ -1,0 +1,19 @@
+{
+  "lineage": "ST39_fast",
+  "snapshot_date": "2026-10-09",
+  "hash_scope": "Observed artifacts after final style/caption/alias regeneration; subsequent reruns or rendering changes require a fresh audit.",
+  "html_reports": [
+    {
+      "report": "fast/profile_report.html",
+      "local_references": 26,
+      "observed_sha256": "61aad742f730a642e4761dd653deb8660a3319bcf102d3b6dd5fe7a9173e35f3"
+    },
+    {
+      "report": "index.html",
+      "local_references": 1,
+      "observed_sha256": "d4b77873046884070681a6a6ae9dc4f135d0d163d5ddc069c3894c367e610aea"
+    }
+  ],
+  "broken_links": [],
+  "json_output_checks": []
+}

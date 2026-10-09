@@ -1,0 +1,186 @@
+{
+  "lineage": "ST147",
+  "snapshot_date": "2026-10-09",
+  "hash_scope": "Observed artifacts after final style/caption/alias regeneration; subsequent reruns or rendering changes require a fresh audit.",
+  "html_reports": [
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/context_geography/country_composition.html",
+      "local_references": 0,
+      "observed_sha256": "617001667b697da76218d4029619a03ae52bea5c7b295b3c36756f09fd366d80"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/context_geography/focused_fragment.html",
+      "local_references": 15,
+      "observed_sha256": "c6df0a66149e66acf91bbcc154251fdce82fe9c86f24befb5fc84498d5326ac7"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/context_geography/fragment.html",
+      "local_references": 0,
+      "observed_sha256": "617001667b697da76218d4029619a03ae52bea5c7b295b3c36756f09fd366d80"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/context_geography/index.html",
+      "local_references": 0,
+      "observed_sha256": "d00dfc3008fd89448d5596c3b4807065d8d8d1ac3307de4e81048c283c2d0a85"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/corrected_report.html",
+      "local_references": 62,
+      "observed_sha256": "04fdf1dd81d6424c89e7a20608ce8535be882046d60b98b59cdeae2ba13135c1"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.finish.html",
+      "local_references": 91,
+      "observed_sha256": "3536493b3a94d85d5e5a4eb75c76d66d699b0e95c7f7ab5548a8b1355dfd42fc"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.full.html",
+      "local_references": 62,
+      "observed_sha256": "0db85dab899f48c752a181761e550d860a03431836716f2f05c6cd9208599405"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.html",
+      "local_references": 91,
+      "observed_sha256": "40fdfbc9b6bcd47685c215e25982099b912312a0e4093de9e033edeb34c078f9"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/context_geography/country_composition.html",
+      "local_references": 0,
+      "observed_sha256": "617001667b697da76218d4029619a03ae52bea5c7b295b3c36756f09fd366d80"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/context_geography/focused_fragment.html",
+      "local_references": 15,
+      "observed_sha256": "c6df0a66149e66acf91bbcc154251fdce82fe9c86f24befb5fc84498d5326ac7"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/context_geography/fragment.html",
+      "local_references": 0,
+      "observed_sha256": "617001667b697da76218d4029619a03ae52bea5c7b295b3c36756f09fd366d80"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/context_geography/index.html",
+      "local_references": 0,
+      "observed_sha256": "d00dfc3008fd89448d5596c3b4807065d8d8d1ac3307de4e81048c283c2d0a85"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/corrected_report.html",
+      "local_references": 62,
+      "observed_sha256": "0737b77a37f80bad16224650ab8d7f944769ec8d486ef54ba5e9838f1b7b9e08"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/report.html",
+      "local_references": 91,
+      "observed_sha256": "40fdfbc9b6bcd47685c215e25982099b912312a0e4093de9e033edeb34c078f9"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/context_geography/country_composition.html",
+      "local_references": 0,
+      "observed_sha256": "12908c68915af077b594feafdfcaafddecd54e2ae7d0e36978112ace217647fd"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/context_geography/focused_fragment.html",
+      "local_references": 15,
+      "observed_sha256": "c6df0a66149e66acf91bbcc154251fdce82fe9c86f24befb5fc84498d5326ac7"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/context_geography/fragment.html",
+      "local_references": 0,
+      "observed_sha256": "12908c68915af077b594feafdfcaafddecd54e2ae7d0e36978112ace217647fd"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/context_geography/index.html",
+      "local_references": 0,
+      "observed_sha256": "c1ccb61f106c2c408d2f771c2b3dd9b045dd28aaed3ed263ad79ead79e70f9ca"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/corrected_report.html",
+      "local_references": 62,
+      "observed_sha256": "0737b77a37f80bad16224650ab8d7f944769ec8d486ef54ba5e9838f1b7b9e08"
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/report.html",
+      "local_references": 62,
+      "observed_sha256": "0737b77a37f80bad16224650ab8d7f944769ec8d486ef54ba5e9838f1b7b9e08"
+    },
+    {
+      "report": "assembly/index.html",
+      "local_references": 1,
+      "observed_sha256": "03c51a80298db12f855d9748e148c2e1723bd2422984bbc496241afff0d98e37"
+    },
+    {
+      "report": "fast/profile_report.html",
+      "local_references": 29,
+      "observed_sha256": "93e8a86becde17abb24c7e3083062cbac356422077295acee08e8b1644141a94"
+    },
+    {
+      "report": "finish.html",
+      "local_references": 2,
+      "observed_sha256": "4ea50f80814e316b2a8231790490f88f1cead21f4cde5a33f67ea1375ef9854f"
+    },
+    {
+      "report": "full.html",
+      "local_references": 2,
+      "observed_sha256": "e5f08420caa2da76bcc71ad5baeca12cfb83bb26ed27c64474cb71cbc7100203"
+    },
+    {
+      "report": "index.html",
+      "local_references": 3,
+      "observed_sha256": "d20d77040545c53b07f4bc9111191305845cc2f7b3c9bce6b61905afc5a5b8ee"
+    }
+  ],
+  "broken_links": [],
+  "json_output_checks": [
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.finish.json",
+      "advertised_existing_outputs": 34,
+      "null_outputs": [
+        "timetree",
+        "timetree_plot",
+        "timetree_png",
+        "timetree_confidence_plot",
+        "timetree_confidence",
+        "node_dates"
+      ],
+      "missing_outputs": []
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.full.json",
+      "advertised_existing_outputs": 8,
+      "null_outputs": [],
+      "missing_outputs": []
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/report.json",
+      "advertised_existing_outputs": 34,
+      "null_outputs": [
+        "timetree",
+        "timetree_plot",
+        "timetree_png",
+        "timetree_confidence_plot",
+        "timetree_confidence",
+        "node_dates"
+      ],
+      "missing_outputs": []
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/finish/report.json",
+      "advertised_existing_outputs": 34,
+      "null_outputs": [
+        "timetree",
+        "timetree_plot",
+        "timetree_png",
+        "timetree_confidence_plot",
+        "timetree_confidence",
+        "node_dates"
+      ],
+      "missing_outputs": []
+    },
+    {
+      "report": "assembly/Klebsiella_pneumoniae__ST147/stages/full/report.json",
+      "advertised_existing_outputs": 8,
+      "null_outputs": [],
+      "missing_outputs": []
+    }
+  ]
+}

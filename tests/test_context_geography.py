@@ -217,7 +217,8 @@ def test_focused_external_figures_human_names_and_source_lookup(tmp_path, catalo
     assert '<img src="focused_country_counts.svg"' in fragment
     assert '<img src="focused_public_groups.svg"' in fragment
     assert 'href="index.html"' in fragment
-    assert "3 genomes in total" in fragment and "5 quality-checked" in fragment
+    assert "3 sample-unit entries across separately deduplicated focal and public cohorts" in fragment
+    assert "5 quality-checked" in fragment
     assert "Full-resolution SVG" in fragment
     assert "not identify exact nearest relatives" in fragment
     counts_svg = (tmp_path / "focused_country_counts.svg").read_text()
@@ -228,6 +229,39 @@ def test_focused_external_figures_human_names_and_source_lookup(tmp_path, catalo
     assert "DejaVu Serif" in group_svg
     assert "KpSC" in (tmp_path / "focused_group_lookup.csv").read_text()
     assert all(Path(p).exists() for p in output["outputs"])
+
+
+def test_focused_geography_counts_deduplicated_units_without_claiming_tree_size(tmp_path):
+    result = geography_tables(
+        [row("p1", "India", biosample="SAM1"), row("p2", "India", biosample="SAM1")],
+        selected_source_ids=["p1", "p2"],
+        focal_rows=[row("f1", "Greece", biosample="SAM2")],
+    )
+    output = generate_focused_geography(result, tmp_path)
+    fragment = output["focused_report_html"]
+
+    assert output["focused"]["audit"]["composition_sample_units_n"] == 2
+    assert "1 focal sample units and 1 selected public sample units" in fragment
+    assert "2 sample-unit entries across separately deduplicated focal and public cohorts" in fragment
+    assert "QC and accession deduplication" in fragment
+    assert "not the number of genome assemblies in the tree" in fragment
+    assert "The tree includes" not in fragment
+
+
+def test_focused_geography_keeps_overlap_in_each_separate_cohort(tmp_path):
+    result = geography_tables(
+        [row("p1", "India", biosample="SAM1")],
+        selected_source_ids=["p1"],
+        focal_rows=[row("f1", "India", biosample="SAM1")],
+    )
+    output = generate_focused_geography(result, tmp_path)
+    audit = output["focused"]["audit"]
+
+    assert audit["composition_sample_units_n"] == 2
+    assert audit["focal_public_overlap_n"] == 1
+    assert "overlap is counted in each cohort" in audit["composition_count_note"]
+    assert "2 sample-unit entries across separately deduplicated focal and public cohorts" in output["focused_report_html"]
+    assert "deduplicated sample units in total" not in output["focused_report_html"]
 
 
 def test_exports_offline_and_stable(tmp_path, catalogue):
