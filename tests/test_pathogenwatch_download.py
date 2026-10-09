@@ -64,3 +64,35 @@ def test_bulk_matches_ids_not_archive_order_and_retains_partial_batch():
 def test_invalid_fasta_rejected(data):
     with pytest.raises(DownloadError):
         validate_fasta(data)
+
+
+def test_identical_contents_download_concurrently(tmp_path):
+    paths, ledger = download_assemblies(
+        [{"source_genome_id": str(i)} for i in range(4)],
+        output=tmp_path / "out",
+        cache_dir=tmp_path / "cache",
+        api_key="secret",
+        workers=4,
+        fetch=lambda source: b">contig\nACGT\n",
+    )
+    assert len(paths) == 4
+    assert all(row["status"] == "downloaded" for row in ledger)
+    assert len(list((tmp_path / "cache").glob("*.fasta"))) == 1
+
+
+def test_provider_revision_invalidates_cached_assembly(tmp_path):
+    calls = []
+
+    def fetch(source):
+        calls.append(source)
+        return b">a\nACGT\n" if len(calls) == 1 else b">a\nTGCA\n"
+
+    row = {"source_genome_id": "a", "source_checksum": "revision1"}
+    kwargs = dict(
+        output=tmp_path / "out", cache_dir=tmp_path / "cache", api_key="secret", fetch=fetch
+    )
+    download_assemblies([row], **kwargs)
+    row["source_checksum"] = "revision2"
+    paths, ledger = download_assemblies([row], **kwargs)
+    assert len(calls) == 2 and ledger[0]["status"] == "downloaded"
+    assert b"TGCA" in paths["a"].read_bytes()

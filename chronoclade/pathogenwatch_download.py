@@ -9,6 +9,7 @@ import json
 import re
 import shutil
 import time
+import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -34,10 +35,14 @@ def request_download(
     base_url: str = "https://pathogen.watch",
     attempts: int = 3,
     timeout: float = 120,
+    stats: dict | None = None,
 ) -> bytes:
     """Follow the documented file redirect without forwarding authentication."""
+    if stats is None:
+        stats = {}
     for attempt in range(attempts):
         try:
+            stats["requests"] = stats.get("requests", 0) + 1
             request = Request(
                 base_url + route,
                 data=json.dumps(body).encode() if body else None,
@@ -54,6 +59,7 @@ def request_download(
                 if parsed.scheme != "https" or not parsed.hostname or parsed.username:
                     raise DownloadError("Download redirect is not a valid HTTPS file URL")
                 # Signed URLs must never enter logs or manifests. No auth on file request.
+                stats["requests"] = stats.get("requests", 0) + 1
                 with build_opener().open(Request(target), timeout=timeout) as response:
                     return response.read()
         except HTTPError as error:
@@ -81,14 +87,16 @@ def validate_fasta(content: bytes) -> bytes:
         raise DownloadError("Downloaded content is not FASTA")
     length = 0
     current = 0
+    seen_header = False
     for line in lines:
         line = line.strip()
         if not line:
             continue
         if line.startswith(">"):
-            if length and not current:
+            if seen_header and not current:
                 raise DownloadError("FASTA contains an empty contig")
             current = 0
+            seen_header = True
         elif re.fullmatch(r"[ACGTRYSWKMBDHVNacgtryswkmbdhvn]+", line):
             current += len(line)
             length += len(line)
@@ -125,7 +133,7 @@ def unpack_bulk(content: bytes, id_to_source: dict[str, str]) -> dict[str, bytes
 
 
 def _atomic(path: Path, content: bytes) -> None:
-    temporary = path.with_suffix(path.suffix + ".partial")
+    temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".partial")
     temporary.write_bytes(content)
     temporary.replace(path)
 
@@ -143,11 +151,6 @@ def download_assemblies(
     """Use verified single-ID downloads; resume only checksum-valid cached files."""
     output.mkdir(parents=True, exist_ok=True)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    fetch = fetch or (
-        lambda source: request_download(
-            f"/api/genomes/download/{source}", api_key=api_key, base_url=base_url
-        )
-    )
 
     def one(row):
         source = str(row["source_genome_id"])
@@ -170,6 +173,7 @@ def download_assemblies(
                     existing = blob.read_bytes()
                     if (
                         saved["source_genome_id"] == source
+                        and saved.get("source_checksum") == row.get("source_checksum")
                         and hashlib.sha256(existing).hexdigest() == saved["sha256"]
                     ):
                         data = validate_fasta(existing)
@@ -177,14 +181,33 @@ def download_assemblies(
                 except (ValueError, KeyError, OSError, DownloadError):
                     pass
             if data is None:
-                requests = 1
-                data = validate_fasta(fetch(source))
+                stats = {}
+                if fetch:
+                    data = validate_fasta(fetch(source))
+                    requests = 1
+                else:
+                    data = validate_fasta(
+                        request_download(
+                            f"/api/genomes/download/{source}",
+                            api_key=api_key,
+                            base_url=base_url,
+                            stats=stats,
+                        )
+                    )
+                    requests = stats.get("requests", 0)
             digest = hashlib.sha256(data).hexdigest()
             blob = cache_dir / f"{digest}.fasta"
             if not cached:
                 _atomic(blob, data)
                 _atomic(
-                    metadata, json.dumps({"source_genome_id": source, "sha256": digest}).encode()
+                    metadata,
+                    json.dumps(
+                        {
+                            "source_genome_id": source,
+                            "sha256": digest,
+                            "source_checksum": row.get("source_checksum"),
+                        }
+                    ).encode(),
                 )
             destination = output / f"{source}.fasta"
             shutil.copyfile(blob, destination.with_suffix(".fasta.partial"))

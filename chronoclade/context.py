@@ -71,6 +71,7 @@ class ContextCandidate:
     cglin_resolved_depth: str = ""
     cgst: str = ""
     cglin_provisional: str = ""
+    cglin_source: str = ""
     cglin_scheme: str = ""
     cglin_scheme_version: str = ""
     cglin_export_sha256: str = ""
@@ -84,7 +85,10 @@ class ContextCandidate:
 
     @property
     def year(self) -> str:
-        return self.collection_date[:4] if len(self.collection_date) >= 4 else "Unknown"
+        if self.date_start:
+            return self.date_start[:4]
+        match = re.match(r"^\[?(\d{4})", self.collection_date)
+        return match.group(1) if match else "Unknown"
 
     @property
     def stratum(self) -> tuple[str, str]:

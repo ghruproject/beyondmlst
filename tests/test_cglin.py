@@ -165,13 +165,19 @@ def test_unsupported_scheme_and_explicit_focal_id_conflict():
     unsupported = assignment("a", scheme="HierCC")
     assert unsupported["cglin_status"] == "unsupported"
     assert not unsupported["cglin_group_5"]
-    catalogue = annotate_catalogue([
-        {"source_genome_id": "a", "biosample": "SAMN100"},
-        {"source_genome_id": "b", "biosample": "SAMN200"},
-    ], [assignment("a"), assignment("b")])
-    rows, _ = resolve_focal_assignments([
-        {"sample_id": "f", "source_genome_id": "b", "biosample": "SAMN100"},
-    ], catalogue)
+    catalogue = annotate_catalogue(
+        [
+            {"source_genome_id": "a", "biosample": "SAMN100"},
+            {"source_genome_id": "b", "biosample": "SAMN200"},
+        ],
+        [assignment("a"), assignment("b")],
+    )
+    rows, _ = resolve_focal_assignments(
+        [
+            {"sample_id": "f", "source_genome_id": "b", "biosample": "SAMN100"},
+        ],
+        catalogue,
+    )
     assert rows[0]["cglin_join_status"] == "conflict"
 
 
