@@ -102,3 +102,13 @@ SKA-selected genomes. Provider QC pipelines, upstream sampling and retrieval
 times differ. Zero failures in an already HQ-selected ATB catalogue cannot
 establish universal upstream ATB QC success; missing raw-failure coverage is
 explicitly unavailable. No ATB cgLIN assignment pipeline is implied.
+
+The committed `frozen_catalogue.json.gz` is a permitted compact public freeze with
+all 5,647 units and the verified three focal stand-ins. It preserves source UUIDs,
+sample units/raw genome counts, normalised country/date/QC and cgLIN annotations,
+and source/retrieval hashes, while excluding full raw metadata and assemblies.
+Regenerate all figures offline using `scripts/st147_pilot.py --stage figures
+--frozen-fixture validation/st147_pathogenwatch/frozen_catalogue.json.gz --output
+validation/st147_pathogenwatch/offline_figures`. Its payload hash is checked before
+rendering. `test_real_frozen_st147_public_country_and_coverage_hand_counts` verifies
+the measured denominators, country subset, assignment coverage and focal overlap.

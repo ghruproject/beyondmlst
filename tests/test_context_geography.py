@@ -157,3 +157,29 @@ def test_duplicate_assignment_conflict_never_inherits_representative_lineage():
     assert all(r['assignment_category'] == 'assignment_coverage' for r in result['rows'])
     assert all(r['assignment_status'] == 'conflict' for r in result['rows'])
     assert all(r['cglin_conflict'] for r in result['duplicate_audit'])
+
+
+def test_real_frozen_st147_public_country_and_coverage_hand_counts():
+    import gzip
+    fixture_path = Path(__file__).resolve().parents[1] / 'validation/st147_pathogenwatch/frozen_catalogue.json.gz'
+    frozen = json.loads(gzip.decompress(fixture_path.read_bytes()))
+    result = geography_tables(frozen['rows'], focal_rows=frozen['focal_rows'], scope=frozen['scope'])
+    assert result['qc_eligible_records'] == 7711
+    assert result['sample_units'] == 5647
+    assert result['identity_unresolved_units'] == 0
+    for depth, expected in [(5, (5558, 89, 104)), (6, (5546, 101, 240)), (7, (5546, 101, 635))]:
+        summary = next(s for s in result['summaries'] if s['cohort'] == 'public_catalogue' and s['depth'] == depth)
+        assert (summary['assigned_units'], summary['unresolved_units'], summary['lineage_groups']) == expected
+    focal_key = '["scgMLST629_S","unknown",[0,0,197,0,4,1,0]]'
+    group = [r for r in result['rows'] if r['cohort'] == 'public_catalogue'
+             and r['prefix_depth'] == 7 and r['prefix_key'] == focal_key]
+    counts = {r['country']: r['count'] for r in group}
+    assert sum(counts.values()) == 1767
+    assert {country: counts[country] for country in ('United States', 'Slovenia', 'Italy', 'Oman', 'Singapore', 'Unknown')} == {
+        'United States': 1024, 'Slovenia': 213, 'Italy': 181, 'Oman': 29, 'Singapore': 1, 'Unknown': 15}
+    assert all(r['known_country_n'] == 1752 and r['unknown_n'] == 15 for r in group)
+    assert len(result['focal_overlap']) == 3
+    for summary in result['summaries']:
+        if summary['cohort'] == 'focal_survey':
+            assert summary['total_units'] == summary['assigned_units'] == 3
+            assert summary['unresolved_units'] == 0

@@ -159,3 +159,25 @@ incidence, migration direction or transmission. Submission/surveillance bias,
 incomplete or provisional cgLIN, organism-specific capability, metadata conflicts
 and date uncertainty remain material limitations. Country is not country of
 acquisition. A same-ST catalogue is not the full global lineage across all STs.
+
+## Committed public freeze for offline figures
+
+The permitted compact public fixture retains all 5,647 QC-passing deduplicated
+units, their source UUIDs, sample-unit/raw-record counts, normalised country/date/QC
+fields, full cgLIN scheme/version/status/prefix annotations, three verified public
+focal stand-ins and retrieval/source hashes. Raw detailed responses and assemblies
+are excluded; this file is a geography/coverage freeze, not a replacement for the
+complete metadata source envelope.
+
+```bash
+pixi run python scripts/st147_pilot.py --stage figures \
+  --frozen-fixture validation/st147_pathogenwatch/frozen_catalogue.json.gz \
+  --output validation/st147_pathogenwatch/offline_figures
+```
+
+This validates the compact payload hash and creates figures/tables/HTML with no
+network, assemblies or phylogenetic analyses. The corresponding real-freeze test
+hand-checks the focal group's country subset and denominators, all-depth assignment
+coverage, raw/sample-unit reconciliation, zero unresolved sample identity and three
+focal memberships/overlaps. The source's immutable raw search/details and annotated
+catalogue hashes remain embedded for audit.

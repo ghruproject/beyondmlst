@@ -70,9 +70,10 @@ def replay(context: Path, output: Path) -> dict:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--stage', choices=('prepare', 'analyse', 'replay', 'live-smoke'), required=True)
+    parser.add_argument('--stage', choices=('prepare', 'analyse', 'replay', 'figures', 'live-smoke'), required=True)
     parser.add_argument('--output', type=Path, default=Path('validation/st147_pathogenwatch/run'))
     parser.add_argument('--context', type=Path)
+    parser.add_argument('--frozen-fixture', type=Path)
     parser.add_argument('--focal', type=Path)
     parser.add_argument('--catalogue', type=Path)
     parser.add_argument('--cglin-export', type=Path)
@@ -88,6 +89,20 @@ def main(argv=None) -> int:
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=True)
     context = (args.context or args.output / 'context').resolve()
+    if args.stage == 'figures':
+        if not args.frozen_fixture:
+            parser.error('figures requires --frozen-fixture')
+        import gzip
+        from chronoclade.pathogenwatch import content_hash
+        from chronoclade.context_geography import generate_context_geography
+        fixture = json.loads(gzip.decompress(args.frozen_fixture.read_bytes()))
+        payload = {k: v for k, v in fixture.items() if k != 'fixture_sha256'}
+        if content_hash(payload) != fixture['fixture_sha256']:
+            raise ValueError('Compact frozen fixture hash mismatch')
+        generate_context_geography(fixture['rows'], args.output / 'context_geography',
+            focal_rows=fixture['focal_rows'], selected_source_ids=fixture.get('selected_source_ids', ()),
+            scope=fixture['scope'])
+        return 0
     if args.stage == 'replay':
         print(json.dumps(replay(context, args.output / 'offline_replay'), indent=2))
         return 0
