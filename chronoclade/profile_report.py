@@ -507,7 +507,7 @@ def _geography_table(value: object, *, label: str, include_origin: bool) -> str:
     normalized = []
     for row, origin, count in parsed:
         normalized.append({
-            "origin": {"local": "Query set", "query": "Query set", "focal": "Query set"}.get(origin, "Public context" if origin == "context" else origin),
+            "origin": {"local": "Your input genomes", "query": "Your input genomes", "focal": "Your input genomes"}.get(origin, "Public comparison genomes" if origin == "context" else origin),
             "country": row.get("country", "Unknown"),
             "region": row.get("region", "Unknown"),
             "nuts2": row.get("nuts2", "Unknown"),
@@ -588,8 +588,24 @@ def _context_funnel(provenance: dict[str, Any]) -> str:
     ):
         if provenance.get(key) is not None:
             rows.append({"stage": label, "count": provenance[key]})
-    return _table(rows, [("stage", "Context funnel step"), ("count", "Records / units")],
-                  empty="Public catalogue selection counts were not supplied.")
+    selection = _mapping(provenance.get("context_pool_selection"))
+    audits = [_mapping(_mapping(item).get("audit")) for item in _items(selection.get("lineages"))]
+    for audit in audits:
+        counts = _mapping(audit.get("counts"))
+        for key, label in (("priority_selected", "Selected using matching lineage-group evidence"),
+                           ("background_selected", "Selected as same-ST background comparisons")):
+            if key in counts:
+                rows.append({"stage": label, "count": counts[key]})
+    result = _table(rows, [("stage", "Context funnel step"), ("count", "Records / units")],
+                    empty="Public catalogue selection counts were not supplied.")
+    if any("no_comparable_evidence_same_st_fallback" in _mapping(a.get("query_status")).values()
+           for a in audits):
+        result += (
+            '<p>Matching lineage-group evidence was unavailable for some inputs when the public pool '
+            'was selected. Those comparisons were sampled from the same MLST sequence type across '
+            'countries and years. They were not selected by matching cgLIN or HierCC groups.</p>'
+        )
+    return result
 
 
 def _provenance_notes(provenance: dict[str, Any]) -> str:
@@ -727,10 +743,8 @@ def write_profile_report(
         f"<li>{escape(_text(item))}</li>" for item in warning_values
     ) + "</ul></aside>"
 
-    summary_values = [
-        ("Input records", focal),
-        ("Usable profiles", raw_profiles if raw_profiles is not None else _mapping(data.get("coverage")).get("profiles_available", "Not reported")),
-    ]
+    query_coverage = _mapping(_mapping(prov.get("coverage")).get("queries"))
+    query_count = query_coverage.get("total")
     context_coverage = _mapping(_mapping(prov.get("coverage")).get("context"))
     public_context_count = context_coverage.get("total")
     public_profiles_available = context_coverage.get("profiles_available")
@@ -744,7 +758,27 @@ def write_profile_report(
         )
     if not context_description:
         context_description = "Frozen local file supplied" if "public_typing" in _mapping(prov.get("inputs")) else "Not reported"
-    summary_values.append(("Public typing context", context_description))
+    summary_values = [
+        ("Your input genomes", query_count if query_count is not None else "Not reported"),
+        ("Public comparison genomes", public_context_count if public_context_count is not None else "Not reported"),
+        ("Usable profiles across both sets", raw_profiles if raw_profiles is not None else "Not reported"),
+    ]
+    input_description = (
+        f"This report investigates your {query_count} input genomes and compares them with "
+        f"{public_context_count} additional public genomes. The selection counts and methods "
+        "are recorded below."
+        if query_count is not None and public_context_count is not None else
+        "Your input genomes are the samples being investigated. Public comparison genomes "
+        "are additional records selected from the source database to provide context."
+    )
+    hero_scope = (
+        f"{query_count} input genomes · {public_context_count} public comparisons · Fast profile report"
+        if query_count is not None and public_context_count is not None else
+        f"{focal} genomes · Profile comparison"
+    )
+    metadata_geography = _records(data.get("metadata_geography"))
+    input_geography = [row for row in metadata_geography if row.get("origin") in {"local", "query", "focal"}]
+    comparison_geography = [row for row in metadata_geography if row not in input_geography]
     geography = _mapping(data.get("geography", data.get("country_breakdown")))
     geography_rows = _records(geography) or _records(data.get("country_breakdown"))
     nearest = data.get("nearest_neighbours", data.get("nearest_relative"))
@@ -776,12 +810,14 @@ def write_profile_report(
     )
     sections = [
         '<main class="shell"><header class="identity"><div class="identity-mark">ChronoClade · ANALYSIS REPORT</div>'
-        f'<div class="identity-copy"><h1>{identity_heading}</h1><p>{escape(_text(focal))} genomes · Profile comparison</p></div></header>'
+        f'<div class="identity-copy"><h1>{identity_heading}</h1><p>{escape(hero_scope)}</p></div></header>'
         '<nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#geography">Countries</a><a href="#nearest">Closest relatives</a><a href="#network">Country network</a><a href="#groups">Groups</a><a href="#root-to-tip">Dates</a><a href="#downloads">Methods &amp; files</a></nav>',
         f'<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{message}{warnings}{_metric_cards(summary_values)}'
+        f'<p>{escape(input_description)}</p><p>Public comparison typing: {escape(context_description)}.</p>'
         '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic grouping, observation across collection years, and concentration in a particular time and place are reported separately.</p></div></section>',
         f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
-        f'<h3>Analysed input metadata</h3>{_geography_table(data.get("metadata_geography"), label="Analysed input metadata", include_origin=True)}'
+        f'<h3>Your input genomes</h3><p>The samples you supplied for investigation.</p>{_geography_table(input_geography, label="Your input genomes", include_origin=True)}'
+        f'<h3>Public comparison genomes</h3><p>Additional genomes selected for comparison.</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
         f'<h3>Frozen public catalogue</h3>{_geography_table(data.get("public_catalogue_geography"), label="Frozen public catalogue", include_origin=False)}'
         f'{legacy_geography}'
         f'{country_figures}'
