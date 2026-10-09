@@ -102,10 +102,10 @@ changes are not confirmed transmission routes; see the [report guide](docs/repor
 
 ## Public context genomes
 
-Pathogenwatch is the primary public-context provider, initially for
-*Klebsiella pneumoniae*. ChronoClade freezes the full public same-ST catalogue,
-imports comparable cgLIN assignments, then downloads a bounded country/year
-balanced candidate pool for SKA screening. Country figures use QC-passing,
+Pathogenwatch is the public-context provider for *Klebsiella pneumoniae* and
+*Escherichia coli*. ChronoClade freezes the full public same-ST catalogue, then
+prioritises compatible cgMLST, cgLIN or HierCC context while retaining a bounded
+country/year-balanced background for SKA screening. Country figures use QC-passing,
 accession-deduplicated public records, including undated records, before
 selection. cgLIN depths are prefix levels, not SNP cutoffs or transmission groups.
 
@@ -129,6 +129,13 @@ Downloads use `PATHOGENWATCH_API_KEY` or a user-only configuration file; see the
 and `--focal-crosswalk` can supply assignments without uploading focal genomes.
 Missing assignments remain explicit. See the [country figures](docs/context-geography.md)
 and [laptop/SLURM pilot](docs/pathogenwatch-pilot.md).
+
+For new assemblies, `chronoclade setup-typing` installs Pathogenwatch's own
+cgMLST caller, Klebsiella `plincer` and E. coli `hclink`, using uv for the Python
+tools. Reference databases are prepared separately and their readiness is checked.
+Use `type-queries` for frozen typing results or `prepare-context --typing-config`
+to type queries and the bounded public pool with the same databases. See
+[new assembly typing and HierCC](docs/query-typing.md) for installation and data access.
 
 Pathogenwatch is the only built-in public-context provider. Context preparation
 currently supports *K. pneumoniae* with `--scheme klebsiella`; other organisms

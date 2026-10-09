@@ -120,6 +120,7 @@ def normalise_assignment(
         "cglin_source": _text(row.get("cglin_source")) or "validated_export",
         "cglin_retrieved_at": _text(row.get("cglin_retrieved_at")) or retrieved_at,
         "cglin_export_sha256": _text(row.get("cglin_export_sha256")) or export_sha256,
+        "cglin_frozen_export_sha256": _text(row.get("cglin_frozen_export_sha256")),
         "cglin_export_row": dict(row.get("cglin_export_row") or row),
     }
     for depth in depths:
@@ -141,6 +142,7 @@ def load_cglin_export(
 ) -> list[dict[str, Any]]:
     """Import UTF-8 JSON records or header-bearing CSV/TSV; retain exact-byte hash.
 
+    The whole-file hash is retained separately from any original per-batch hash.
     Every record requires an explicit Pathogenwatch ID. Duplicate IDs are kept
     for conflict detection in annotate_catalogue, rather than last-write-wins.
     """
@@ -181,6 +183,9 @@ def load_cglin_export(
         )
         if not assignment["source_genome_id"]:
             raise CGLINError(f"cgLIN record {index} has no source genome ID; name joins are unsafe")
+        # Scope the complete import independently of original per-batch hashes.
+        # This proves common frozen file identity, not a database version.
+        assignment["cglin_frozen_export_sha256"] = digest
         assignments.append(assignment)
     return assignments
 

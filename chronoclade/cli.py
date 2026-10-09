@@ -99,6 +99,80 @@ def _print_plan(items: list[dict[str, object]]) -> None:
     console.print(table)
 
 
+@app.command("setup-typing")
+def setup_typing_command(
+    destination: Annotated[
+        Path,
+        typer.Option("--destination", help="Pinned native typing tools and reference databases"),
+    ] = Path("~/.local/share/chronoclade/typing"),
+    species: Annotated[
+        list[str] | None,
+        typer.Option("--species", help="klebsiella or ecoli; repeat to install both"),
+    ] = None,
+    prepare_db: Annotated[
+        bool,
+        typer.Option(
+            "--prepare-db",
+            help="Also download and index publicly available cgMLST alleles; may take hours",
+        ),
+    ] = False,
+    pasteur_secrets: Annotated[
+        Path | None,
+        typer.Option(
+            "--pasteur-secrets",
+            help="Protected Pasteur credentials file for a Klebsiella LIN database build",
+        ),
+    ] = None,
+    enterobase_key_file: Annotated[
+        Path | None,
+        typer.Option(
+            "--enterobase-key-file",
+            help="Protected EnteroBase key file for an E. coli HierCC database build",
+        ),
+    ] = None,
+) -> None:
+    """Install Pathogenwatch typing tools via uv and report database readiness."""
+    from chronoclade.typing_setup import TypingSetupError, setup_typing
+
+    try:
+        path, report = setup_typing(
+            destination,
+            species=species or ["klebsiella", "ecoli"],
+            prepare_db=prepare_db,
+            pasteur_secrets=pasteur_secrets,
+            enterobase_key_file=enterobase_key_file,
+        )
+    except (TypingSetupError, OSError) as error:
+        _fail(error)
+    console.print(f"Typing setup: {path}")
+    console.print(json.dumps(report["databases"], indent=2))
+
+
+@app.command("type-queries")
+def type_queries_command(
+    metadata: Annotated[Path, typer.Argument(help="Query genome metadata CSV")],
+    typing_config: Annotated[
+        Path,
+        typer.Option(
+            "--typing-config", help="Pinned tools and reference databases from setup-typing"
+        ),
+    ],
+    output: Annotated[Path, typer.Option("--output", "-o")] = Path("chronoclade_typing"),
+) -> None:
+    """Call cgMLST and Klebsiella LIN or E. coli HierCC locally."""
+    from chronoclade.query_typing import QueryTypingError, type_query_assemblies
+
+    try:
+        results = type_query_assemblies(
+            read_metadata(metadata), typing_config, output.expanduser().resolve()
+        )
+    except (QueryTypingError, MetadataError, OSError) as error:
+        _fail(error)
+    console.print(
+        f"Typed {len(results)} queries; results: {output.expanduser().resolve() / 'query_typing.json'}"
+    )
+
+
 @app.command("prepare-context")
 def prepare_context_command(
     metadata: Annotated[Path, typer.Argument(help="Focal-isolate metadata CSV")],
@@ -155,18 +229,61 @@ def prepare_context_command(
         ),
     ] = 3,
     threads: Annotated[int, typer.Option("--threads", "-t", min=1)] = 4,
-    catalogue: Annotated[Path | None, typer.Option(
-        "--catalogue", help="Frozen Pathogenwatch JSON catalogue; no live metadata requests"
-    )] = None,
-    cglin_export: Annotated[Path | None, typer.Option(
-        "--cglin-export", help="Validated cgLIN export for the same scheme"
-    )] = None,
-    focal_crosswalk: Annotated[Path | None, typer.Option(
-        "--focal-crosswalk", help="Focal sample/accession to Pathogenwatch ID CSV"
-    )] = None,
-    refresh_catalogue: Annotated[bool, typer.Option(
-        "--refresh-catalogue", help="Explicitly replace the cached public metadata snapshot"
-    )] = False,
+    catalogue: Annotated[
+        Path | None,
+        typer.Option(
+            "--catalogue", help="Frozen Pathogenwatch JSON catalogue; no live metadata requests"
+        ),
+    ] = None,
+    cglin_export: Annotated[
+        Path | None,
+        typer.Option("--cglin-export", help="Validated cgLIN export for the same scheme"),
+    ] = None,
+    focal_crosswalk: Annotated[
+        Path | None,
+        typer.Option("--focal-crosswalk", help="Focal sample/accession to Pathogenwatch ID CSV"),
+    ] = None,
+    typing_config: Annotated[
+        Path | None,
+        typer.Option(
+            "--typing-config",
+            help="Native Pathogenwatch tools and frozen databases; type queries and downloaded context",
+        ),
+    ] = None,
+    query_typing: Annotated[
+        Path | None,
+        typer.Option(
+            "--query-typing", help="Frozen type-queries results matching the focal assembly hashes"
+        ),
+    ] = None,
+    public_typing: Annotated[
+        Path | None,
+        typer.Option(
+            "--public-typing",
+            help="Frozen cgMLST/cgLIN/HierCC assignments keyed by exact Pathogenwatch IDs",
+        ),
+    ] = None,
+    cglin_depth: Annotated[
+        int,
+        typer.Option(
+            "--cglin-depth",
+            min=1,
+            max=10,
+            help="Full cgLIN prefix depth prioritised within the same-ST pool",
+        ),
+    ] = 7,
+    hiercc_level: Annotated[
+        str,
+        typer.Option(
+            "--hiercc-level", help="HierCC level prioritised within the same-ST pool, e.g. HC1100"
+        ),
+    ] = "HC1100",
+    refresh_catalogue: Annotated[
+        bool,
+        typer.Option(
+            "--refresh-catalogue", help="Explicitly replace the cached public metadata snapshot"
+        ),
+    ] = False,
     seed: Annotated[int, typer.Option("--seed")] = 20260818,
     dry_run: Annotated[
         bool,
@@ -223,6 +340,11 @@ def prepare_context_command(
             cglin_export=cglin_export,
             focal_crosswalk=focal_crosswalk,
             refresh_catalogue=refresh_catalogue,
+            typing_config=typing_config,
+            query_typing=query_typing,
+            public_typing=public_typing,
+            cglin_depth=cglin_depth,
+            hiercc_level=hiercc_level,
         )
     except (ContextError, MetadataError, OSError) as error:
         _fail(error)
@@ -303,9 +425,7 @@ def run(
         if mode not in {"full", "fast"}:
             raise WorkflowError("--mode must be full or fast")
         if normalized_method not in {"root_to_tip", "full_tree"}:
-            raise WorkflowError(
-                "--date-randomisation-method must be root-to-tip or full-tree"
-            )
+            raise WorkflowError("--date-randomisation-method must be root-to-tip or full-tree")
         if mode == "fast" and normalized_method != "root_to_tip":
             raise WorkflowError("--mode fast only supports root-to-tip randomisation")
         samples = read_metadata(metadata)

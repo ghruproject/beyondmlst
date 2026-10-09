@@ -45,6 +45,7 @@ nav:
   - Pathogenwatch context:
       - Frozen metadata: pathogenwatch.md
       - cgLIN assignments: cglin.md
+      - New assembly typing and HierCC: query-typing.md
       - Country figures: context-geography.md
       - Laptop and SLURM pilot: pathogenwatch-pilot.md
   - Reading the report: report.md

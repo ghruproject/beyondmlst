@@ -249,12 +249,12 @@ def test_dry_run_without_download_credentials_and_tampered_snapshot(tmp_path, mo
 
 def test_unsupported_species_is_rejected(tmp_path):
     focal, catalogue, export = make_fixture(tmp_path)
-    focal.write_text(focal.read_text().replace("Klebsiella pneumoniae", "Escherichia coli"))
+    focal.write_text(focal.read_text().replace("Klebsiella pneumoniae", "Salmonella enterica"))
     result = CliRunner().invoke(
         app, prepare_args(focal, catalogue, export, tmp_path / "unsupported", dry=True)
     )
     assert result.exit_code != 0
-    assert "currently supports Klebsiella pneumoniae" in result.output
+    assert "supports Klebsiella pneumoniae" in result.output
     assert "ATB" not in result.output and "--context-source" not in result.output
 
 

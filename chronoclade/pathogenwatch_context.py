@@ -17,12 +17,13 @@ from chronoclade.context import (
     parse_ska_distances,
     run_ska_screen,
     select_context,
-    stratified_candidate_pool,
     write_audit,
     write_candidate_table,
     write_combined_metadata,
     write_ska_inputs,
 )
+from chronoclade.context_refinement import refine_candidate_pool
+from chronoclade.metadata import Sample
 from chronoclade.pathogenwatch import (
     PathogenwatchClient,
     PathogenwatchError,
@@ -66,6 +67,8 @@ def _candidate(
         for key, value in row.items()
         if key in names and not isinstance(value, (dict, list))
     }
+    if isinstance(row.get("hiercc_codes"), dict):
+        values["hiercc_codes"] = json.dumps(row["hiercc_codes"], sort_keys=True)
     values.update(
         sample_id="PW_" + row["source_genome_id"],
         species=species,
@@ -125,6 +128,11 @@ def prepare_pathogenwatch_context(
     cglin_export=None,
     focal_crosswalk=None,
     refresh_catalogue=False,
+    typing_config=None,
+    query_typing=None,
+    public_typing=None,
+    cglin_depth=7,
+    hiercc_level="HC1100",
 ):
     """Freeze, annotate, filter, fetch a bounded pool and screen with existing SKA gates."""
     from chronoclade.cglin import (
@@ -135,16 +143,36 @@ def prepare_pathogenwatch_context(
         resolve_focal_assignments,
     )
     from chronoclade.context_geography import generate_context_geography
+    from chronoclade.public_typing import (
+        PublicTypingError,
+        annotate_public_typing,
+        load_public_typing,
+        resolve_focal_typing,
+    )
+    from chronoclade.query_typing import QueryTypingError, load_query_typing, type_query_assemblies
 
     if not focal:
         raise ContextError("No focal samples were supplied for context preparation")
-    # Initial supported route is explicit; genome availability is separate from cgLIN support.
     normalized = " ".join(species.replace("_", " ").casefold().split())
-    if normalized != "klebsiella pneumoniae" or scheme not in {"klebsiella", "mlst"}:
+    supported = {
+        "klebsiella pneumoniae": ("573", {"klebsiella", "mlst"}),
+        "escherichia coli": ("562", {"ecoli", "ecoli_achtman_4", "mlst", "mlst2"}),
+    }
+    if normalized not in supported or scheme not in supported[normalized][1]:
         raise ContextError(
-            "Pathogenwatch context currently supports Klebsiella pneumoniae "
-            "with --scheme klebsiella (cgLIN is organism-specific)"
+            "Pathogenwatch context supports Klebsiella pneumoniae (--scheme klebsiella) "
+            "and Escherichia coli (--scheme ecoli, or explicit mlst/mlst2 API field)"
         )
+    organism_id = supported[normalized][0]
+    api_scheme = "mlst2" if scheme == "mlst2" else "mlst"
+    if typing_config and query_typing:
+        raise ContextError("Use either --typing-config or --query-typing, not both")
+    if (
+        not 1 <= cglin_depth <= 10
+        or not hiercc_level.startswith("HC")
+        or not hiercc_level[2:].isdigit()
+    ):
+        raise ContextError("Use cgLIN depth 1–10 and a HierCC level such as HC1100")
     if min(candidate_pool, max_context, nearest_per_focal, threads) < 1:
         raise ContextError("Context pool, selection and thread settings must be positive")
     output = output.expanduser().resolve()
@@ -161,21 +189,27 @@ def prepare_pathogenwatch_context(
         elif catalogue:
             raise ContextError("Supplied frozen catalogue does not exist; do not refresh imports")
         else:
-            envelope = PathogenwatchClient().freeze_catalogue(frozen, organism_id="573", st=st)
+            envelope = PathogenwatchClient().freeze_catalogue(
+                frozen, organism_id=organism_id, st=st, mlst_scheme=api_scheme
+            )
     except PathogenwatchError as error:
         raise ContextError(str(error)) from None
     provenance = envelope["provenance"]
     query = provenance["query"]
-    if str(query.get("organismId")) != "573" or query.get("mlst") != [str(st)]:
+    if str(query.get("organismId")) != organism_id or query.get(api_scheme) != [str(st)]:
         raise ContextError("Frozen catalogue query does not match the requested organism/ST")
     rows = envelope["rows"]
     assignments = []
     annotation_capability = "unavailable_without_credentials"
     try:
+        if cglin_export and organism_id != "573":
+            raise ContextError(
+                "Klebsiella cgLIN exports cannot annotate E. coli; use --public-typing"
+            )
         if cglin_export:
             assignments = load_cglin_export(cglin_export)
             annotation_capability = "imported_validated_export"
-        else:
+        elif organism_id == "573":
             key = load_api_key()
             export_dir = output / "cglin" / envelope["snapshot_sha256"]
             export_manifest = export_dir / "cglin_export.json"
@@ -183,17 +217,26 @@ def prepare_pathogenwatch_context(
                 assignments = load_cglin_export(export_manifest)
                 annotation_capability = "frozen_export"
             elif key:
-                exported = download_cglin_export(rows, export_dir, api_key=key)
-                assignments = exported["assignments"]
+                download_cglin_export(rows, export_dir, api_key=key)
+                assignments = load_cglin_export(export_manifest)
                 annotation_capability = "downloaded_export"
     except CGLINError as error:
         raise ContextError(str(error)) from None
     rows = annotate_catalogue(rows, assignments)
+    public_assignments = []
+    try:
+        if public_typing:
+            public_assignments = load_public_typing(public_typing)
+            rows = annotate_public_typing(rows, public_assignments)
+    except PublicTypingError as error:
+        raise ContextError(str(error)) from None
     # Public composition is deduplicated before dated/selection/focal exclusions.
     public, duplicate_audit = deduplicate_catalogue(
         [row for row in rows if row.get("qc_pass") is True]
     )
     public = annotate_catalogue(public, assignments)
+    if public_assignments:
+        public = annotate_public_typing(public, public_assignments)
     crosswalk = _read_crosswalk(focal_crosswalk)
     focal_rows = [
         {
@@ -209,6 +252,46 @@ def prepare_pathogenwatch_context(
     focal_annotations, focal_audit = resolve_focal_assignments(
         focal_rows, rows, crosswalk=crosswalk or None
     )
+    focal_annotations = resolve_focal_typing(focal_annotations, rows)
+    try:
+        if query_typing:
+            typed_queries = load_query_typing(query_typing)
+            by_sample = {sample.sample_id: sample for sample in focal}
+            for assignment in typed_queries:
+                sample = by_sample.get(assignment["sample_id"])
+                if sample is None:
+                    raise QueryTypingError(
+                        "Query typing contains a sample outside the focal cohort"
+                    )
+                if (
+                    " ".join(
+                        str(assignment.get("species", "")).replace("_", " ").casefold().split()
+                    )
+                    != normalized
+                    or assignment["assembly_sha256"]
+                    != hashlib.sha256(sample.assembly.read_bytes()).hexdigest()
+                ):
+                    raise QueryTypingError(
+                        "Query typing species or assembly hash does not match the focal input"
+                    )
+        elif typing_config:
+            typed_queries = type_query_assemblies(focal, typing_config, output / "query_typing")
+        else:
+            typed_queries = []
+    except QueryTypingError as error:
+        raise ContextError(str(error)) from None
+    by_sample_typing = {row["sample_id"]: row for row in typed_queries}
+    focal_annotations = [
+        dict(
+            row,
+            **{
+                k: v
+                for k, v in by_sample_typing.get(row["sample_id"], {}).items()
+                if k != "sample_id"
+            },
+        )
+        for row in focal_annotations
+    ]
     focal_aliases = {sample.sample_id for sample in focal}
     for row in focal_annotations:
         for key in (
@@ -222,6 +305,8 @@ def prepare_pathogenwatch_context(
                 focal_aliases.add(row[key])
     eligible, focal_duplicate_audit = deduplicate_catalogue(rows, focal_aliases=focal_aliases)
     eligible = annotate_catalogue(eligible, assignments)
+    if public_assignments:
+        eligible = annotate_public_typing(eligible, public_assignments)
     qc = [row for row in eligible if row.get("qc_pass") is True]
     dated = [row for row in qc if row.get("dated_cohort_eligible")]
     annotated_path = output / "context_catalogue.json"
@@ -249,7 +334,17 @@ def prepare_pathogenwatch_context(
         host=host,
         isolation_source=isolation_source,
     )
-    pool = stratified_candidate_pool(filtered, limit=candidate_pool, seed=seed)
+    pool, refinement = refine_candidate_pool(
+        filtered,
+        eligible,
+        focal_annotations,
+        limit=candidate_pool,
+        seed=seed,
+        cglin_depth=cglin_depth,
+        hiercc_level=hiercc_level,
+    )
+    for candidate in pool:
+        candidate.pool_selection_reason = candidate.selection_reason
     write_candidate_table(output / "candidate_pool.tsv", pool)
     settings = dict(
         countries=countries or [],
@@ -261,6 +356,8 @@ def prepare_pathogenwatch_context(
         candidate_pool=candidate_pool,
         max_context=max_context,
         nearest_per_focal=nearest_per_focal,
+        cglin_depth=cglin_depth,
+        hiercc_level=hiercc_level,
     )
     fingerprint = content_hash(
         {
@@ -288,6 +385,12 @@ def prepare_pathogenwatch_context(
         focal_exclusions=focal_duplicate_audit,
         focal_cglin=focal_audit,
         annotation_capability=annotation_capability,
+        query_typing_source="native"
+        if typing_config
+        else "imported"
+        if query_typing
+        else "public_identity_lookup",
+        lineage_refinement=refinement,
         qc_pass_candidates=len(qc),
         dated_hq_metadata_candidates=len(dated),
         metadata_filtered_candidates=len(filtered),
@@ -363,13 +466,82 @@ def prepare_pathogenwatch_context(
     if not downloaded:
         figures()
         raise ContextError("No validated Pathogenwatch FASTAs downloaded; see failure ledger")
-    inputs = write_ska_inputs(output / "ska_inputs.tsv", focal, downloaded)
+    screening_pool = downloaded
+    if typing_config:
+        # Public annotations can use a different database release. Type this
+        # bounded downloaded pool with the same tools as the novel focal queries
+        # before deciding which genomes enter the genetic screen.
+        public_samples = [
+            Sample(
+                c.sample_id,
+                Path(c.assembly),
+                c.collection_date,
+                c.country,
+                species,
+                lineage,
+                "public_context",
+            )
+            for c in downloaded
+        ]
+        try:
+            public_results = type_query_assemblies(
+                public_samples, typing_config, output / "public_query_typing"
+            )
+        except QueryTypingError as error:
+            raise ContextError(str(error)) from None
+        native_annotations = [
+            dict(row, source_genome_id=row["sample_id"][3:]) for row in public_results
+        ]
+        write_audit(
+            output / "native_public_typing.json",
+            {"schema_version": 1, "assignments": native_annotations},
+        )
+        audit["native_public_typing_sha256"] = hashlib.sha256(
+            (output / "native_public_typing.json").read_bytes()
+        ).hexdigest()
+        write_audit(output / "context_selection.json", audit)
+        native_by_source = {row["source_genome_id"]: row for row in native_annotations}
+        native_rows = [
+            dict(
+                row,
+                **{
+                    k: v
+                    for k, v in native_by_source.get(row["source_genome_id"], {}).items()
+                    if k not in {"sample_id", "source_genome_id"}
+                },
+            )
+            for row in qc
+        ]
+        screening_pool, native_refinement = refine_candidate_pool(
+            downloaded,
+            native_rows,
+            focal_annotations,
+            limit=max_context,
+            seed=seed,
+            cglin_depth=cglin_depth,
+            hiercc_level=hiercc_level,
+        )
+        for candidate in screening_pool:
+            candidate.pool_selection_reason = candidate.selection_reason
+            annotation = native_by_source[candidate.source_genome_id]
+            for field in fields(ContextCandidate):
+                name = field.name
+                if (
+                    (name.startswith(("cglin_", "cgmlst_", "hiercc_")) or name == "cgst")
+                    and name in annotation
+                    and not isinstance(annotation[name], (dict, list))
+                ):
+                    setattr(candidate, name, str(annotation[name]))
+            candidate.hiercc_codes = json.dumps(annotation.get("hiercc_codes", {}), sort_keys=True)
+        audit["native_lineage_refinement"] = native_refinement
+        audit["stage_losses"]["native_lineage_refinement"] = len(downloaded) - len(screening_pool)
+    inputs = write_ska_inputs(output / "ska_inputs.tsv", focal, screening_pool)
     distance_path = run_ska_screen(
         inputs=inputs, output_dir=output, threads=threads, executable=ska_executable
     )
     distances = parse_ska_distances(distance_path)
     selected, selection = select_context(
-        downloaded,
+        screening_pool,
         [s.sample_id for s in focal],
         distances,
         max_context=max_context,
@@ -378,7 +550,7 @@ def prepare_pathogenwatch_context(
     )
     audit.update(selection)
     audit["stage_losses"]["missing_ska_comparisons"] = (
-        len(downloaded) - selection["screened_candidates"]
+        len(screening_pool) - selection["screened_candidates"]
     )
     audit["stage_losses"]["selection_limit"] = selection["screened_candidates"] - len(selected)
     if not selected:
@@ -387,7 +559,7 @@ def prepare_pathogenwatch_context(
         raise ContextError("SKA screening yielded no contextual genomes; see selection audit")
     write_candidate_table(
         output / "screened_candidates.tsv",
-        annotate_screening_distances(downloaded, [s.sample_id for s in focal], distances),
+        annotate_screening_distances(screening_pool, [s.sample_id for s in focal], distances),
     )
     manifest = write_candidate_table(output / "context_manifest.tsv", selected)
     combined = write_combined_metadata(output / "combined_metadata.csv", focal, selected)

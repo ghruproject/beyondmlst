@@ -1,0 +1,118 @@
+{
+  "validation_date": "2026-10-09",
+  "scope": "Actual upstream executables against synthetic three-locus references; integration validation only, not biological typing validation",
+  "tools": {
+    "mlst": {
+      "version": "8.0.0",
+      "commit": "4067e2aecbedc21ca2921fc0e6e149a0972119ff",
+      "node_version": "v22.19.0",
+      "node_sha256": "c59006db713c770d6ec63ae16cb3edc11f49ee093b5c415d667bb4f436c6526d"
+    },
+    "plincer": {
+      "version": "7.0.0",
+      "commit": "c6d3d85e7484aee4d713429b78402b0590ac8fdc"
+    },
+    "hclink": {
+      "version": "4.0.1",
+      "commit": "e8282cd6fc813b90d0b1d65f6598b11e7d637e8a"
+    }
+  },
+  "assignments": [
+    {
+      "sample_id": "queryK",
+      "species": "Klebsiella pneumoniae",
+      "assembly_sha256": "857d0b0c8c7e1c1f1fe7bb4c66373c04074bedf44054462595716fab8b4c1ac5",
+      "typing_status": "typed",
+      "cgmlst_scheme": "klebsiella_1",
+      "cgmlst_scheme_version": "2026-01-01",
+      "cgmlst_loci": [
+        "a",
+        "b",
+        "c"
+      ],
+      "cgmlst_code": "1_1_1",
+      "cgmlst_called_fraction": 1.0,
+      "cgmlst_database_sha256": "371996b0c080707e10774e886a07097bfc50fe57f67cb39370438c8dfdfd8e82",
+      "cglin_raw": "0_0_1_2_3_4_5_6_7_8",
+      "cglin_database_sha256": "1e89b3b01cef733d13f95444a15202914528cfc88eac3a46616a57493caca666"
+    },
+    {
+      "sample_id": "queryE",
+      "species": "Escherichia coli",
+      "assembly_sha256": "857d0b0c8c7e1c1f1fe7bb4c66373c04074bedf44054462595716fab8b4c1ac5",
+      "typing_status": "typed",
+      "cgmlst_scheme": "ecoli_1",
+      "cgmlst_scheme_version": "2026-01-01",
+      "cgmlst_loci": [
+        "a",
+        "b",
+        "c"
+      ],
+      "cgmlst_code": "1_1_1",
+      "cgmlst_called_fraction": 1.0,
+      "cgmlst_database_sha256": "371996b0c080707e10774e886a07097bfc50fe57f67cb39370438c8dfdfd8e82",
+      "hiercc_codes": {
+        "HC0": "1",
+        "HC2": "2",
+        "HC10": "3",
+        "HC200": "4"
+      },
+      "hiercc_database_sha256": "cd1f6e5d063d66c556776e3e4e2d5aa77e6ffdfba726749f07203bf9fdd05c89"
+    }
+  ],
+  "frozen_st147_refinement": {
+    "counts": {
+      "eligible_same_st": 5372,
+      "selected": 8,
+      "priority_selected": 6,
+      "background_selected": 2,
+      "reserved_background": 2,
+      "priority_eligible": 1724,
+      "comparison_reasons": {
+        "cglin_different_group": 10632,
+        "cglin_unassigned_or_unversioned": 312,
+        "cgmlst_profile_unavailable": 16116,
+        "hiercc_unassigned_or_unversioned": 16116
+      }
+    },
+    "query_status": {
+      "SAMD00193192": "has_comparable_evidence",
+      "SAMEA122094000": "has_comparable_evidence",
+      "SAMEA9453699": "has_comparable_evidence"
+    },
+    "selected": [
+      {
+        "id": "11otHzAJfT9akcJciFEFyV",
+        "reason": "lineage_priority:SAMD00193192"
+      },
+      {
+        "id": "16d3aUfa595jupF6epJP5H",
+        "reason": "lineage_priority:SAMEA122094000"
+      },
+      {
+        "id": "185V6wmT1Xkpme3q6Na8tu",
+        "reason": "lineage_priority:SAMEA9453699"
+      },
+      {
+        "id": "18SUP77Hz6zwKtc7hwchtk",
+        "reason": "lineage_priority:SAMD00193192"
+      },
+      {
+        "id": "19Xb4zP6LAc7tAuMwYyY7j",
+        "reason": "lineage_priority:SAMEA122094000"
+      },
+      {
+        "id": "19jtiyXds9h7gEfw6qUtTk",
+        "reason": "lineage_priority:SAMEA9453699"
+      },
+      {
+        "id": "ub5DyBkv3pVAXuWWkw3pFc",
+        "reason": "balanced_same_st_background"
+      },
+      {
+        "id": "bqi9f4VXWbXi7bp5R26r1X",
+        "reason": "balanced_same_st_background"
+      }
+    ]
+  }
+}
