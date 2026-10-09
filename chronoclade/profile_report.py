@@ -175,7 +175,7 @@ def _range_text(low: object, high: object) -> str:
 
 
 def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
-    edges = _records(row.get("edges"))
+    edges = _records(row.get("directed_edges", row.get("edges")))
     countries = set(_items(row.get("input_countries")))
     if focus_inputs:
         edges = [edge for edge in edges if _edge_countries(edge)[0] in countries or _edge_countries(edge)[1] in countries]
@@ -184,7 +184,9 @@ def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
         "displayed_changes": edge.get("representative_count", edge.get("displayed_changes")),
         "minimum_changes": edge.get("min_changes"), "maximum_changes": edge.get("max_changes"),
     } for edge in edges]
-    table = _table(edges, [("country_a", "Country A"), ("country_b", "Country B"),
+    directed = "directed_edges" in row
+    table = _table(edges, [("country_a", "From ancestral country" if directed else "Country A"),
+        ("country_b", "To descendant country" if directed else "Country B"),
         ("displayed_changes", "Changes in displayed reconstruction"),
         ("minimum_changes", "Minimum changes"), ("maximum_changes", "Maximum changes")],
         empty="No inferred country connections are available for this view.")
@@ -204,11 +206,30 @@ def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
             ("mismatches", "Allele differences"), ("shared_loci", "Jointly compared loci")],
             empty="No closest-relative country connections are available for this view.")
         + f'<details class="coverage-details"><summary>Inferred country connections ({len(edges)} pairs)</summary>'
-        '<p class="muted">Ranges count changes across all equally optimal parsimony assignments on the fixed NJ topology. '
+        '<p class="muted">Ranges count changes across all equally optimal parsimony assignments on the fixed rooted NJ tree. '
         'They are exact conditional counts, not confidence or probabilities. A pair can have zero changes in the '
         'displayed representative reconstruction and still have a non-zero maximum. Ranges are calculated '
-        'for each pair separately; their maxima need not occur together in one reconstruction.</p>' + table + '</details>'
+        'for each ordered pair separately; their maxima need not occur together in one reconstruction.</p>' + table + '</details>'
+        + _network_metrics(row)
     )
+
+
+def _network_metrics(row: dict[str, Any]) -> str:
+    metrics = _records(row.get("network_metrics"))
+    if not metrics:
+        return ""
+    metrics = [{**item, "source_hub_ratio": (
+        f"{item['source_hub_ratio']:.3f}" if item.get("source_hub_ratio") is not None else "Undefined"
+    )} for item in metrics]
+    return ('<details class="coverage-details"><summary>Country network metrics</summary>'
+            '<p>Incoming and outgoing links count distinct country connections in the displayed history. '
+            'Incoming and outgoing changes count tree branches. The source/hub ratio is outgoing changes '
+            'divided by all incoming and outgoing changes; it describes this rooted reconstruction.</p>'
+            + _table(metrics, [("country", "Country"), ("in_degree", "Incoming links"),
+                ("out_degree", "Outgoing links"), ("in_changes", "Incoming changes"),
+                ("out_changes", "Outgoing changes"), ("source_hub_ratio", "Source/hub ratio")],
+                     empty="No country metrics are available.")
+            + '</details>')
 
 
 def _edge_countries(edge: dict[str, Any]) -> tuple[object, object]:
@@ -240,7 +261,7 @@ def _network_view(row: dict[str, Any], directory: Path, *, focus_inputs: bool) -
         if roots is not None:
             root_note += '. Separate possible-link diagnostic: ' + escape(_text(roots)) + ' roots checked'
         root_note += '.</p>'
-    default_asset = _figure_asset(directory, row, representative, "Representative weighted country network")
+    default_asset = _figure_asset(directory, row, representative, "Country-state transition network")
     possible_asset = _figure_asset(directory, row, possible, "Representative network with alternative possible links")
     return metrics + root_note + '<div data-network-representative>' + tree + default_asset + '</div>' + \
         '<div data-network-possible hidden>' + tree + possible_asset + '</div>' + _network_tables(row, focus_inputs=focus_inputs)
@@ -282,7 +303,8 @@ def _location_network(value: object, directory: Path, cohorts: object = None) ->
             f'<select id="{identifier}-reconstruction" data-network-reconstruction><option value="representative">Representative reconstruction</option>'
             '<option value="possible">Include alternative possible links</option></select></div>'
             + '<p>Node colours show country states; dark outlines mark countries with input genomes. '
-            'Link thickness counts changes in the representative history. Dashed links mark variation across optimal assignments.</p>'
+            'Arrows follow ancestral-to-descendant state changes on the displayed rooted tree. '
+            'Link thickness counts these changes; dashed links mark variation across optimal assignments.</p>'
             + '<div data-network-output>' + rendered[0]["all"] + '</div>'
             + '<noscript><p>Showing all country links and the representative reconstruction. Enable JavaScript to switch views.</p></noscript>'
             + f'<script type="application/json" data-network-views>{payload}</script></div>'
