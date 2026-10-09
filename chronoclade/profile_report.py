@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from chronoclade.sample_labels import label_analysis, read_sample_labels
+from chronoclade.profile_network_widget import interactive_network_html, widget_assets
 
 from chronoclade.report import (
     _context_geography_visual,
@@ -218,16 +219,18 @@ def _network_metrics(row: dict[str, Any]) -> str:
     metrics = _records(row.get("network_metrics"))
     if not metrics:
         return ""
-    metrics = [{**item, "source_hub_ratio": (
-        f"{item['source_hub_ratio']:.3f}" if item.get("source_hub_ratio") is not None else "Undefined"
-    )} for item in metrics]
+    metrics = [{**item, **{key: f"{item[key]:.3f}" if item.get(key) is not None else "Undefined"
+                          for key in ("source_hub_ratio", "betweenness", "closeness")}}
+               for item in metrics]
     return ('<details class="coverage-details"><summary>Country network metrics</summary>'
             '<p>Incoming and outgoing links count distinct country connections in the displayed history. '
-            'Incoming and outgoing changes count tree branches. The source/hub ratio is outgoing changes '
-            'divided by all incoming and outgoing changes; it describes this rooted reconstruction.</p>'
+            'Incoming and outgoing changes count tree branches. As in StrainHub, the source/hub ratio is outgoing links '
+            'divided by incoming plus outgoing links. Centralities use unweighted links in the displayed rooted reconstruction.</p>'
             + _table(metrics, [("country", "Country"), ("in_degree", "Incoming links"),
                 ("out_degree", "Outgoing links"), ("in_changes", "Incoming changes"),
-                ("out_changes", "Outgoing changes"), ("source_hub_ratio", "Source/hub ratio")],
+                ("out_changes", "Outgoing changes"), ("degree", "Degree"),
+                ("betweenness", "Betweenness"), ("closeness", "Closeness"),
+                ("source_hub_ratio", "Source/hub ratio")],
                      empty="No country metrics are available.")
             + '</details>')
 
@@ -263,8 +266,14 @@ def _network_view(row: dict[str, Any], directory: Path, *, focus_inputs: bool) -
         root_note += '.</p>'
     default_asset = _figure_asset(directory, row, representative, "Country-state transition network")
     possible_asset = _figure_asset(directory, row, possible, "Representative network with alternative possible links")
-    return metrics + root_note + '<div data-network-representative>' + tree + default_asset + '</div>' + \
-        '<div data-network-possible hidden>' + tree + possible_asset + '</div>' + _network_tables(row, focus_inputs=focus_inputs)
+    identity = f"{row.get('cohort_id', 'cohort')}-{row.get('id', 'all')}-{'input' if focus_inputs else 'all'}"
+    static = '<details class="coverage-details"><summary>Static network figure</summary>' + default_asset + '</details>'
+    alternative_static = '<details class="coverage-details"><summary>Static network figure</summary>' + possible_asset + '</details>'
+    return metrics + root_note + '<div data-network-representative>' + \
+        interactive_network_html(row, identity + '-representative', focus_inputs=focus_inputs) + tree + static + '</div>' + \
+        '<div data-network-possible hidden>' + \
+        interactive_network_html(row, identity + '-possible', focus_inputs=focus_inputs, include_possible=True) + \
+        tree + alternative_static + '</div>' + _network_tables(row, focus_inputs=focus_inputs)
 
 
 def _figure_asset(directory: Path, row: dict[str, Any], field: str, alt: str) -> str:
@@ -297,17 +306,17 @@ def _location_network(value: object, directory: Path, cohorts: object = None) ->
             f'<label for="{identifier}-group">Input subgroup </label>'
             f'<select id="{identifier}-group" data-network-group>{subgroup_options}</select> '
             f'<label for="{identifier}-scope">Country links </label>'
-            f'<select id="{identifier}-scope" data-network-scope><option value="input">Input-country links</option>'
-            '<option value="all">All country links</option></select> '
+            f'<select id="{identifier}-scope" data-network-scope><option value="all">All country links</option>'
+            '<option value="input">Input-country links</option></select> '
             f'<label for="{identifier}-reconstruction">Reconstruction </label>'
             f'<select id="{identifier}-reconstruction" data-network-reconstruction><option value="representative">Representative reconstruction</option>'
             '<option value="possible">Include alternative possible links</option></select></div>'
-            + '<p>The default view shows reconstructed changes involving countries with input genomes. '
-            'Choose All country links for the complete network. Node colours show country states; dark outlines mark countries with input genomes. '
+            + '<p>The complete country network is shown by default. Select a country to highlight its neighbours, '
+            'drag countries to separate them, or zoom and pan. Node colours show country states; dark outlines mark countries with input genomes. '
             'Arrows follow ancestral-to-descendant state changes on the displayed rooted tree. '
             'Link thickness counts these changes; dashed links mark variation across optimal assignments.</p>'
-            + '<div data-network-output>' + rendered[0]["input"] + '</div>'
-            + '<noscript><p>Showing input-country links and the representative reconstruction. Enable JavaScript to switch views.</p></noscript>'
+            + '<div data-network-output>' + rendered[0]["all"] + '</div>'
+            + '<noscript><style>.cc-network-widget{display:none}</style><p>Open the static network figure above. Enable JavaScript for the interactive network.</p></noscript>'
             + f'<script type="application/json" data-network-views>{payload}</script></div>'
         )
     script = """<script>
@@ -315,10 +324,10 @@ def _location_network(value: object, directory: Path, cohorts: object = None) ->
 var data=JSON.parse(viewer.querySelector('[data-network-views]').textContent);
 var group=viewer.querySelector('[data-network-group]');var scope=viewer.querySelector('[data-network-scope]');
 var reconstruction=viewer.querySelector('[data-network-reconstruction]');var output=viewer.querySelector('[data-network-output]');
-function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){output.innerHTML=chosen[scope.value];var possible=reconstruction.value==='possible';output.querySelectorAll('[data-network-representative]').forEach(function(el){el.hidden=possible;});output.querySelectorAll('[data-network-possible]').forEach(function(el){el.hidden=!possible;});}}
+function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.destroy(output);output.innerHTML=chosen[scope.value];var possible=reconstruction.value==='possible';output.querySelectorAll('div[data-network-representative]').forEach(function(el){el.hidden=possible;});output.querySelectorAll('div[data-network-possible]').forEach(function(el){el.hidden=!possible;});if(window.ChronoCladeNetworks)window.ChronoCladeNetworks.mount(output);}}
 group.addEventListener('change',update);scope.addEventListener('change',update);reconstruction.addEventListener('change',update);viewer.querySelector('.network-controls').hidden=false;
 });})();</script>"""
-    return "".join(panels) + script
+    return "".join(panels) + widget_assets() + script
 
 
 def _download_links(directory: Path, paths: dict[str, Any]) -> str:

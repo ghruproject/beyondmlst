@@ -226,7 +226,8 @@ def write_profile_network_figures(output, cohort_id, network, records=(), displa
         )
         model["network_metrics_path"] = _csv(
             output / f"{stem}_country_network_metrics.csv", model.get("network_metrics", []),
-            ["country", "in_degree", "out_degree", "in_changes", "out_changes", "source_hub_ratio"],
+            ["country", "in_degree", "out_degree", "degree", "betweenness", "closeness",
+             "in_changes", "out_changes", "source_hub_ratio"],
         )
         model["nearest_country_connections_path"] = _csv(
             output / f"{stem}_nearest_country_connections.csv", model["nearest_edges"],

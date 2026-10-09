@@ -118,7 +118,13 @@ The profile-first `fast` report follows the StrainHub state-change workflow:
 reconstruct countries at ancestral nodes, record parent-to-child country changes
 on branches, then aggregate those changes into a directed, weighted network.
 It shows that representative history on the selected rooted cgMLST NJ tree.
-The default network shows links involving input countries. All country links and
+The complete network is interactive by default, using the same vis-network
+repulsion layout approach as StrainHub. Countries can be dragged, the view can
+be zoomed and panned, and selecting a country highlights its direct neighbours.
+Node sizes follow the selected centrality metric: indegree, outdegree, degree,
+betweenness, closeness or source/hub ratio. The JavaScript library is bundled
+locally; the report requires no Internet connection. Static figures remain
+available for export and readers without JavaScript. Input-country links and
 alternative possible links are optional views, and each input LIN subgroup has
 its own viewer. Node colours identify country states; a dark outline marks a
 country containing input genomes. Unknown-country sample tips remain grey and
@@ -144,8 +150,11 @@ table separately reports observed input-to-relative comparisons from cgMLST
 distances, including ties and callable-locus denominators.
 
 An expandable metrics table and CSV report incoming/outgoing connections,
-incoming/outgoing branch changes and the source/hub ratio. The ratio uses
-outgoing changes divided by incoming plus outgoing changes in the displayed
+incoming/outgoing branch changes, degree, betweenness, closeness and the source/hub ratio.
+As in StrainHub, centralities use unweighted links: betweenness follows directed
+shortest paths, while closeness traverses links in either direction and is the
+reciprocal of the sum of distances to reachable countries. The ratio uses
+outgoing links divided by incoming plus outgoing links in the displayed
 history; it is undefined for an isolated country. The network method follows
 [StrainHub](https://github.com/abschneider/StrainHub), while the exact conditional
 count ranges retain ancestral-state ambiguity instead of silently fixing ties.
