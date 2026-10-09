@@ -5,7 +5,6 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import hashlib
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass
@@ -282,7 +281,12 @@ def read_context_manifest(path: Path | None) -> list[dict[str, str]]:
             raise WorkflowError(
                 "Context manifest must be tab-separated and contain sample_id, species and lineage"
             )
-        return [dict(row) for row in reader]
+        rows = [dict(row) for row in reader]
+        for row in rows:
+            for key in ("assembly", "catalogue_path"):
+                if row.get(key):
+                    row[key] = str((path.parent / row[key]).resolve())
+        return rows
 
 
 def context_evidence(

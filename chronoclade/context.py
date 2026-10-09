@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
 import random
 import re
 import subprocess
@@ -651,7 +652,11 @@ def write_candidate_table(path: Path, candidates: list[ContextCandidate]) -> Pat
         )
         writer.writeheader()
         for candidate in candidates:
-            writer.writerow(asdict(candidate))
+            row = asdict(candidate)
+            for key in ("assembly", "catalogue_path"):
+                if row.get(key) and Path(row[key]).is_absolute():
+                    row[key] = os.path.relpath(row[key], path.parent)
+            writer.writerow(row)
     return path
 
 
@@ -676,7 +681,7 @@ def write_combined_metadata(
             writer.writerow(
                 {
                     "sample_id": sample.sample_id,
-                    "assembly": sample.assembly,
+                    "assembly": os.path.relpath(sample.assembly, path.parent),
                     "collection_date": sample.collection_date,
                     "location": sample.location,
                     "species": sample.species,
@@ -690,7 +695,7 @@ def write_combined_metadata(
             writer.writerow(
                 {
                     "sample_id": candidate.sample_id,
-                    "assembly": candidate.assembly,
+                    "assembly": os.path.relpath(candidate.assembly, path.parent),
                     "collection_date": candidate.collection_date,
                     "location": candidate.country or "Public_context",
                     "species": candidate.species,
