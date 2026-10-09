@@ -19,7 +19,7 @@ def record(name, calls=None, **kwargs):
 
 
 def test_accessions_label_tree_but_preserve_distance_and_tree_identity(tmp_path):
-    rows = [record("q", origin="local"),
+    rows = [record("q", origin="local", country="Greece", collection_date="2019-05"),
             record("PW_public", run_accessions=["SRR32641190"],
                    biosample_accessions=["SAMN46159676"])]
     result = analyse_profiles(rows, output=tmp_path, bootstrap_replicates=0)
@@ -28,6 +28,12 @@ def test_accessions_label_tree_but_preserve_distance_and_tree_identity(tmp_path)
     tree = result["cohorts"][0]
     assert "PW_public" in Path(tree["tree_path"]).read_text()
     assert "SRR32641190" in Path(tree["tree_figure"]).read_text()
+    svg = Path(tree["tree_figure"]).read_text()
+    assert "q | Greece | 2019-05" in svg
+    assert "SRR32641190 | Country unknown | Date unknown" in svg
+    assert "Input genomes" in svg and "Public comparisons" in svg
+    assert "#2166ac" in svg and "#666666" in svg
+    assert "Inner" not in svg
     assert "SAMN46159676" in Path(result["paths"]["sample_labels"]).read_text()
 
 

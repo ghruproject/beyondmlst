@@ -25,6 +25,53 @@ from chronoclade.context_refinement import _allele, _compatible, _lineage, _loci
 MAX_RECORDS = 1500
 
 
+def draw_profile_tree(tree, records, labels, path):
+    """Draw neutral branches with dataset-coloured tips and supplied metadata."""
+    import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
+
+    by_id = {row["sample_id"]: row for row in records}
+    colours = {"input": "#2166ac", "context": "#666666"}
+    tip_labels, label_colours = {}, {}
+    for tip in tree.get_terminals():
+        row = by_id[tip.name]
+        dataset = "input" if row.get("origin") in {"local", "query", "focal"} else "context"
+        country = str(row.get("country") or "Country unknown")
+        date = str(row.get("collection_date") or row.get("collection_year") or "Date unknown")
+        label = f"{labels.get(tip.name, tip.name)} | {country} | {date}"
+        tip_labels[tip.name] = label
+        label_colours[label] = colours[dataset]
+
+    fig, ax = plt.subplots(figsize=(13, max(4, len(records) * 0.24)))
+    Phylo.draw(
+        tree, axes=ax, do_show=False,
+        label_func=lambda clade: tip_labels.get(clade.name),
+        label_colors=label_colours,
+    )
+    # Draw a coloured marker at each terminal without colouring ancestral branches.
+    depths = tree.depths()
+    if not max(depths.values()):
+        depths = tree.depths(unit_branch_lengths=True)
+    terminals = tree.get_terminals()
+    for index, tip in enumerate(terminals):
+        ax.plot(depths[tip], index + 1, "o", markersize=4,
+                color=label_colours[tip_labels[tip.name]], zorder=3)
+    handles = [Line2D([], [], color=colour, marker="o", linestyle="None", label=label)
+               for colour, label in ((colours["input"], "Input genomes"),
+                                     (colours["context"], "Public comparisons"))]
+    ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.01),
+              frameon=False, ncol=2)
+    ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
+    ax.set_ylabel("")
+    ax.set_yticks([])
+    left, right = ax.get_xlim()
+    ax.set_xlim(left, right + (right - left) * 0.35)
+    ax.set_title("Neighbour-joining tree · tip labels: genome | country | collection date", pad=38)
+    fig.tight_layout()
+    fig.savefig(path, bbox_inches="tight")
+    plt.close(fig)
+
+
 def _date_interval(row, *, allow_future=False):
     value = str(row.get("collection_date") or row.get("collection_year") or "").strip()
     try:
@@ -567,15 +614,8 @@ def analyse_profiles(
             import matplotlib.pyplot as plt
 
             if len(rows) <= 100:
-                fig, ax = plt.subplots(figsize=(9, max(4, len(rows) * 0.2)))
-                Phylo.draw(tree, axes=ax, do_show=False,
-                           label_func=lambda clade: summary["sample_labels"].get(clade.name, clade.name))
-                ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
-                ax.set_title("Exploratory neighbour-joining tree")
-                fig.tight_layout()
                 tree_figure = output / f"{cohort_id}_nj.svg"
-                fig.savefig(tree_figure)
-                plt.close(fig)
+                draw_profile_tree(tree, rows, summary["sample_labels"], tree_figure)
                 cohort["tree_figure"] = str(tree_figure)
             else:
                 cohort["warnings"].append(
