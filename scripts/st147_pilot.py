@@ -111,6 +111,11 @@ def main(argv=None) -> int:
     parser.add_argument("--date-randomisations", type=int, default=100)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
+        "--public-focal-demonstration",
+        action="store_true",
+        help="Label analysis reports as demonstrations using public focal stand-ins",
+    )
+    parser.add_argument(
         "--confirm-live", action="store_true", help="Explicit opt-in to contact upstream"
     )
     args = parser.parse_args(argv)
@@ -230,6 +235,13 @@ def main(argv=None) -> int:
         command.append("--dry-run")
     started = time.monotonic()
     result = subprocess.run(command, check=False)
+    if (
+        args.stage == "analyse"
+        and result.returncode == 0
+        and not args.dry_run
+        and args.public_focal_demonstration
+    ):
+        label_public_demonstration(args.output / "analysis")
     provenance = {
         "stage": args.stage,
         "utc": datetime.now(timezone.utc).isoformat(),
@@ -247,6 +259,35 @@ def main(argv=None) -> int:
         json.dumps(provenance, indent=2) + "\n"
     )
     return result.returncode
+
+
+def label_public_demonstration(analysis: Path) -> None:
+    """Mark only explicitly requested public stand-in runs, without altering their results."""
+    from chronoclade.report import (
+        write_fast_lineage_report,
+        write_lineage_report,
+        write_supporting_bundle,
+    )
+
+    for path in analysis.glob("*/report.json"):
+        report = json.loads(path.read_text())
+        report["demonstration"] = {
+            "label": "Public-data demonstration",
+            "description": (
+                "The focal samples in this pilot are public genomes chosen to demonstrate "
+                "the workflow. They come from different countries and are not a defined "
+                "local outbreak or patient cohort. Automated introduction/persistence "
+                "labels are illustrative and must not be treated as an epidemiological finding."
+            ),
+        }
+        path.write_text(json.dumps(report, indent=2) + "\n")
+        writer = (
+            write_fast_lineage_report
+            if report.get("analysis_mode") == "fast"
+            else write_lineage_report
+        )
+        writer(report, directory=path.parent, p_value_threshold=0.05)
+        write_supporting_bundle(path.parent)
 
 
 if __name__ == "__main__":

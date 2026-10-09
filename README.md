@@ -16,8 +16,9 @@ an epidemiological interpretation.
 The workflow is intended for longitudinal surveillance within a species and
 lineage, such as an MLST sequence type. Public context genomes can be added to
 help distinguish a sampled local lineage from separate introductions. The final
-HTML report keeps the temporal analysis, clonal SNP distances, topology and
-context together.
+HTML report starts with countries, closest analysed relatives and a genetic tree,
+then explains interpretation and dating. Detailed methods and the full public
+country atlas are available separately.
 
 ChronoClade does not infer direct transmission. A dated tree estimates ancestral
 times under a molecular-clock model; it does not identify who infected whom.

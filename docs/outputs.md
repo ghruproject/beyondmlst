@@ -29,6 +29,8 @@ completed stage can be reused.
 | `clonal_snp_matrix.tsv` | Square clonal SNP matrix |
 | `pairwise_callable_sites.tsv` | Square callable-site matrix |
 | `public_health_evidence.json` | Scenario rules, groups, neighbours and sensitivity results |
+| `nearest_neighbours.tsv`, `.csv`, `.json` | Per-focal nearest comparisons, exact ties, callable sites, separate tree-distance ranks and scope/provenance |
+| `genetic_tree.svg`, `.png` | Genetic relationship tree before calendar dating; large trees use labelled overview pages |
 
 ## Temporal evidence
 

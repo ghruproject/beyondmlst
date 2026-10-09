@@ -62,8 +62,13 @@ pixi run python scripts/st147_pilot.py --stage analyse \
 
 # Full native analysis, where supported, preserving default dating/divergence gates.
 pixi run python scripts/st147_pilot.py --stage analyse \
-  --output validation/st147_pathogenwatch/run --threads 2 --date-randomisations 100
+  --output validation/st147_pathogenwatch/run --threads 2 --date-randomisations 100 \
+  --public-focal-demonstration
 ```
+
+Use `--public-focal-demonstration` only when the focal genomes are the public
+stand-ins described here. It marks the report prominently as a demonstration;
+omit it for a real focal cohort.
 
 The minimum sample count is four, permitting this bounded demonstration rather
 than changing temporal significance. The pilot uses p=0.05 and the existing

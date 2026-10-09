@@ -82,21 +82,50 @@ def write_supporting_bundle(directory: Path) -> Path:
 
 
 def _context_geography_visual(directory: Path) -> str:
-    """Embed geography computed from the frozen catalogue, independently of dating."""
-    path = directory / "context_geography" / "fragment.html"
+    """Embed a focused country view; keep the full public atlas separately."""
+    path = directory / "context_geography" / "focused_fragment.html"
     if not path.is_file():
-        return ""
+        return (
+            '<p class="missing">A focused country breakdown is not available for this analysis.</p>'
+        )
     fragment = path.read_text(encoding="utf-8")
-    # The fragment is generated locally; asset URLs are relative to its directory.
     fragment = fragment.replace('<a href="', '<a href="context_geography/').replace(
         '<img src="', '<img src="context_geography/'
     )
-    return (
-        '<div class="context-geography"><style>'
-        ".context-geography{min-width:0;max-width:100%;overflow:hidden}"
-        ".context-geography svg{width:100%;max-width:100%;height:auto;display:block}"
-        "</style>" + fragment + "</div>"
+    atlas = directory / "context_geography" / "index.html"
+    link = (
+        '<p><a href="context_geography/index.html">Explore the full public country atlas and source tables</a></p>'
+        if atlas.is_file()
+        else ""
     )
+    return '<div class="context-geography">' + fragment + link + "</div>"
+
+
+def _demonstration_banner(report: dict[str, object]) -> str:
+    demonstration = report.get("demonstration")
+    if (
+        not isinstance(demonstration, dict)
+        or not demonstration
+        or demonstration.get("enabled") is False
+    ):
+        return ""
+    title = str(demonstration.get("label", demonstration.get("title", "Demonstration dataset")))
+    description = str(demonstration.get("description", demonstration.get("message", "")))
+    return (
+        f'<aside class="guardrail demonstration" aria-label="Demonstration dataset">'
+        f"<strong>{escape(title)}</strong><p>{escape(description)}</p>"
+        "<p>Read the findings as a demonstration of the analysis; they do not establish a local outbreak.</p></aside>"
+    )
+
+
+def _neighbourhood_visual(directory: Path) -> str:
+    try:
+        from chronoclade.neighbourhood import neighbourhood_report_html
+    except ModuleNotFoundError as exc:
+        if exc.name != "chronoclade.neighbourhood":
+            raise
+        return '<p class="missing">Closest-relative tables and a genetic relationship figure are not available.</p>'
+    return neighbourhood_report_html(directory)
 
 
 def _display_summary(value: object) -> str:
@@ -117,6 +146,14 @@ def _public_health_visual(report: dict[str, object], directory: Path) -> tuple[s
     code = str(scenario.get("code", "indeterminate"))
     label = str(scenario.get("label", "Indeterminate"))
     confidence = str(scenario.get("confidence", "low"))
+    demonstration = (
+        isinstance(report.get("demonstration"), dict)
+        and bool(report["demonstration"])
+        and report["demonstration"].get("enabled") is not False
+    )
+    if demonstration:
+        label = "Illustrative rule output: " + label
+        confidence = "Demonstration only; no epidemiological confidence is assigned"
     reasons = scenario.get("reasons", [])
     actions = scenario.get("recommended_follow_up", [])
     evidence = scenario.get("evidence", [])
@@ -251,7 +288,7 @@ def _public_health_visual(report: dict[str, object], directory: Path) -> tuple[s
   <section class="scenario {escape(code)}">
     <h3>What does the genomic evidence support?</h3>
     <strong>{escape(label)}</strong>
-    <p><span class="confidence">{escape(confidence)} confidence</span></p>
+    <p><span class="confidence">{escape(confidence + ("" if demonstration else " confidence"))}</span></p>
     <h3>Why?</h3>
     <ul>{"".join(f"<li>{escape(str(reason))}</li>" for reason in reasons)}</ul>
     <p class="guardrail">{escape(str(scenario.get("guardrail", "This analysis does not establish direct transmission.")))}</p>
@@ -309,7 +346,9 @@ def _timetree_section(
     observed_r_squared: float,
 ) -> str:
     timetree_plot = directory / "timetree" / "timetree.svg"
-    if not bool(assessment["supported"]) or not timetree_plot.is_file():
+    if bool(assessment["supported"]) and not timetree_plot.is_file():
+        return '<section id="time-tree"><h3>Dated-tree output is unavailable</h3><p>The configured date test passed, but a dated-tree figure was not produced. Inspect the supporting files before interpreting ancestor dates.</p></section>'
+    if not bool(assessment["supported"]):
         return f"""
         <section class="stage" id="time-tree" data-stage="4">
           <div class="stage-index"><span>4</span><b>Time scale</b></div>
@@ -319,9 +358,7 @@ def _timetree_section(
               <strong class="decision stop">DO NOT TIME-SCALE</strong>
             </div>
             <p>{escape(str(assessment["reason"]))}</p>
-            <p>An undated recombination-corrected phylogeny, topology, and pairwise clonal SNP
-            evidence remain available. Calendar dates for internal nodes would not be defensible
-            from this analysis.</p>
+            <p>Use any available undated genetic evidence. Calendar dates for ancestors are not supported by this analysis.</p>
           </div>
         </section>
         """
@@ -815,6 +852,49 @@ def write_lineage_report(
         ],
         directory,
     )
+    timing_supported = bool(assessment["supported"])
+    timing_label = (
+        "Dates support estimating a dated tree"
+        if timing_supported
+        else "Dates do not support estimating a dated tree"
+    )
+    timing_boundary = (
+        "The configured date test passed. Estimated dates remain conditional on the tree, sampling dates and clock model."
+        if timing_supported
+        else "The collection dates did not provide enough evidence for dating. Genetic relationships and country comparisons remain available; dates for ancestors or introductions are not supported."
+    )
+    focal_count = context.get("local_samples")
+    public_count = context.get("context_samples")
+    sample_scope = (
+        "The tree combines your focal genomes with the selected public comparison genomes."
+        if isinstance(focal_count, (int, float)) and isinstance(public_count, (int, float))
+        else f"The genetic analysis includes {int(report['sample_count'])} genomes."
+    )
+    raw_neighbours = report.get("neighbourhood", {})
+    neighbours = raw_neighbours if isinstance(raw_neighbours, dict) else {}
+    closest_counts = [
+        row["clonal_snps"]
+        for row in neighbours.get("rows", [])
+        if isinstance(row, dict)
+        and row.get("metric") == "clonal_snps"
+        and row.get("rank") == 1
+        and isinstance(row.get("clonal_snps"), int)
+    ]
+    neighbour_summary = ""
+    if closest_counts:
+        low, high = min(closest_counts), max(closest_counts)
+        span = f"{low:,}" if low == high else f"{low:,}–{high:,}"
+        neighbour_summary = (
+            f"The closest analysed comparisons differ from the focal samples at {span} DNA positions "
+            "after recombination correction. See the closest-relative section for each sample, "
+            "the amount of comparable sequence and any distance ties."
+        )
+    neighbourhood_visual = _neighbourhood_visual(directory)
+    footer_evidence = (
+        "Dated-tree figures, node-date intervals and source evidence are available in the supporting-results bundle."
+        if timing_supported and (directory / "timetree" / "timetree.svg").is_file()
+        else "Available genetic evidence, country tables and date-test results are preserved in the supporting-results bundle. No dated-tree result is reported."
+    )
     output = directory / "report.html"
     output.write_text(
         _clean_html(f"""<!doctype html>
@@ -873,29 +953,50 @@ def write_lineage_report(
     @media(max-width:800px) {{ :root {{ --rail:76px; }} .identity-copy {{ display:block; padding:22px 20px; }} .overall {{ margin-top:22px; }} .contents {{ padding-left:0; overflow:visible; }} .contents a {{ min-width:0; padding:12px 7px; text-align:center; font-size:11px; white-space:nowrap; }} .stage-index {{ padding:28px 10px; }} .stage-index span {{ font-size:48px; }} .stage-index b {{ writing-mode:vertical-rl; margin:18px auto 0; }} .stage-body {{ padding:30px 18px 38px; }} .stage-head {{ display:block; }} .decision {{ margin-top:18px; width:max-content; max-width:100%; }} .measure-strip,.confidence-grid {{ grid-template-columns:1fr; }} .measure-strip > div,.confidence-grid>div {{ border-right:0; border-bottom:1px solid var(--line); min-width:0; }} .confidence-grid b {{ overflow-wrap:anywhere; }} .confidence-grid>div:nth-child(3n),.recombination-measures>div:nth-child(3n) {{ border-right:0; }} .confidence-grid>div:nth-last-child(-n+3) {{ border-bottom:1px solid var(--line); }} .confidence-grid>div:last-child {{ border-bottom:0; }} .logic {{ grid-template-columns:1fr; }} .logic > span {{ transform:rotate(90deg); justify-self:center; }} .download a {{ grid-template-columns:minmax(0,1fr) 42px; }} .download span,.download small {{ overflow-wrap:anywhere; }} .download small {{ grid-column:1/-1; grid-row:2; }} .scroll-hint {{ display:block; position:sticky; left:0; width:max-content; max-width:100%; margin-top:12px; padding:9px 10px; background:#edf3ff; color:var(--blue); font-size:12px; font-weight:700; }} .table-scroll:not(.compact-table) table {{ min-width:680px; }} .table-scroll:not(.compact-table) th:first-child,.table-scroll:not(.compact-table) td:first-child {{ position:sticky; left:0; background:#fff; z-index:1; }} .compact-table .scroll-hint,.compact-table thead {{ display:none; }} .compact-table table,.compact-table tbody,.compact-table tr,.compact-table td {{ display:block; min-width:0; width:100%; }} .compact-table tr {{ padding:10px 0; border-bottom:1px solid var(--line); }} .compact-table td {{ padding:3px 0; border:0; }} .compact-table td:first-child {{ font-weight:700; }} .figure-scroll img {{ min-width:760px; }} }}
     @media(prefers-reduced-motion:reduce) {{ html {{ scroll-behavior:auto; }} }}
     @media print {{ .contents {{ display:none; }} body,.shell {{ background:#fff; }} .stage {{ break-inside:avoid-page; }} details {{ display:block; }} details > * {{ display:block; }} .report-close {{ color:#000; background:#fff; border-top:2px solid #000; }} .report-close a {{ color:#000; }} }}
+    .shell {{ width:min(1180px,100%); }}
+    .identity {{ display:block; }} .identity-mark {{ padding:16px clamp(20px,5vw,54px); overflow-wrap:anywhere; }}
+    .identity-copy {{ padding:30px clamp(20px,5vw,54px); }} h1 {{ font-size:clamp(32px,5vw,56px); }}
+    .contents {{ padding-left:0; }} .contents a {{ flex:none; min-width:0; white-space:nowrap; }}
+    .stage {{ display:block; }} .stage-index {{ display:none; }} .stage-body {{ padding:38px clamp(20px,5vw,54px); }}
+    .stage .stage {{ border:0; }} .stage .stage .stage-body {{ padding:24px 0; }}
+    #root-to-tip .stage-body {{ display:block; }} .evidence-layout,#root-to-tip .evidence-layout {{ display:block; }}
+    .evidence-layout .evidence-files {{ margin-top:22px; }} .report-close {{ display:block; }}
+    h2 {{ max-width:34ch; line-height:1.16; }} summary {{ cursor:pointer; padding:14px 0; font-weight:700; }}
+    .context-geography {{ min-width:0; max-width:100%; }} .context-geography img,.context-geography svg {{ width:100%; height:auto; }}
+    .demonstration strong {{ display:block; }} .demonstration p {{ margin:8px 0; }}
+    @media(max-width:800px) {{
+      .neighbourhood [aria-label="Closest relatives by final clonal SNPs"] table {{ min-width:0; }}
+      .neighbourhood [aria-label="Closest relatives by final clonal SNPs"] thead {{ display:none; }}
+      .neighbourhood [aria-label="Closest relatives by final clonal SNPs"] tr {{ display:block; padding:12px 0; border-bottom:1px solid var(--line); }}
+      .neighbourhood [aria-label="Closest relatives by final clonal SNPs"] td {{ display:grid; grid-template-columns:140px minmax(0,1fr); gap:12px; padding:5px 0; border:0; overflow-wrap:anywhere; position:static; }}
+      .neighbourhood [aria-label="Closest relatives by final clonal SNPs"] td::before {{ content:attr(data-label); font-weight:700; }}
+    }}
+    @media(max-width:800px) {{ .contents {{ overflow:auto; }} .contents a {{ flex:none; padding:12px 14px; font-size:13px; }} .stage-body {{ padding:30px 20px; }} .identity-copy {{ padding:28px 20px; }} }}
   </style>
 </head>
 <body>
 <main class="shell">
   <header class="identity">
-    <div class="identity-mark">ChronoClade<br>ANALYSIS</div>
-    <div class="identity-copy"><div><h1><i>{escape(species_display)}</i><span>{escape(lineage_display)}</span></h1><p>{int(report["sample_count"])} genomes · {int(report["distinct_dates"])} distinct collection dates · recombination-aware temporal analysis</p></div><div class="overall {escape(status)}"><small>Configured temporal screen</small><b>{escape(str(assessment["label"]))}</b></div></div>
+    <div class="identity-mark">ChronoClade · ANALYSIS REPORT</div>
+    <div class="identity-copy"><h1><i>{escape(species_display)}</i><span>{escape(lineage_display)}</span></h1><p>{int(report["sample_count"])} genomes · {int(report["distinct_dates"])} distinct collection dates</p></div>
   </header>
-  <nav class="contents" aria-label="Analysis stages"><a href="#prepare">1 · Prepare</a><a href="#root-to-tip">2 · Explore</a><a href="#randomisation">3 · Test</a><a href="#time-tree">4 · Time scale</a><a href="#interpretation">5 · Interpret</a></nav>
-
-  <section class="stage" id="prepare" data-stage="1">
-    <div class="stage-index"><span>1</span><b>Prepare</b></div>
-    <div class="stage-body">
-      <div class="stage-head"><div><h2>Is this a coherent, dated lineage dataset?</h2><p class="question">Bad lineage assignments and extreme divergence are checked before the clock analysis.</p></div><strong class="decision proceed">READY TO TEST</strong></div>
-      <p>The workflow aligned the genomes to a lineage reference, screened raw pairwise distances for extreme outliers, inferred recombination with ClonalFrameML, and repeated the coherence screen using clonal distances. This report was generated only after both screens completed without a flagged genome.</p>
-      <div class="measure-strip"><div><small>Genomes</small><b>{int(report["sample_count"])}</b><span>within this species and lineage</span></div><div><small>Sampling span</small><b>{escape(first_date)} – {escape(last_date)}</b><span>{int(report["distinct_dates"])} distinct collection dates</span></div><div><small>Clonal alignment</small><b>{clonal_sites_text} sites</b><span>complete A/C/G/T sites used for dating</span></div></div>
-      <ul class="check-list"><li>Extreme raw-distance outliers were screened before the expensive recombination analysis.</li><li>ClonalFrameML was used to infer recombination and construct the corrected alignment and tree.</li><li>The post-recombination distance screen was repeated before temporal testing.</li></ul>
-      {recombination_visual}
-      <p class="guardrail">These checks catch grossly divergent or mismatched genomes; they do not prove that every sample label is correct or that recombination has been reconstructed perfectly. Any biological anomaly should still be traced to its accession and metadata.</p>
-      <details class="evidence-files" open><summary>Inputs, checks and corrected phylogeny</summary>{basis_downloads}</details>
-    </div>
-  </section>
-
+  <nav class="contents" aria-label="Report topics"><a href="#overview">Overview</a><a href="#countries">Countries</a><a href="#relatives">Closest relatives</a><a href="#interpretation">Interpretation</a><a href="#dating">Dating</a><a href="#prepare">Methods &amp; files</a></nav>
+  <section class="stage" id="overview"><div class="stage-body">
+    <h2>Your results at a glance</h2>
+    {_demonstration_banner(report)}
+    <p>{escape(sample_scope)} The country figures also use the larger frozen public catalogue, which is a separate comparison population; those catalogue genomes are not all included in the tree.</p>
+    <p>{escape(neighbour_summary)}</p>
+    <p>Start with where the samples were collected and which analysed public genomes are genetically closest to each focal genome. Then read the biological interpretation and the limits of the date analysis.</p>
+    <div class="overall {escape(status)}"><small>Dating result</small><b>{escape(timing_label)}</b></div>
+    <p>{escape(timing_boundary)}</p>
+    <details class="terms"><summary>Terms used in this report</summary><p><strong>Focal genomes</strong> are the samples you supplied. <strong>Public genomes</strong> are comparison samples from the source database. A <strong>SNP</strong> is a difference at one DNA position. <strong>cgLIN</strong> groups genomes by a hierarchical core-genome typing code; a shared code is a grouping aid, not proof of transmission. Countries describe recorded sample collection locations, not inferred routes of spread.</p></details>
+  </div></section>
+  <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples, selected public comparisons, and the wider public groups.</p><p>The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes.</p>{_context_geography_visual(directory)}</div></section>
+  <section class="stage" id="relatives"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These comparisons cover the genomes included in this analysis. They cannot identify the closest genome in the entire public catalogue or prove direct transmission.</p>{neighbourhood_visual}</div></section>
+  <section class="stage" id="interpretation"><div class="stage-body"><h2>What pattern is consistent with these genomes?</h2>{public_health_summary}<p class="guardrail">Genetic similarity and country records alone do not prove direct transmission, local circulation, or a definitive number of introductions. Interpret these results alongside patient, place and sampling information.</p><details class="evidence-files"><summary>Biological interpretation: evidence and sensitivity checks</summary>{public_health_evidence}</details></div></section>
+  <section class="stage" id="dating"><div class="stage-body"><h2>Can this analysis estimate when ancestors existed?</h2><div class="overall {escape(status)}"><b>{escape(timing_label)}</b></div><p>{escape(timing_boundary)}</p><p>{escape(str(assessment["reason"]))}</p>
+  {timetree_visual}
+  <details class="evidence-files"><summary>Inspect the date test and diagnostic figures</summary>
   <section class="stage" id="root-to-tip" data-stage="2">
     <div class="stage-index"><span>2</span><b>Explore</b></div>
     <div class="stage-body">
@@ -904,7 +1005,7 @@ def write_lineage_report(
       <div class="measure-strip"><div><small>Exploratory rate</small><b>{observed_rate:.3g}</b><span>substitutions/site/year</span></div><div><small>Exploratory root-to-tip fit</small><b>R² {observed_r_squared:.3g}</b><span>descriptive, not a pass criterion alone</span></div><div><small>Samples</small><b>{int(report["sample_count"])}</b><span>{int(report["distinct_dates"])} distinct dates</span></div></div>
       <div class="evidence-layout"><figure>{root_visual}<figcaption>Root-to-tip regression after recombination correction and least-squares rooting. {escape(outlier_note)}</figcaption></figure>
       <div class="logic"><div><b>What this can show</b>Genetic divergence is associated with collection time.</div><span>→</span><div><b>What it cannot show alone</b>That the association is stronger than a result obtained with arbitrary dates.</div></div>
-      <details class="evidence-files" open><summary>Evidence and downloads</summary>{rtt_downloads}</details></div>
+      <details class="evidence-files"><summary>Evidence and downloads</summary>{rtt_downloads}</details></div>
     </div>
   </section>
 
@@ -917,27 +1018,13 @@ def write_lineage_report(
       <div class="evidence-layout"><figure><img src="date_randomisation.svg" alt="Date-randomisation results"><figcaption>{escape(randomisation_caption)}</figcaption></figure>
       <section class="verdict {escape(status)}"><strong>{escape(str(assessment["label"]))}</strong><p>{escape(str(assessment["reason"]))}</p></section>
       <p class="guardrail">Dates are permuted without preserving genetic or outbreak clusters. When collection date is confounded with population structure, a passing result can overstate temporal signal. Inspect how dates cluster on the corrected tree and use a structure-preserving sensitivity test when defensible groups have been defined independently.</p>
-      <details class="evidence-files" open><summary>Evidence and downloads</summary>{randomisation_downloads}</details></div>
+      <details class="evidence-files"><summary>Evidence and downloads</summary>{randomisation_downloads}</details></div>
     </div>
   </section>
 
-  {timetree_visual}
-
-  <section class="stage" id="interpretation" data-stage="5">
-    <div class="stage-index"><span>5</span><b>Interpret</b></div>
-    <div class="stage-body">
-      <div class="stage-head"><div><h2>What pattern is consistent with these genomes?</h2><p class="question">Time, topology, distance and context are considered together.</p></div></div>
-      {public_health_summary}
-      {context_visual}
-      {_context_geography_visual(directory)}
-      {public_health_evidence}
-      <section class="card caveat"><h3>Interpretation boundary</h3><p>Passing the configured temporal screen means the dates contain information useful for rate and node-time estimation under this topology and clock model. TreeTime's intervals are conditional on the supplied topology, dates and model; they do not include uncertainty in sampling, topology or model choice. This result does not prove direct transmission, local circulation, or a definitive number of introductions.</p></section>
-      <h3>Complete audit package</h3><p>Every reader-facing result is available separately and as one ZIP bundle.</p>{audit_downloads}
-      <p><a href="supporting_results.zip"><strong>Download all supporting results (.zip)</strong></a></p>
-    </div>
-  </section>
-
-  <footer class="report-close"><b>REPORT COMPLETE</b><div><p>Generated by ChronoClade. The dated-tree figure, node-date intervals, clock statistics and source tables are preserved in the supporting-results bundle.</p></div></footer>
+  <p class="guardrail">Estimated intervals, when available, are conditional on the supplied topology, dates and model; they do not include uncertainty in sampling, topology or model choice.</p></details></div></section>
+  <section class="stage" id="prepare"><div class="stage-body"><h2>Methods and supporting files</h2><details class="evidence-files"><summary>Dataset checks and recombination correction</summary><h3>Is this a coherent, dated lineage dataset?</h3><p>The workflow screened raw genomic distances, inferred recombination with ClonalFrameML, and repeated the coherence screen using corrected distances. Recombination means DNA acquired from another lineage; the correction reduces its influence on the genetic analysis.</p><div class="measure-strip"><div><small>Genomes</small><b>{int(report["sample_count"])}</b></div><div><small>Sampling span</small><b>{escape(first_date)} – {escape(last_date)}</b></div><div><small>Clonal sites</small><b>{clonal_sites_text}</b></div></div>{recombination_visual}{basis_downloads}</details><details class="evidence-files"><summary>Public-context selection and screening distances</summary>{context_visual}</details><details class="evidence-files"><summary>Complete audit package and individual downloads</summary>{audit_downloads}</details><p><a href="supporting_results.zip"><strong>Download all supporting results (.zip)</strong></a></p></div></section>
+  <footer class="report-close"><div><p>Generated by ChronoClade. {escape(footer_evidence)}</p></div></footer>
 </main>
 </body>
 </html>
@@ -1058,11 +1145,16 @@ h1{{font-size:clamp(32px,5vw,68px);line-height:1;margin:0 0 18px;letter-spacing:
 .note{{background:#fff8dc;padding:16px}}details{{margin-top:24px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}}summary{{padding:13px 0;cursor:pointer;font-weight:800}}.downloads{{list-style:none;margin:0 0 14px;padding:8px 10px 12px;border-top:1px solid var(--line)}}.download a{{display:grid;grid-template-columns:minmax(180px,1fr) 2fr 52px;gap:12px;padding:10px 3px;border-bottom:1px solid var(--line);text-decoration:none;align-items:center}}.download small{{color:var(--muted)}}.download b{{font-size:11px;color:var(--muted);text-align:right}}a{{color:var(--blue);font-weight:700;text-underline-offset:3px}}a:focus-visible,summary:focus-visible{{outline:3px solid #ffb800;outline-offset:3px}}footer{{padding:30px clamp(22px,6vw,70px);background:var(--ink);color:#fff}}footer a{{color:#fff}}
 @media(max-width:700px){{header,section{{grid-template-columns:64px minmax(0,1fr)}}.mark{{padding:28px 9px;font-size:11px;overflow-wrap:anywhere}}.header-body,.body{{padding:30px 18px 38px}}.number{{padding:28px 9px;font-size:48px}}.number small{{writing-mode:vertical-rl;margin:16px auto 0}}.stage-head{{display:block}}.decision{{margin-top:18px}}.metrics{{grid-template-columns:1fr}}.metrics div{{border-right:0;border-bottom:1px solid var(--line)}}.download a{{grid-template-columns:minmax(0,1fr) 40px}}.download small{{grid-column:1/-1;grid-row:2;overflow-wrap:anywhere}}}}
 @media(prefers-reduced-motion:reduce){{html{{scroll-behavior:auto}}}}
+header,section{{display:block}}.mark{{padding:16px 22px;overflow-wrap:anywhere}}.number{{display:none}}.header-body,.body{{padding:30px clamp(20px,5vw,54px)}}.contents{{display:flex;gap:20px;overflow:auto;padding:15px 22px;border-bottom:1px solid var(--line)}}.contents a{{white-space:nowrap}}main>details,main>.note,main>.guardrail,#fast-dating{{margin:24px clamp(20px,5vw,54px)}}.context-geography img,.context-geography svg{{max-width:100%;height:auto}}
 </style></head><body><main><header><div class="mark">ChronoClade<br>FAST SCREEN</div><div class="header-body"><h1><i>{species}</i><br>{lineage}</h1><p>This is a triage report. It uses an uncorrected fast tree to decide whether a full recombination-aware analysis is worth prioritising. It does not estimate a dated phylogeny or infer circulation and introductions.</p><div class="status {status_class}">{escape(next_action)}</div></div></header>
-<section><div class="number">1<small>RECOMBINATION</small></div><div class="body"><div class="stage-head"><div><h2>Is there a fast PHI signal that warrants recombination correction?</h2><p>PhiPack Profile tests for incompatibility within bounded, reference-ordered blocks.</p></div><strong class="decision {recombination_class}">{recombination_decision}</strong></div><div class="metrics"><div><small>Blocks tested</small><b>{int(recombination.get("tested_core_blocks", 0))}</b></div><div><small>PHI-positive blocks</small><b>{significant_blocks}</b></div><div><small>Minimum p-value</small><b>{minimum_p_text}</b></div></div><p>{boundary}</p><p class="note">{localisation_limit} {multiple_testing_limit} This adapts Parsnp's PhiPack Profile settings to fixed 250 kb blocks of the SKA reference-ordered alignment. Unlike Parsnp's locally collinear blocks, these divisions have no biological meaning.</p><details open><summary>Screen output and inputs</summary>{recombination_downloads}</details></div></section>
-<section><div class="number">2<small>EXPLORE</small></div><div class="body"><div class="stage-head"><div><h2>Does genetic divergence increase with sampling time?</h2><p>Root-to-tip regression is an exploratory diagnostic, not a temporal-signal test by itself.</p></div></div><div class="metrics"><div><small>Exploratory rate</small><b>{observed_rate:.3g}</b></div><div><small>Root-to-tip fit</small><b>R² {observed_r_squared:.3g}</b></div><div><small>Distinct dates</small><b>{int(report["distinct_dates"])}</b></div></div><figure>{root_visual}<figcaption>Each point is one genome on the uncorrected fast tree. Inspect the slope, dispersion and extreme clock residuals before reading the permutation result.</figcaption></figure><details open><summary>Root-to-tip evidence</summary>{root_downloads}</details></div></section>
-<section><div class="number">3<small>TEST</small></div><div class="body"><div class="stage-head"><div><h2>Is the observed fit stronger than shuffled dates?</h2><p>Dates are reassigned among tips and root-to-tip regression is repeated on the same uncorrected tree.</p></div><strong class="decision {"proceed" if bool(assessment["supported"]) else "stop"}">{label}</strong></div><div class="metrics"><div><small>Observed R²</small><b>{observed_r_squared:.3g}</b></div><div><small>Null exceedances</small><b>{sum(float(value["r_squared"]) >= observed_r_squared for value in temporal.get("randomised", []) if isinstance(value, dict))} / {successful}</b></div><div><small>Empirical p</small><b>{p_value:.3g}</b></div></div><figure><img src="date_randomisation.svg" alt="Root-to-tip date-permutation results"><figcaption>The red line is the observed result; blue bars are the null distribution from shuffled dates.</figcaption></figure><p><strong>{label}.</strong> {reason}</p><p class="note">{escape(resolution_note)} Dates are permuted without accounting for genetic or outbreak clusters. If sampling date is confounded with population structure, an apparently strong result can be misleading. The full report must be read alongside the tree and sampling design.</p><h3>Next action</h3><p><strong>{escape(next_action)}.</strong> {escape(next_reason)}</p><details open><summary>Permutation evidence</summary>{randomisation_downloads}</details></div></section>
-{_context_geography_visual(directory)}
+<nav class="contents" aria-label="Report topics"><a href="#countries">Countries</a><a href="#relatives">Closest relatives</a><a href="#fast-dating">Date screen</a><a href="#fast-methods">Methods</a></nav>
+{_demonstration_banner(report)}
+<section id="countries"><div class="body"><h2>Where were the samples collected?</h2><p>Country summaries describe collection records and cgLIN groups in the public catalogue. The catalogue comparison population is larger than the genomes in the screening tree.</p>{_context_geography_visual(directory)}</div></section>
+<section id="relatives"><div class="body"><h2>Which analysed genomes are closest relatives?</h2><p>The fast screen uses an uncorrected tree. Corrected closest-relative evidence requires the full analysis.</p></div></section>
+<details id="fast-methods"><summary>Recombination screening methods and files</summary><section><div class="number">1<small>RECOMBINATION</small></div><div class="body"><div class="stage-head"><div><h2>Is there a fast PHI signal that warrants recombination correction?</h2><p>PhiPack Profile tests for incompatibility within bounded, reference-ordered blocks.</p></div><strong class="decision {recombination_class}">{recombination_decision}</strong></div><div class="metrics"><div><small>Blocks tested</small><b>{int(recombination.get("tested_core_blocks", 0))}</b></div><div><small>PHI-positive blocks</small><b>{significant_blocks}</b></div><div><small>Minimum p-value</small><b>{minimum_p_text}</b></div></div><p>{boundary}</p><p class="note">{localisation_limit} {multiple_testing_limit} This adapts Parsnp's PhiPack Profile settings to fixed 250 kb blocks of the SKA reference-ordered alignment. Unlike Parsnp's locally collinear blocks, these divisions have no biological meaning.</p><details><summary>Screen output and inputs</summary>{recombination_downloads}</details></div></section></details>
+<div id="fast-dating"><h2>Can the sampling dates support a full dating analysis?</h2></div>
+<section><div class="number">2<small>EXPLORE</small></div><div class="body"><div class="stage-head"><div><h2>Does genetic divergence increase with sampling time?</h2><p>Root-to-tip regression is an exploratory diagnostic, not a temporal-signal test by itself.</p></div></div><div class="metrics"><div><small>Exploratory rate</small><b>{observed_rate:.3g}</b></div><div><small>Root-to-tip fit</small><b>R² {observed_r_squared:.3g}</b></div><div><small>Distinct dates</small><b>{int(report["distinct_dates"])}</b></div></div><figure>{root_visual}<figcaption>Each point is one genome on the uncorrected fast tree. Inspect the slope, dispersion and extreme clock residuals before reading the permutation result.</figcaption></figure><details><summary>Root-to-tip evidence</summary>{root_downloads}</details></div></section>
+<section><div class="number">3<small>TEST</small></div><div class="body"><div class="stage-head"><div><h2>Is the observed fit stronger than shuffled dates?</h2><p>Dates are reassigned among tips and root-to-tip regression is repeated on the same uncorrected tree.</p></div><strong class="decision {"proceed" if bool(assessment["supported"]) else "stop"}">{label}</strong></div><div class="metrics"><div><small>Observed R²</small><b>{observed_r_squared:.3g}</b></div><div><small>Null exceedances</small><b>{sum(float(value["r_squared"]) >= observed_r_squared for value in temporal.get("randomised", []) if isinstance(value, dict))} / {successful}</b></div><div><small>Empirical p</small><b>{p_value:.3g}</b></div></div><figure><img src="date_randomisation.svg" alt="Root-to-tip date-permutation results"><figcaption>The red line is the observed result; blue bars are the null distribution from shuffled dates.</figcaption></figure><p><strong>{label}.</strong> {reason}</p><p class="note">{escape(resolution_note)} Dates are permuted without accounting for genetic or outbreak clusters. If sampling date is confounded with population structure, an apparently strong result can be misleading. The full report must be read alongside the tree and sampling design.</p><h3>Next action</h3><p><strong>{escape(next_action)}.</strong> {escape(next_reason)}</p><details><summary>Permutation evidence</summary>{randomisation_downloads}</details></div></section>
 <footer><a href="supporting_results.zip">Download all supporting results</a></footer></main></body></html>"""),
         encoding="utf-8",
     )

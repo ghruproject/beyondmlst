@@ -8,6 +8,8 @@ from chronoclade.context_geography import (
     CAUTION,
     country_colour,
     generate_context_geography,
+    generate_focused_geography,
+    focused_geography_tables,
     geography_tables,
 )
 
@@ -112,6 +114,120 @@ def test_assembly_chain_and_conflict():
     assert result["sample_units"] == 1
     assert all(r["country"] == "Unknown" for r in result["rows"])
     assert all(r["country_conflict"] for r in result["duplicate_audit"])
+
+
+def test_focused_shared_groups_separate_denominators_unknown_and_scoping(catalogue):
+    original = geography_tables(
+        catalogue,
+        selected_source_ids=["a", "d"],
+        focal_rows=[
+            row("f1", "India", biosample="SAM1"),
+            row("f2", "Unknown", biosample="SAM9"),
+        ],
+    )
+    before = json.dumps(original, sort_keys=True)
+    focused = focused_geography_tables(original)
+    assert json.dumps(original, sort_keys=True) == before
+    assert focused["depth"] == 7
+    assert len(focused["group_lookup"]) == 1
+    assert focused["group_lookup"][0]["focal_n"] == 2
+    assert focused["group_lookup"][0]["public_n"] == 3
+    assert focused["group_lookup"][0]["selected_context_n"] == 1
+    assert {r["country"]: r["count"] for r in focused["public_groups"]} == {
+        "India": 1,
+        "United Kingdom": 1,
+        "Unknown": 1,
+    }
+    assert all(r["denominator"] == 3 for r in focused["public_groups"])
+    assert sum(r["percentage"] for r in focused["public_groups"]) == pytest.approx(100)
+    assert focused["audit"]["public_catalogue_n"] == 5
+    assert focused["audit"]["tree_participants_n"] == 4
+    assert focused["audit"]["matched_public_n"] == 3
+    assert focused["audit"]["focal_public_overlap_n"] == 1
+    assert not any(r["country"] == "France" for r in focused["public_groups"])
+    assert any(r["country"] == "France" for r in focused["country_counts"])
+    assert any(r["assignment_status"] == "partial" for r in focused["assignment_coverage"])
+
+
+def test_focused_fallback_and_missing_public_groups():
+    public = [row("p", "India")]
+    focal = [row("f", "Unknown", prefix=(1, 2, 3, 4, 5))]
+    focused = focused_geography_tables(geography_tables(public, focal_rows=focal))
+    assert focused["depth"] == 5
+    assert focused["group_lookup"][0]["public_n"] == 1
+    missing = focused_geography_tables(
+        geography_tables(public, focal_rows=[row("f", "India", prefix=(9, 8, 7, 6, 5, 4, 3))])
+    )
+    assert missing["depth"] == 7
+    assert not missing["public_groups"]
+    assert missing["audit"]["groups_without_public_records"] == ["Group 1"]
+
+
+def test_focused_depth_six_fallback_and_partial_focal_coverage():
+    public = [row("p", "India")]
+    depth_six = focused_geography_tables(
+        geography_tables(
+            public,
+            focal_rows=[
+                row("f", "Unknown", prefix=(1, 2, 3, 4, 5, 6)),
+            ],
+        )
+    )
+    assert depth_six["depth"] == 6
+    mixed = focused_geography_tables(
+        geography_tables(
+            public,
+            focal_rows=[
+                row("resolved", "India"),
+                row("partial", "Unknown", prefix=(1, 2, 3, 4, 5)),
+            ],
+        )
+    )
+    assert mixed["depth"] == 7
+    assert mixed["group_lookup"][0]["focal_n"] == 1
+    assert sum(r["count"] for r in mixed["country_counts"]) == 2
+    coverage = [r for r in mixed["assignment_coverage"] if r["cohort"] == "focal_survey"]
+    assert len(coverage) == 1 and coverage[0]["country"] == "Unknown"
+    assert coverage[0]["assignment_status"] == "partial"
+
+
+def test_focused_no_assignment_reports_unavailable_without_fabricated_groups(tmp_path):
+    result = geography_tables(
+        [row("p", "India")],
+        selected_source_ids=["p"],
+        focal_rows=[{"sample_id": "f", "country": "Unknown"}],
+    )
+    focused = generate_focused_geography(result, tmp_path)
+    assert focused["focused"]["depth"] is None
+    assert not focused["focused"]["public_groups"]
+    assert "no comparable focal cgLIN" in focused["focused_report_html"]
+    assert (tmp_path / "focused_country_counts.svg").exists()
+    assert not (tmp_path / "focused_public_groups.svg").exists()
+    assert "Unknown" in (tmp_path / "focused_country_counts.csv").read_text()
+    assert "missing" in (tmp_path / "focused_assignment_coverage.csv").read_text()
+
+
+def test_focused_external_figures_human_names_and_source_lookup(tmp_path, catalogue):
+    result = geography_tables(
+        catalogue, selected_source_ids=["a", "d"], focal_rows=[row("f", "India", biosample="SAM1")]
+    )
+    output = generate_focused_geography(result, tmp_path)
+    fragment = (tmp_path / "focused_fragment.html").read_text()
+    assert "<svg" not in fragment and "data:" not in fragment
+    assert '<img src="focused_country_counts.svg"' in fragment
+    assert '<img src="focused_public_groups.svg"' in fragment
+    assert 'href="index.html"' in fragment
+    assert "3 genomes in total" in fragment and "5 quality-checked" in fragment
+    assert "Full-resolution SVG" in fragment
+    assert "not identify exact nearest relatives" in fragment
+    counts_svg = (tmp_path / "focused_country_counts.svg").read_text()
+    group_svg = (tmp_path / "focused_public_groups.svg").read_text()
+    assert "Focal samples" in counts_svg and "Selected public context" in counts_svg
+    assert "United Kingdom" in group_svg and "Unknown" in group_svg
+    assert "1 (33.3%)" in group_svg
+    assert "DejaVu Serif" in group_svg
+    assert "KpSC" in (tmp_path / "focused_group_lookup.csv").read_text()
+    assert all(Path(p).exists() for p in output["outputs"])
 
 
 def test_exports_offline_and_stable(tmp_path, catalogue):

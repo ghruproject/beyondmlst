@@ -203,3 +203,40 @@ source tables and paginated offline output. Bounded selected/focal panels show e
 named country rather than needlessly collapsing them to Other. Caption/legend
 space is reserved separately. The integrated report was also checked in the browser
 by the orchestrating agent, including the failed temporal-signal gate.
+
+
+## Country-first report and closest relatives
+
+The revised reader report begins with a short summary, countries and the genetic
+relationship tree before dating. Detailed method checks and full catalogue atlas
+remain accessible separately. It is explicitly labelled as a public-data
+demonstration, and no epidemiological confidence is assigned to its illustrative
+scenario label.
+
+The focused public-country panel includes the focal-matching full-prefix depth-7
+group: N=1,767, comprising 1,752 known-country units and 15 Unknown. The seven tree
+participants are a separate comparison: three focal and four selected context
+genomes. All 37 country rows remain in the focused group table/figure; focal
+counts do not increase the public denominator.
+
+The corrected genetic tree and final SNP comparisons are available even though
+the temporal gate failed. Each focal sample's nearest analysed context is
+`PW_aBbUpWyNcgnBayYVXLFaX4` (Italy, 2020-01-02):
+
+| Focal sample | Final clonal SNPs | Comparable sites |
+| --- | ---: | ---: |
+| SAMEA9453699 | 6 | 5,085,048 |
+| SAMEA122094000 | 86 | 5,085,048 |
+| SAMD00193192 | 128 | 5,085,048 |
+
+Separate patristic-distance rankings identify the same nearest sets in this
+pilot. The complete ranked rows preserve ties and provenance in
+`native_results/nearest_neighbours.tsv`,`.csv` and `.json`; the source genetic
+tree and its SHA-256 are retained. These comparisons cover the four analysed
+context genomes, not the entire public catalogue. Nearest does not establish
+transmission or infection direction.
+
+`figures/` includes focused country counts, public-group proportions and the
+undated genetic tree as SVG/PNG. The report was visually checked at browser-panel,
+wide desktop and phone widths; its heavy full-atlas SVG markup is no longer
+inlined in the main report. The full catalogue source tables remain unchanged.
