@@ -497,7 +497,7 @@ def neighbourhood_report_html(directory: Path) -> str:
             f'alt="Genetic relationships before dating{suffix}; focal samples emphasised"></a>'
             f"<figcaption>Genetic relationships{suffix}: {len(page['tip_ids'])} tips shown; "
             f"{page['omitted_tip_count']} omitted from this view. Branches measure substitutions per site, "
-            "not time. Labels give recorded locations and collection dates; ancestral locations are not inferred. "
+            "not time. Labels give recorded locations and collection dates; ancestral locations are not shown in this tree view. "
             f'<a href="{escape(page["svg"], quote=True)}">Open full-resolution tree</a> · '
             f'<a href="{escape(page["png"], quote=True)}">Download PNG</a>.</figcaption></figure>'
         )

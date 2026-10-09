@@ -226,3 +226,17 @@ transmission or infection direction.
 undated genetic tree as SVG/PNG. The report was visually checked at browser-panel,
 wide desktop and phone widths; its heavy full-atlas SVG markup is no longer
 inlined in the main report. The full catalogue source tables remain unchanged.
+
+## Exploratory country network
+
+The existing TreeTime location reconstruction is now summarised as a network
+in the full report, including when dating is unsupported. The seven-genome pilot
+contains four representative location changes; all four have uncertain endpoint
+assignments and appear dashed. The Portugal/Nigeria ancestral tie remains visible
+in the node-probability and branch audits rather than being treated as resolved.
+
+`figures/country_network.svg` and `.png` show the graph. `native_results/` holds
+country counts, aggregated arrows, branch-level endpoint probabilities, all node
+state probabilities and the input-hash audit. These model-conditional assignments
+are not joint edge probabilities or confirmed transmission/migration routes.
+The network uses the analysed genomes, not the wider catalogue country totals.

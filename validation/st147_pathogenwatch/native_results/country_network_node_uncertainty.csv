@@ -1,0 +1,66 @@
+node_id,country,marginal_probability,maximum_candidate,annotated_representative,is_tip
+NODE_13,India,8.149029100757749e-07,False,False,False
+NODE_13,Italy,0.999997688776772,True,True,False
+NODE_13,Myanmar (Burma),5.485797187467133e-07,False,False,False
+NODE_13,Nigeria,4.7387029967666256e-07,False,False,False
+NODE_13,Portugal,4.738702996767034e-07,False,False,False
+PW_aBbUpWyNcgnBayYVXLFaX4,India,0.0,False,False,True
+PW_aBbUpWyNcgnBayYVXLFaX4,Italy,1.0,True,True,True
+PW_aBbUpWyNcgnBayYVXLFaX4,Myanmar (Burma),0.0,False,False,True
+PW_aBbUpWyNcgnBayYVXLFaX4,Nigeria,0.0,False,False,True
+PW_aBbUpWyNcgnBayYVXLFaX4,Portugal,0.0,False,False,True
+NODE_12,India,5.026461926070609e-07,False,False,False
+NODE_12,Italy,0.9999992506437761,True,True,False
+NODE_12,Myanmar (Burma),1.5308533484526052e-07,False,False,False
+NODE_12,Nigeria,4.681234825309818e-08,False,False,False
+NODE_12,Portugal,4.68123482531089e-08,False,False,False
+SAMEA9453699,India,0.0,False,False,True
+SAMEA9453699,Italy,1.0,True,True,True
+SAMEA9453699,Myanmar (Burma),0.0,False,False,True
+SAMEA9453699,Nigeria,0.0,False,False,True
+SAMEA9453699,Portugal,0.0,False,False,True
+NODE_11,India,0.0003147336493403671,False,False,False
+NODE_11,Italy,0.9995171727181695,True,True,False
+NODE_11,Myanmar (Burma),0.00010365858728786451,False,False,False
+NODE_11,Nigeria,3.221752260122159e-05,False,False,False
+NODE_11,Portugal,3.2217522601228534e-05,False,False,False
+PW_oSavMhBThwcTN6GSL6Rg9q,India,0.0,False,False,True
+PW_oSavMhBThwcTN6GSL6Rg9q,Italy,1.0,True,True,True
+PW_oSavMhBThwcTN6GSL6Rg9q,Myanmar (Burma),0.0,False,False,True
+PW_oSavMhBThwcTN6GSL6Rg9q,Nigeria,0.0,False,False,True
+PW_oSavMhBThwcTN6GSL6Rg9q,Portugal,0.0,False,False,True
+NODE_10,India,0.3942094934933457,True,True,False
+NODE_10,Italy,0.37505426206145764,False,False,False
+NODE_10,Myanmar (Burma),0.14086060745107834,False,False,False
+NODE_10,Nigeria,0.044937818497055235,False,False,False
+NODE_10,Portugal,0.04493781849706319,False,False,False
+SAMEA122094000,India,0.9999999999999999,True,True,True
+SAMEA122094000,Italy,0.0,False,False,True
+SAMEA122094000,Myanmar (Burma),0.0,False,False,True
+SAMEA122094000,Nigeria,0.0,False,False,True
+SAMEA122094000,Portugal,0.0,False,False,True
+NODE_9,India,0.1406256916475836,False,False,False
+NODE_9,Italy,0.130889272812779,False,False,False
+NODE_9,Myanmar (Burma),0.43918452197998986,True,True,False
+NODE_9,Nigeria,0.14465025677981763,False,False,False
+NODE_9,Portugal,0.14465025677982998,False,False,False
+SAMD00193192,India,0.0,False,False,True
+SAMD00193192,Italy,0.0,False,False,True
+SAMD00193192,Myanmar (Burma),1.0,True,True,True
+SAMD00193192,Nigeria,0.0,False,False,True
+SAMD00193192,Portugal,0.0,False,False,True
+NODE_8,India,0.03989035308405768,False,False,False
+NODE_8,Italy,0.03674432783708936,False,False,False
+NODE_8,Myanmar (Burma),0.13029224198888004,False,False,False
+NODE_8,Nigeria,0.3965365385449814,True,False,False
+NODE_8,Portugal,0.39653653854499155,True,True,False
+PW_5ifnG8SSwbwRCiwbs5Wahp,India,0.0,False,False,True
+PW_5ifnG8SSwbwRCiwbs5Wahp,Italy,0.0,False,False,True
+PW_5ifnG8SSwbwRCiwbs5Wahp,Myanmar (Burma),0.0,False,False,True
+PW_5ifnG8SSwbwRCiwbs5Wahp,Nigeria,0.0,False,False,True
+PW_5ifnG8SSwbwRCiwbs5Wahp,Portugal,1.0,True,True,True
+PW_9Cg5tSRuj3WekAkohxtNF8,India,0.0,False,False,True
+PW_9Cg5tSRuj3WekAkohxtNF8,Italy,0.0,False,False,True
+PW_9Cg5tSRuj3WekAkohxtNF8,Myanmar (Burma),0.0,False,False,True
+PW_9Cg5tSRuj3WekAkohxtNF8,Nigeria,1.0,True,True,True
+PW_9Cg5tSRuj3WekAkohxtNF8,Portugal,0.0,False,False,True

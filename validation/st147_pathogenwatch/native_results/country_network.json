@@ -1,0 +1,787 @@
+{
+  "status": "available",
+  "reason": "",
+  "method": "TreeTime marginal maximum-likelihood ancestral location reconstruction. Arrows count country-changing parent-to-child branches among the analysed genomes. They are not direct transmission links, dated journeys, or StrainHub parsimony results.",
+  "caveat": "Direction depends on the chosen root and sampled genomes. Tied ancestral assignments can change or reverse arrows. Endpoint marginal confidence is not joint support for an edge; this diagram does not quantify uncertainty over alternative trees, roots or sampling. Labels use locations as supplied: this is a country network only when those labels are countries.",
+  "temporal_supported": false,
+  "confidence_threshold": 0.9,
+  "nodes": [
+    {
+      "country": "India",
+      "observed_tips": 1
+    },
+    {
+      "country": "Italy",
+      "observed_tips": 3
+    },
+    {
+      "country": "Myanmar (Burma)",
+      "observed_tips": 1
+    },
+    {
+      "country": "Nigeria",
+      "observed_tips": 1
+    },
+    {
+      "country": "Portugal",
+      "observed_tips": 1
+    }
+  ],
+  "edges": [
+    {
+      "source": "India",
+      "target": "Myanmar (Burma)",
+      "branches": 1,
+      "high_endpoint_branches": 0,
+      "uncertain_branches": 1
+    },
+    {
+      "source": "Italy",
+      "target": "India",
+      "branches": 1,
+      "high_endpoint_branches": 0,
+      "uncertain_branches": 1
+    },
+    {
+      "source": "Myanmar (Burma)",
+      "target": "Portugal",
+      "branches": 1,
+      "high_endpoint_branches": 0,
+      "uncertain_branches": 1
+    },
+    {
+      "source": "Portugal",
+      "target": "Nigeria",
+      "branches": 1,
+      "high_endpoint_branches": 0,
+      "uncertain_branches": 1
+    }
+  ],
+  "branches": [
+    {
+      "parent": "NODE_13",
+      "child": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "parent_country": "Italy",
+      "child_country": "Italy",
+      "parent_marginal_confidence": 0.999997688776772,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Italy",
+      "child_candidates": "Italy",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": true,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_13",
+      "child": "NODE_12",
+      "parent_country": "Italy",
+      "child_country": "Italy",
+      "parent_marginal_confidence": 0.999997688776772,
+      "child_marginal_confidence": 0.9999992506437761,
+      "parent_candidates": "Italy",
+      "child_candidates": "Italy",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": true,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_12",
+      "child": "SAMEA9453699",
+      "parent_country": "Italy",
+      "child_country": "Italy",
+      "parent_marginal_confidence": 0.9999992506437761,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Italy",
+      "child_candidates": "Italy",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": true,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_12",
+      "child": "NODE_11",
+      "parent_country": "Italy",
+      "child_country": "Italy",
+      "parent_marginal_confidence": 0.9999992506437761,
+      "child_marginal_confidence": 0.9995171727181695,
+      "parent_candidates": "Italy",
+      "child_candidates": "Italy",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": true,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_11",
+      "child": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "parent_country": "Italy",
+      "child_country": "Italy",
+      "parent_marginal_confidence": 0.9995171727181695,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Italy",
+      "child_candidates": "Italy",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": true,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_11",
+      "child": "NODE_10",
+      "parent_country": "Italy",
+      "child_country": "India",
+      "parent_marginal_confidence": 0.9995171727181695,
+      "child_marginal_confidence": 0.3942094934933457,
+      "parent_candidates": "Italy",
+      "child_candidates": "India",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": true,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_10",
+      "child": "SAMEA122094000",
+      "parent_country": "India",
+      "child_country": "India",
+      "parent_marginal_confidence": 0.3942094934933457,
+      "child_marginal_confidence": 0.9999999999999999,
+      "parent_candidates": "India",
+      "child_candidates": "India",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_10",
+      "child": "NODE_9",
+      "parent_country": "India",
+      "child_country": "Myanmar (Burma)",
+      "parent_marginal_confidence": 0.3942094934933457,
+      "child_marginal_confidence": 0.43918452197998986,
+      "parent_candidates": "India",
+      "child_candidates": "Myanmar (Burma)",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": true,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_9",
+      "child": "SAMD00193192",
+      "parent_country": "Myanmar (Burma)",
+      "child_country": "Myanmar (Burma)",
+      "parent_marginal_confidence": 0.43918452197998986,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Myanmar (Burma)",
+      "child_candidates": "Myanmar (Burma)",
+      "parent_tied": false,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_9",
+      "child": "NODE_8",
+      "parent_country": "Myanmar (Burma)",
+      "child_country": "Portugal",
+      "parent_marginal_confidence": 0.43918452197998986,
+      "child_marginal_confidence": 0.39653653854499155,
+      "parent_candidates": "Myanmar (Burma)",
+      "child_candidates": "Nigeria | Portugal",
+      "parent_tied": false,
+      "child_tied": true,
+      "changes_country": true,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_8",
+      "child": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "parent_country": "Portugal",
+      "child_country": "Portugal",
+      "parent_marginal_confidence": 0.39653653854499155,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Nigeria | Portugal",
+      "child_candidates": "Portugal",
+      "parent_tied": true,
+      "child_tied": false,
+      "changes_country": false,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    },
+    {
+      "parent": "NODE_8",
+      "child": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "parent_country": "Portugal",
+      "child_country": "Nigeria",
+      "parent_marginal_confidence": 0.39653653854499155,
+      "child_marginal_confidence": 1.0,
+      "parent_candidates": "Nigeria | Portugal",
+      "child_candidates": "Nigeria",
+      "parent_tied": true,
+      "child_tied": false,
+      "changes_country": true,
+      "both_endpoints_high_confidence": false,
+      "included": true,
+      "reason": ""
+    }
+  ],
+  "excluded_tips": [],
+  "unknown_tips": 0,
+  "node_assignments": [
+    {
+      "node_id": "NODE_13",
+      "country": "India",
+      "marginal_probability": 8.149029100757749e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_13",
+      "country": "Italy",
+      "marginal_probability": 0.999997688776772,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_13",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 5.485797187467133e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_13",
+      "country": "Nigeria",
+      "marginal_probability": 4.7387029967666256e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_13",
+      "country": "Portugal",
+      "marginal_probability": 4.738702996767034e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "country": "Italy",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "NODE_12",
+      "country": "India",
+      "marginal_probability": 5.026461926070609e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_12",
+      "country": "Italy",
+      "marginal_probability": 0.9999992506437761,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_12",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 1.5308533484526052e-07,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_12",
+      "country": "Nigeria",
+      "marginal_probability": 4.681234825309818e-08,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_12",
+      "country": "Portugal",
+      "marginal_probability": 4.68123482531089e-08,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "SAMEA9453699",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA9453699",
+      "country": "Italy",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA9453699",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA9453699",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA9453699",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "NODE_11",
+      "country": "India",
+      "marginal_probability": 0.0003147336493403671,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_11",
+      "country": "Italy",
+      "marginal_probability": 0.9995171727181695,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_11",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.00010365858728786451,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_11",
+      "country": "Nigeria",
+      "marginal_probability": 3.221752260122159e-05,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_11",
+      "country": "Portugal",
+      "marginal_probability": 3.2217522601228534e-05,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "country": "Italy",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "NODE_10",
+      "country": "India",
+      "marginal_probability": 0.3942094934933457,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_10",
+      "country": "Italy",
+      "marginal_probability": 0.37505426206145764,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_10",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.14086060745107834,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_10",
+      "country": "Nigeria",
+      "marginal_probability": 0.044937818497055235,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_10",
+      "country": "Portugal",
+      "marginal_probability": 0.04493781849706319,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "SAMEA122094000",
+      "country": "India",
+      "marginal_probability": 0.9999999999999999,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA122094000",
+      "country": "Italy",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA122094000",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA122094000",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMEA122094000",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "NODE_9",
+      "country": "India",
+      "marginal_probability": 0.1406256916475836,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_9",
+      "country": "Italy",
+      "marginal_probability": 0.130889272812779,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_9",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.43918452197998986,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_9",
+      "country": "Nigeria",
+      "marginal_probability": 0.14465025677981763,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_9",
+      "country": "Portugal",
+      "marginal_probability": 0.14465025677982998,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "SAMD00193192",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMD00193192",
+      "country": "Italy",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMD00193192",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMD00193192",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "SAMD00193192",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "NODE_8",
+      "country": "India",
+      "marginal_probability": 0.03989035308405768,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_8",
+      "country": "Italy",
+      "marginal_probability": 0.03674432783708936,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_8",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.13029224198888004,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_8",
+      "country": "Nigeria",
+      "marginal_probability": 0.3965365385449814,
+      "maximum_candidate": true,
+      "annotated_representative": false,
+      "is_tip": false
+    },
+    {
+      "node_id": "NODE_8",
+      "country": "Portugal",
+      "marginal_probability": 0.39653653854499155,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": false
+    },
+    {
+      "node_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "country": "Italy",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "country": "Nigeria",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+      "country": "Portugal",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "country": "India",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "country": "Italy",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "country": "Myanmar (Burma)",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "country": "Nigeria",
+      "marginal_probability": 1.0,
+      "maximum_candidate": true,
+      "annotated_representative": true,
+      "is_tip": true
+    },
+    {
+      "node_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+      "country": "Portugal",
+      "marginal_probability": 0.0,
+      "maximum_candidate": false,
+      "annotated_representative": false,
+      "is_tip": true
+    }
+  ],
+  "input_sha256": {
+    "metadata": "5b319df28cf9d6cb99357bd754f4f1e07b920b5fcf2f94393f29dc5cf705a337",
+    "tree": "407ab773416004fe8036e6659ead9cd75978cab8fab3d9e7a2947bfb4b9ad6d7",
+    "confidence": "3f2815105d49121fffc115169fafe0d05f015bc2e871574465deca72b3d4270d",
+    "mapping": "9d8db4a7aa521f7a2dd31576c4bb8d3ca909e8dd671e88b0a9a045dfcebbd11b"
+  },
+  "changing_branches": 4,
+  "uncertain_changing_branches": 4,
+  "unavailable_reason": ""
+}

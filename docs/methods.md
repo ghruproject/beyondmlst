@@ -112,6 +112,25 @@ dated tree, or on the corrected genetic tree when temporal signal is absent.
 This reconstruction is exploratory. Its result depends on how locations were
 defined and sampled.
 
+The full report's StrainHub-style location network groups sampled tips by the
+`location` values in metadata and count, then draws representative changes
+between ancestral states on the rooted analysed tree. Labels are used as
+supplied: there is no automatic geography hierarchy lookup. Use country labels
+for a country-level view; city or hospital labels produce a network at that
+level. Unknown or missing location values are excluded rather than passed to
+the model as a location state. The view uses the existing TreeTime
+maximum-likelihood reconstruction; it does not use StrainHub's parsimony
+algorithm. Solid arrows
+require unique marginal state assignments at both endpoints with confidence of
+at least 0.9. Dashed arrows indicate a tied/ambiguous endpoint or confidence
+below 0.9. The lower endpoint confidence is a display rule, not a joint
+transition probability. Marginal assignments and changes are conditional on
+the rooted tree, sampling and supplied location states. They do not prove
+transmission or migration, and they do not estimate national prevalence.
+Because reconstruction uses the rooted genetic tree, the network can be shown
+after dating is unsupported; it contains no inferred timing. Fast-screen mode
+does not run this reconstruction.
+
 The context workflow freezes a full public Pathogenwatch same-ST catalogue with
 source IDs, accessions, QC, raw metadata, date precision and retrieval hashes.
 It currently supports *K. pneumoniae*; other organisms and schemes return an
@@ -137,6 +156,7 @@ date uncertainty constrain interpretation. See [cgLIN](cglin.md) and
 ## References
 
 - Sagulenko P, Puller V, Neher RA. 2018. [TreeTime: Maximum-likelihood phylodynamic analysis](https://doi.org/10.1093/ve/vex042). *Virus Evolution* 4:vex042.
+- [StrainHub project](https://github.com/abschneider/StrainHub). ChronoClade's country view is stylistically inspired by this tool but uses TreeTime's location reconstruction.
 - Didelot X, Croucher NJ, Bentley SD, Harris SR, Wilson DJ. 2018. [Bayesian inference of ancestral dates on bacterial phylogenetic trees](https://doi.org/10.1093/nar/gky783). *Nucleic Acids Research* 46:e134.
 - Didelot X, Wilson DJ. 2015. [ClonalFrameML: efficient inference of recombination in whole bacterial genomes](https://doi.org/10.1371/journal.pcbi.1004041). *PLoS Computational Biology* 11:e1004041.
 - Bruen TC, Philippe H, Bryant D. 2006. [A simple and robust statistical test for detecting the presence of recombination](https://doi.org/10.1534/genetics.105.048975). *Genetics* 172:2665-2681.
