@@ -116,6 +116,7 @@ def normalise_assignment(
         "cglin_provisional": provisional,
         "cglin_scheme": scheme,
         "cglin_scheme_version": version,
+        "cglin_source": _text(row.get("cglin_source")) or "validated_export",
         "cglin_retrieved_at": _text(row.get("cglin_retrieved_at")) or retrieved_at,
         "cglin_export_sha256": _text(row.get("cglin_export_sha256")) or export_sha256,
         "cglin_export_row": dict(row),
@@ -311,6 +312,8 @@ def resolve_focal_assignments(
         status = "missing" if not matches else "matched" if len(matches) == 1 else "ambiguous"
         if explicit.get(sample) and accession_matches and explicit[sample] != accession_matches:
             status = "conflict"
+        if direct_id and accession_matches and direct_id not in accession_matches:
+            status = "conflict"
         if matches - ids.keys() and status == "matched":
             status = "unavailable"
         own_raw = _field(focal, "cglin_raw", "LINcode", "cgLIN")
@@ -472,6 +475,8 @@ def download_cglin_export(
             parsed = load_cglin_export(
                 temporary, scheme_version=scheme_version, retrieved_at=retrieved_at
             )
+            for assignment in parsed:
+                assignment["cglin_source"] = "pathogenwatch"
             exported = [record["source_genome_id"] for record in parsed]
             if len(exported) != len(set(exported)):
                 raise CGLINError("cgLIN export contains duplicate source IDs")

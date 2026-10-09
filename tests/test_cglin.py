@@ -161,6 +161,33 @@ def test_export_replay_and_all_missing_statuses(tmp_path):
         assert all(not r[f"cglin_group_{depth}"] for r in rows)
 
 
+def test_unsupported_scheme_and_explicit_focal_id_conflict():
+    unsupported = assignment("a", scheme="HierCC")
+    assert unsupported["cglin_status"] == "unsupported"
+    assert not unsupported["cglin_group_5"]
+    catalogue = annotate_catalogue([
+        {"source_genome_id": "a", "biosample": "SAMN100"},
+        {"source_genome_id": "b", "biosample": "SAMN200"},
+    ], [assignment("a"), assignment("b")])
+    rows, _ = resolve_focal_assignments([
+        {"sample_id": "f", "source_genome_id": "b", "biosample": "SAMN100"},
+    ], catalogue)
+    assert rows[0]["cglin_join_status"] == "conflict"
+
+
+def test_normalised_export_import_preserves_csv_provenance(tmp_path):
+    exported = assignment("a")
+    exported["cglin_export_sha256"] = "original_csv_hash"
+    exported["cglin_retrieved_at"] = "2026-10-09T12:00:00Z"
+    exported["cglin_source"] = "pathogenwatch"
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps({"assignments": [exported]}))
+    imported = load_cglin_export(path)[0]
+    assert imported["cglin_export_sha256"] == "original_csv_hash"
+    assert imported["cglin_retrieved_at"] == "2026-10-09T12:00:00Z"
+    assert imported["cglin_source"] == "pathogenwatch"
+
+
 @pytest.mark.parametrize("content", ["", "name,code\nfoo,0_0\n", '{"wrong":[]}'])
 def test_export_requires_source_id_contract(tmp_path, content):
     path = tmp_path / "bad.csv"
