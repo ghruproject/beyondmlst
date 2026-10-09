@@ -117,10 +117,15 @@ interval midpoints; it is exploratory and never passes the final clock gate.
 The `finish` stage evaluates dates on the corrected genomic workflow and
 creates a calendar tree only when the configured temporal screen supports it.
 
-Location networks are possible maximum-parsimony state changes across alternate
-sample roots. The root fraction records how often a possible change appears in
-those tested rootings; it is not a probability or confidence interval. These
-changes depend on the selected tree and the submitted locations, and do not
+Fast location networks show undirected possible maximum-parsimony connections
+on the full selected profile tree, across roots chosen for input, country and
+genetic diversity. Root coverage records how often a possible country pair
+appears; it is not probability or confidence and does not estimate topology or
+sampling uncertainty. Dashed links also mark ambiguous ancestral states.
+The default input-country focus can be switched to the wider network or a
+version-compatible input level-5 LIN subgroup. Each CG retains one viewer.
+Actual nearest-relative country comparisons, including ties, appear separately
+and continue to use the complete selected CG pool. None of these connections
 prove transmission, direction of spread or acquisition location.
 
 ## Current typing-data availability

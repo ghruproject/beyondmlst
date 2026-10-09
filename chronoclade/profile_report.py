@@ -168,35 +168,96 @@ def _root_to_tip(value: object) -> str:
     )
 
 
-def _location_network(value: object) -> str:
+def _range_text(low: object, high: object) -> str:
+    if low is None:
+        return "Not reported"
+    return str(low) if high is None or high == low else f"{low}–{high}"
+
+
+def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
+    edges = _records(row.get("edges"))
+    countries = set(_items(row.get("input_countries")))
+    if focus_inputs:
+        edges = [edge for edge in edges if edge.get("source") in countries or edge.get("target") in countries]
+    table = _table(edges, [("source", "Country A"), ("target", "Country B"),
+        ("roots_with_possible_change", "Roots with possible connection"),
+        ("roots_tested", "Roots tested"), ("root_fraction", "Root coverage fraction"),
+        ("roots_with_ambiguous_change", "Roots with ambiguous reconstruction")],
+        empty="No inferred country connections are available for this view.")
+    nearest = []
+    for edge in _records(row.get("nearest_edges", row.get("nearest_country_connections"))):
+        item = dict(edge)
+        item["mismatches"] = _range_text(edge.get("allele_mismatches_min"), edge.get("allele_mismatches_max"))
+        item["shared_loci"] = _range_text(edge.get("shared_loci_min"), edge.get("shared_loci_max"))
+        nearest.append(item)
+    return (
+        '<h4>Closest-relative country connections</h4>'
+        '<p>These connections come from actual nearest-neighbour cgMLST comparisons, including all distance ties. Subgroup views select input genomes while retaining their closest matches across the complete selected CG pool. '
+        'They do not infer movement between countries. Missing country metadata is retained as Unknown.</p>'
+        + _table(nearest, [("source", "Input country"), ("target", "Nearest-relative country"),
+            ("query_count", "Input genomes"), ("context_count", "Public relatives"),
+            ("comparison_count", "Comparisons, including ties"),
+            ("mismatches", "Allele differences"), ("shared_loci", "Jointly compared loci")],
+            empty="No closest-relative country connections are available for this view.")
+        + f'<details class="coverage-details"><summary>Inferred country connections ({len(edges)} links)</summary>'
+        '<p class="muted">Root coverage is the fraction of tested roots on which a possible connection appears. '
+        'It is sensitivity to rooting, not probability or confidence. It does not measure uncertainty in tree '
+        'estimation or sampling, and is not evidence of transmission.</p>' + table + '</details>'
+    )
+
+
+def _network_view(row: dict[str, Any], directory: Path, *, focus_inputs: bool) -> str:
+    field = "network_figure" if focus_inputs else "full_network_figure"
+    safe_row = dict(row)
+    path = _path_file(directory, row, field)
+    if path is None or path.suffix.casefold() not in {".svg", ".png", ".jpg", ".jpeg", ".webp"}:
+        safe_row.pop(field, None)
+    roots = row.get("root_count", row.get("tested_roots"))
+    root_count = len(roots) if isinstance(roots, list) else roots
+    metrics = _metric_cards([("Method", row.get("method")), ("Roots tested", root_count),
+                            ("Unknown-country samples", row.get("unknown_country_count"))])
+    return metrics + _asset(directory, safe_row, (field,), "Undirected country network") + _network_tables(row, focus_inputs=focus_inputs)
+
+
+def _location_network(value: object, directory: Path, cohorts: object = None) -> str:
     rows = _records(value)
     if not rows:
         return '<p class="empty">No location network reconstruction was reported.</p>'
+    legacy_figures = {row.get("cohort_id"): row.get("network_figure") for row in _records(cohorts)}
     panels = []
-    for row in rows:
-        cohort = _text(row.get("cohort_id", "Cohort"))
-        metrics = _metric_cards([
-            ("Method", row.get("method")),
-            ("Roots tested", row.get("tested_roots")),
-            ("Ambiguous edge reconstructions", row.get("ambiguous_edge_reconstructions")),
-        ])
-        edges = [item for item in _items(row.get("edges")) if isinstance(item, dict)]
-        table = _table(
-            edges,
-            [("source", "From"), ("target", "To"), ("roots_with_possible_change", "Roots with possible change"),
-             ("roots_tested", "Roots tested"), ("root_fraction", "Fraction of tested roots with possible change"), ("uncertain", "Uncertain")],
-            empty="No location edges were reported.",
-        )
-        if edges:
-            table = (
-                f'<details class="coverage-details"><summary>Possible location changes ({len(edges)} edges)</summary>'
-                '<p class="muted">Fractions show the share of tested roots on which a possible change appears. They are not probabilities, confidence scores, or evidence of transmission.</p>'
-                f"{table}</details>"
-            )
+    for index, raw in enumerate(rows):
+        row = dict(raw)
+        row.setdefault("network_figure", legacy_figures.get(row.get("cohort_id")))
+        options = [dict(row, label="All inputs")] + _records(row.get("views"))
+        rendered = [{"label": _text(view.get("label")),
+            "input": _network_view(view, directory, focus_inputs=True),
+            "all": _network_view(view, directory, focus_inputs=False)} for view in options]
+        payload = json.dumps(rendered, ensure_ascii=True).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        identifier = f"network-viewer-{index}"
+        subgroup_options = "".join(f'<option value="{number}">{escape(view["label"])}</option>' for number, view in enumerate(rendered))
         panels.append(
-            f"<h3>{escape(cohort)}</h3>{metrics}<p>{escape(_text(row.get('interpretation')))}</p>{table}"
+            f'<div id="{identifier}" class="network-viewer"><h3>{escape(_text(row.get("cohort_id", "Cohort")))}</h3>'
+            + '<div class="network-controls" hidden>'
+            f'<label for="{identifier}-group">Input subgroup </label>'
+            f'<select id="{identifier}-group" data-network-group>{subgroup_options}</select> '
+            f'<label for="{identifier}-scope">Country links </label>'
+            f'<select id="{identifier}-scope" data-network-scope><option value="input">Input-country links</option>'
+            '<option value="all">All country links</option></select></div>'
+            + '<p>Blue nodes contain your input genomes; grey nodes contain only public comparisons. '
+            'Links are undirected. Their root coverage describes sensitivity to alternative roots.</p>'
+            + '<div data-network-output>' + rendered[0]["input"] + '</div>'
+            + '<noscript><p>Showing all inputs and links involving input countries. Enable JavaScript to switch views.</p></noscript>'
+            + f'<script type="application/json" data-network-views>{payload}</script></div>'
         )
-    return "".join(panels)
+    script = """<script>
+(function(){document.querySelectorAll('.network-viewer').forEach(function(viewer){
+var data=JSON.parse(viewer.querySelector('[data-network-views]').textContent);
+var group=viewer.querySelector('[data-network-group]');var scope=viewer.querySelector('[data-network-scope]');
+var output=viewer.querySelector('[data-network-output]');
+function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){output.innerHTML=chosen[scope.value];}}
+group.addEventListener('change',update);scope.addEventListener('change',update);viewer.querySelector('.network-controls').hidden=false;
+});})();</script>"""
+    return "".join(panels) + script
 
 
 def _download_links(directory: Path, paths: dict[str, Any]) -> str:
@@ -878,7 +939,7 @@ def write_profile_report(
         + pcoa_figures
         + tree_figures
         + "</div><p class=\"muted\">The neighbour-joining tree is a profile-distance view. Branches do not represent time or prove transmission.</p></div></section>",
-        f'<section class="stage" id="network"><div class="stage-body"><h2>Location network</h2><p>Reconstructed location changes depend on the selected rooted tree and supplied metadata. Root fractions report how often a possible change appeared across tested roots; they are not support values, probabilities or proof of transmission or acquisition direction.</p>{_cohort_figures(data.get("cohorts"), directory, "network_figure", "Location network")}{_location_network(data.get("location_network"))}</div></section>',
+        f'<section class="stage" id="network"><div class="stage-body"><h2>Country connections</h2><p>Country reconstruction depends on the rooted tree and supplied metadata. This network describes the selected LIN context pool. It uses all usable profiles, before tree-display subsampling. Input subgroups can have different context breadth, so the network does not describe the distribution of the complete ST.</p>{_location_network(data.get("location_network"), directory, data.get("cohorts"))}</div></section>',
         f'<section class="stage" id="groups"><div class="stage-body"><h2>How do the genomes group genetically?</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
         '<p class="muted">Genetic group stability describes how consistently genomes group when loci are resampled.</p>'
         '<details class="evidence-files"><summary>Inspect genetic groups and bootstrap results</summary>'
