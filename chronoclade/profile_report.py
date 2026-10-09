@@ -178,11 +178,15 @@ def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
     edges = _records(row.get("edges"))
     countries = set(_items(row.get("input_countries")))
     if focus_inputs:
-        edges = [edge for edge in edges if edge.get("source") in countries or edge.get("target") in countries]
-    table = _table(edges, [("source", "Country A"), ("target", "Country B"),
-        ("roots_with_possible_change", "Roots with possible connection"),
-        ("roots_tested", "Roots tested"), ("root_fraction", "Root coverage fraction"),
-        ("roots_with_ambiguous_change", "Roots with ambiguous reconstruction")],
+        edges = [edge for edge in edges if _edge_countries(edge)[0] in countries or _edge_countries(edge)[1] in countries]
+    edges = [{**edge,
+        "country_a": _edge_countries(edge)[0], "country_b": _edge_countries(edge)[1],
+        "displayed_changes": edge.get("representative_count", edge.get("displayed_changes")),
+        "minimum_changes": edge.get("min_changes"), "maximum_changes": edge.get("max_changes"),
+    } for edge in edges]
+    table = _table(edges, [("country_a", "Country A"), ("country_b", "Country B"),
+        ("displayed_changes", "Changes in displayed reconstruction"),
+        ("minimum_changes", "Minimum changes"), ("maximum_changes", "Maximum changes")],
         empty="No inferred country connections are available for this view.")
     nearest = []
     for edge in _records(row.get("nearest_edges", row.get("nearest_country_connections"))):
@@ -199,24 +203,55 @@ def _network_tables(row: dict[str, Any], *, focus_inputs: bool) -> str:
             ("comparison_count", "Comparisons, including ties"),
             ("mismatches", "Allele differences"), ("shared_loci", "Jointly compared loci")],
             empty="No closest-relative country connections are available for this view.")
-        + f'<details class="coverage-details"><summary>Inferred country connections ({len(edges)} links)</summary>'
-        '<p class="muted">Root coverage is the fraction of tested roots on which a possible connection appears. '
-        'It is sensitivity to rooting, not probability or confidence. It does not measure uncertainty in tree '
-        'estimation or sampling, and is not evidence of transmission.</p>' + table + '</details>'
+        + f'<details class="coverage-details"><summary>Inferred country connections ({len(edges)} pairs)</summary>'
+        '<p class="muted">Ranges count changes across all equally optimal parsimony assignments on the fixed NJ topology. '
+        'They are exact conditional counts, not confidence or probabilities. A pair can have zero changes in the '
+        'displayed representative reconstruction and still have a non-zero maximum. Ranges are calculated '
+        'for each pair separately; their maxima need not occur together in one reconstruction.</p>' + table + '</details>'
     )
 
 
+def _edge_countries(edge: dict[str, Any]) -> tuple[object, object]:
+    return (edge.get("country_a", edge.get("source")), edge.get("country_b", edge.get("target")))
+
+
 def _network_view(row: dict[str, Any], directory: Path, *, focus_inputs: bool) -> str:
-    field = "network_figure" if focus_inputs else "full_network_figure"
+    tree = ('<details class="coverage-details"><summary>Country-coloured NJ tree</summary>'
+            + _figure_asset(directory, row, "country_tree_figure", "Representative country states on NJ tree")
+            + '</details>')
+    representative = "network_figure" if focus_inputs else "full_network_figure"
+    possible = "possible_input_network_figure" if focus_inputs else "possible_network_figure"
+    reconstruction = _mapping(row.get("reconstruction"))
+    nodes = _records(reconstruction.get("nodes"))
+    ambiguous = row.get("ambiguous_internal_node_count")
+    if ambiguous is None:
+        ambiguous = sum(1 for node in nodes if not node.get("is_tip")
+                        and isinstance(node.get("allowed_states"), list)
+                        and len(node["allowed_states"]) > 1)
+    metric_values = [("Minimum total changes", reconstruction.get("optimum_changes", row.get("minimum_total_changes"))),
+                     ("Ambiguous internal nodes", ambiguous),
+                     ("Unknown-country samples", row.get("unknown_country_count"))]
+    metrics = _metric_cards([(label, value) for label, value in metric_values if value is not None])
+    roots = row.get("root_count", row.get("tested_roots"))
+    roots = len(roots) if isinstance(roots, list) else roots
+    root_note = ""
+    if row.get("method") is not None or roots is not None:
+        root_note = '<p class="muted">' + escape(_text(row.get("method")))
+        if roots is not None:
+            root_note += '. Separate possible-link diagnostic: ' + escape(_text(roots)) + ' roots checked'
+        root_note += '.</p>'
+    default_asset = _figure_asset(directory, row, representative, "Representative weighted country network")
+    possible_asset = _figure_asset(directory, row, possible, "Representative network with alternative possible links")
+    return metrics + root_note + '<div data-network-representative>' + tree + default_asset + '</div>' + \
+        '<div data-network-possible hidden>' + tree + possible_asset + '</div>' + _network_tables(row, focus_inputs=focus_inputs)
+
+
+def _figure_asset(directory: Path, row: dict[str, Any], field: str, alt: str) -> str:
     safe_row = dict(row)
     path = _path_file(directory, row, field)
     if path is None or path.suffix.casefold() not in {".svg", ".png", ".jpg", ".jpeg", ".webp"}:
         safe_row.pop(field, None)
-    roots = row.get("root_count", row.get("tested_roots"))
-    root_count = len(roots) if isinstance(roots, list) else roots
-    metrics = _metric_cards([("Method", row.get("method")), ("Roots tested", root_count),
-                            ("Unknown-country samples", row.get("unknown_country_count"))])
-    return metrics + _asset(directory, safe_row, (field,), "Undirected country network") + _network_tables(row, focus_inputs=focus_inputs)
+    return _asset(directory, safe_row, (field,), alt)
 
 
 def _location_network(value: object, directory: Path, cohorts: object = None) -> str:
@@ -241,21 +276,24 @@ def _location_network(value: object, directory: Path, cohorts: object = None) ->
             f'<label for="{identifier}-group">Input subgroup </label>'
             f'<select id="{identifier}-group" data-network-group>{subgroup_options}</select> '
             f'<label for="{identifier}-scope">Country links </label>'
-            f'<select id="{identifier}-scope" data-network-scope><option value="input">Input-country links</option>'
-            '<option value="all">All country links</option></select></div>'
-            + '<p>Blue nodes contain your input genomes; grey nodes contain only public comparisons. '
-            'Links are undirected. Their root coverage describes sensitivity to alternative roots.</p>'
-            + '<div data-network-output>' + rendered[0]["input"] + '</div>'
-            + '<noscript><p>Showing all inputs and links involving input countries. Enable JavaScript to switch views.</p></noscript>'
+            f'<select id="{identifier}-scope" data-network-scope><option value="all">All country links</option>'
+            '<option value="input">Input-country links</option></select> '
+            f'<label for="{identifier}-reconstruction">Reconstruction </label>'
+            f'<select id="{identifier}-reconstruction" data-network-reconstruction><option value="representative">Representative reconstruction</option>'
+            '<option value="possible">Include alternative possible links</option></select></div>'
+            + '<p>Node colours show country states; dark outlines mark countries with input genomes. '
+            'Link thickness counts changes in the representative history. Dashed links mark variation across optimal assignments.</p>'
+            + '<div data-network-output>' + rendered[0]["all"] + '</div>'
+            + '<noscript><p>Showing all country links and the representative reconstruction. Enable JavaScript to switch views.</p></noscript>'
             + f'<script type="application/json" data-network-views>{payload}</script></div>'
         )
     script = """<script>
 (function(){document.querySelectorAll('.network-viewer').forEach(function(viewer){
 var data=JSON.parse(viewer.querySelector('[data-network-views]').textContent);
 var group=viewer.querySelector('[data-network-group]');var scope=viewer.querySelector('[data-network-scope]');
-var output=viewer.querySelector('[data-network-output]');
-function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){output.innerHTML=chosen[scope.value];}}
-group.addEventListener('change',update);scope.addEventListener('change',update);viewer.querySelector('.network-controls').hidden=false;
+var reconstruction=viewer.querySelector('[data-network-reconstruction]');var output=viewer.querySelector('[data-network-output]');
+function update(){var chosen=data[Number(group.value)];if(chosen&&(scope.value==='input'||scope.value==='all')){output.innerHTML=chosen[scope.value];var possible=reconstruction.value==='possible';output.querySelectorAll('[data-network-representative]').forEach(function(el){el.hidden=possible;});output.querySelectorAll('[data-network-possible]').forEach(function(el){el.hidden=!possible;});}}
+group.addEventListener('change',update);scope.addEventListener('change',update);reconstruction.addEventListener('change',update);viewer.querySelector('.network-controls').hidden=false;
 });})();</script>"""
     return "".join(panels) + script
 
