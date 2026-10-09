@@ -1,0 +1,94 @@
+{
+  "dates_sha256": "78c690f8d2f5caa980b4f0fc8865eec7fdcb173e262f6971ecf7eeb7fa4307ae",
+  "method": "root_to_tip",
+  "observed": {
+    "r_squared": 0.0,
+    "rate": 1.44e-08
+  },
+  "observed_clock_sha256": "4e786f27ab5a115787ac42df34a6b57eddb63b5d6af036465865977d58346938",
+  "p_value_r_squared": 1.0,
+  "randomised": [
+    {
+      "r_squared": 0.04,
+      "rate": 9.225e-08
+    },
+    {
+      "r_squared": 0.93,
+      "rate": -4.545e-07
+    },
+    {
+      "r_squared": 0.0,
+      "rate": -2.056e-08
+    },
+    {
+      "r_squared": 0.31,
+      "rate": -2.678e-07
+    },
+    {
+      "r_squared": 0.62,
+      "rate": -3.737e-07
+    },
+    {
+      "r_squared": 0.14,
+      "rate": 1.801e-07
+    },
+    {
+      "r_squared": 0.03,
+      "rate": -8.534e-08
+    },
+    {
+      "r_squared": 0.0,
+      "rate": 9.174e-09
+    },
+    {
+      "r_squared": 0.84,
+      "rate": -4.972e-07
+    },
+    {
+      "r_squared": 0.04,
+      "rate": -9.193e-08
+    },
+    {
+      "r_squared": 0.08,
+      "rate": -1.316e-07
+    },
+    {
+      "r_squared": 0.28,
+      "rate": 2.728e-07
+    },
+    {
+      "r_squared": 0.67,
+      "rate": -3.965e-07
+    },
+    {
+      "r_squared": 0.06,
+      "rate": 1.169e-07
+    },
+    {
+      "r_squared": 0.53,
+      "rate": 4.253e-07
+    },
+    {
+      "r_squared": 0.02,
+      "rate": -7.066e-08
+    },
+    {
+      "r_squared": 0.6,
+      "rate": 4.053e-07
+    },
+    {
+      "r_squared": 0.95,
+      "rate": 1.375e-06
+    },
+    {
+      "r_squared": 0.16,
+      "rate": 1.9e-07
+    }
+  ],
+  "requested_randomisations": 19,
+  "seed": 7,
+  "sequence_length": 5085048,
+  "successful_randomisations": 19,
+  "test_label": "Root-to-tip date-permutation screen",
+  "tree_sha256": "db94a24d3eedaa655b747a117ccf1e15d22616deeed9c259a41110d92c97789a"
+}

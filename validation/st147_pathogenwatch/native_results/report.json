@@ -1,0 +1,554 @@
+{
+  "alignment_length": 5816827,
+  "analysis_mode": "full",
+  "complete_alignment_sites": 5085048,
+  "context": {
+    "context_locations": [
+      "Italy",
+      "Nigeria",
+      "Portugal"
+    ],
+    "context_samples": 4,
+    "geography_available": true,
+    "interpretation": "Contextual genomes are available for topology and relatedness assessment.",
+    "local_samples": 3,
+    "manifest_available": true,
+    "nearest_screening_contexts": [
+      {
+        "collection_date": "2020-01-02",
+        "country": "Italy",
+        "min_ska_distance": 11.0,
+        "nearest_focal": "SAMEA9453699",
+        "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4",
+        "selection_reason": "nearest_to=SAMD00193192|SAMEA122094000|SAMEA9453699"
+      },
+      {
+        "collection_date": "2019-12-09",
+        "country": "Italy",
+        "min_ska_distance": 22.0,
+        "nearest_focal": "SAMEA9453699",
+        "sample_id": "PW_oSavMhBThwcTN6GSL6Rg9q",
+        "selection_reason": "stratified_background=Italy|2019"
+      },
+      {
+        "collection_date": "2009",
+        "country": "Portugal",
+        "min_ska_distance": 233.0,
+        "nearest_focal": "SAMEA9453699",
+        "sample_id": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+        "selection_reason": "stratified_background=Portugal|2009"
+      },
+      {
+        "collection_date": "2016-12-13",
+        "country": "Nigeria",
+        "min_ska_distance": 572.0,
+        "nearest_focal": "SAMEA9453699",
+        "sample_id": "PW_9Cg5tSRuj3WekAkohxtNF8",
+        "selection_reason": "stratified_background=Nigeria|2016"
+      }
+    ],
+    "origin_counts": {
+      "context": 4,
+      "local": 3
+    },
+    "retrospective_samples": 0
+  },
+  "date_randomisation_method": "root_to_tip",
+  "distinct_dates": 7,
+  "first_collection_date": "2009",
+  "last_collection_date": "2022",
+  "lineage": "ST147",
+  "locations": [
+    "India",
+    "Italy",
+    "Myanmar (Burma)",
+    "Nigeria",
+    "Portugal"
+  ],
+  "public_health": {
+    "distance_summary": {
+      "callable_sites": {
+        "comparisons": 21,
+        "maximum": 5085048,
+        "median": 5085048,
+        "minimum": 5085048
+      },
+      "categories": {
+        "between_candidate_groups": {
+          "comparisons": 3,
+          "maximum": 142,
+          "median": 128,
+          "minimum": 86
+        },
+        "between_years": {
+          "comparisons": 3,
+          "maximum": 142,
+          "median": 128,
+          "minimum": 86
+        },
+        "context_context": {
+          "comparisons": 6,
+          "maximum": 177,
+          "median": 165.5,
+          "minimum": 15
+        },
+        "different_patients": {
+          "comparisons": 0,
+          "maximum": null,
+          "median": null,
+          "minimum": null
+        },
+        "focal_context": {
+          "comparisons": 12,
+          "maximum": 200,
+          "median": 148.0,
+          "minimum": 6
+        },
+        "focal_focal": {
+          "comparisons": 3,
+          "maximum": 142,
+          "median": 128,
+          "minimum": 86
+        },
+        "same_month": {
+          "comparisons": 0,
+          "maximum": null,
+          "median": null,
+          "minimum": null
+        },
+        "same_patient": {
+          "comparisons": 0,
+          "maximum": null,
+          "median": null,
+          "minimum": null
+        },
+        "same_year": {
+          "comparisons": 0,
+          "maximum": null,
+          "median": null,
+          "minimum": null
+        },
+        "within_candidate_groups": {
+          "comparisons": 0,
+          "maximum": null,
+          "median": null,
+          "minimum": null
+        }
+      }
+    },
+    "nearest_contexts_by_clonal_distance": [
+      {
+        "callable_sites": 5085048,
+        "clonal_snps": 128,
+        "context_sample": "PW_aBbUpWyNcgnBayYVXLFaX4",
+        "focal_sample": "SAMD00193192",
+        "snp_proportion": 2.517183711933496e-05
+      },
+      {
+        "callable_sites": 5085048,
+        "clonal_snps": 86,
+        "context_sample": "PW_aBbUpWyNcgnBayYVXLFaX4",
+        "focal_sample": "SAMEA122094000",
+        "snp_proportion": 1.6912328064553178e-05
+      },
+      {
+        "callable_sites": 5085048,
+        "clonal_snps": 6,
+        "context_sample": "PW_aBbUpWyNcgnBayYVXLFaX4",
+        "focal_sample": "SAMEA9453699",
+        "snp_proportion": 1.1799298649688262e-06
+      }
+    ],
+    "patient_sensitivity": {
+      "excluded_repeated_patient_samples": [],
+      "focal_samples": 3,
+      "full_focal_distances": {
+        "comparisons": 3,
+        "maximum": 142,
+        "median": 128,
+        "minimum": 86
+      },
+      "interpretation": "No repeated coded patient isolates were removed.",
+      "one_per_patient_distances": {
+        "comparisons": 3,
+        "maximum": 142,
+        "median": 128,
+        "minimum": 86
+      },
+      "patient_metadata_complete": false,
+      "representative_samples": [
+        "SAMD00193192",
+        "SAMEA122094000",
+        "SAMEA9453699"
+      ],
+      "samples_with_patient_id": 0
+    },
+    "scenario": {
+      "code": "multiple_introductions",
+      "confidence": "moderate",
+      "decision_rule": "At least two separated focal-only topology groups are present, with no group showing longitudinal persistence in the sampled dates.",
+      "distance_summary": {
+        "callable_sites": {
+          "comparisons": 21,
+          "maximum": 5085048,
+          "median": 5085048,
+          "minimum": 5085048
+        },
+        "categories": {
+          "between_candidate_groups": {
+            "comparisons": 3,
+            "maximum": 142,
+            "median": 128,
+            "minimum": 86
+          },
+          "between_years": {
+            "comparisons": 3,
+            "maximum": 142,
+            "median": 128,
+            "minimum": 86
+          },
+          "context_context": {
+            "comparisons": 6,
+            "maximum": 177,
+            "median": 165.5,
+            "minimum": 15
+          },
+          "different_patients": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          },
+          "focal_context": {
+            "comparisons": 12,
+            "maximum": 200,
+            "median": 148.0,
+            "minimum": 6
+          },
+          "focal_focal": {
+            "comparisons": 3,
+            "maximum": 142,
+            "median": 128,
+            "minimum": 86
+          },
+          "same_month": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          },
+          "same_patient": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          },
+          "same_year": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          },
+          "within_candidate_groups": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          }
+        }
+      },
+      "evidence": [
+        {
+          "finding": "Recombination-filtered SNP and callable-site counts were calculated for 21 genome pairs.",
+          "id": "clonal_distances",
+          "status": "supported"
+        },
+        {
+          "finding": "3 focal genomes cover 3 distinct collection dates.",
+          "id": "longitudinal_span",
+          "status": "supported"
+        },
+        {
+          "finding": "4 public context genomes were analysed; neighbour selection was bounded and cannot guarantee the globally nearest public genome.",
+          "id": "context",
+          "status": "suggestive"
+        },
+        {
+          "finding": "The rooted corrected tree contains 3 maximal focal-only candidate groups; branch support is not yet propagated through ClonalFrameML.",
+          "id": "topology",
+          "status": "suggestive"
+        },
+        {
+          "finding": "Patient identifiers are incomplete, so patient-level sensitivity is limited.",
+          "id": "patient_sensitivity",
+          "status": "unavailable"
+        },
+        {
+          "finding": "The observed root-to-tip fit was not stronger than randomised dates at the predefined threshold (p=1; threshold=0.05).",
+          "id": "temporal_signal",
+          "status": "unavailable"
+        }
+      ],
+      "guardrail": "This is a working genomic interpretation, not a count of introduction events or evidence of direct transmission. Epidemiological review is required.",
+      "label": "Consistent with multiple introductions",
+      "provisional": true,
+      "reasons": [
+        "The focal isolates form 3 separate groups in the recombination-corrected tree.",
+        "0 local groups contain isolates collected on more than one date.",
+        "The comparison includes 4 public context genomes."
+      ],
+      "recommended_follow_up": [
+        "Review referral, travel, community and source histories separately for each candidate focal group.",
+        "Expand public or regional context around each group before estimating introduction pathways.",
+        "Complete coded patient identifiers to assess repeated-patient sampling."
+      ]
+    },
+    "topology": {
+      "branch_support_available": false,
+      "candidate_local_group_count": 3,
+      "focal_monophyletic": false,
+      "groups": [
+        {
+          "distinct_collection_dates": 1,
+          "first_collection_date": "2016-01-01",
+          "group_id": "LG1",
+          "last_collection_date": "2016-01-01",
+          "locations": [
+            "Myanmar (Burma)"
+          ],
+          "nearest_context": {
+            "clonal_snps": 128,
+            "nearest_focal": "SAMD00193192",
+            "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4"
+          },
+          "patient_count": 0,
+          "sample_count": 1,
+          "sample_ids": [
+            "SAMD00193192"
+          ],
+          "spans_sampling_periods": false,
+          "within_group_clonal_snps": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          }
+        },
+        {
+          "distinct_collection_dates": 1,
+          "first_collection_date": "2022",
+          "group_id": "LG2",
+          "last_collection_date": "2022",
+          "locations": [
+            "India"
+          ],
+          "nearest_context": {
+            "clonal_snps": 86,
+            "nearest_focal": "SAMEA122094000",
+            "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4"
+          },
+          "patient_count": 0,
+          "sample_count": 1,
+          "sample_ids": [
+            "SAMEA122094000"
+          ],
+          "spans_sampling_periods": false,
+          "within_group_clonal_snps": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          }
+        },
+        {
+          "distinct_collection_dates": 1,
+          "first_collection_date": "2019",
+          "group_id": "LG3",
+          "last_collection_date": "2019",
+          "locations": [
+            "Italy"
+          ],
+          "nearest_context": {
+            "clonal_snps": 6,
+            "nearest_focal": "SAMEA9453699",
+            "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4"
+          },
+          "patient_count": 0,
+          "sample_count": 1,
+          "sample_ids": [
+            "SAMEA9453699"
+          ],
+          "spans_sampling_periods": false,
+          "within_group_clonal_snps": {
+            "comparisons": 0,
+            "maximum": null,
+            "median": null,
+            "minimum": null
+          }
+        }
+      ],
+      "interpretation": "Candidate groups are maximal focal-only clades in the rooted recombination-corrected tree. They are review aids, not confirmed transmission clusters.",
+      "rooting": "TreeTime least-squares root"
+    }
+  },
+  "public_health_confidence": "moderate",
+  "public_health_label": "Consistent with multiple introductions",
+  "public_health_status": "multiple_introductions",
+  "recombination_masking": {
+    "alignment_sites": 5816827,
+    "ambiguous_columns_retained_by_clonalframeml": 0,
+    "boundary_crossing_intervals": 1,
+    "branches_with_inferred_importation": 3,
+    "coordinate_system": "1-based closed positions in the reference-ordered alignment",
+    "filtered_alignment_sites": 5085048,
+    "filtering_rule": "ClonalFrameML removed every column inferred as imported on any branch and every column that its ordered site scan flagged as containing an ambiguous base. At multiallelic sites, that scan stops after the third called allele; any ambiguity in a later sequence remains in the filtered alignment and is reported separately.",
+    "incomplete_only_removed_percent": 11.773360287318155,
+    "incomplete_only_removed_sites": 684836,
+    "inferred_importation_intervals": 3,
+    "longest_inferred_intervals": [
+      {
+        "alignment_end": 4296740,
+        "alignment_start": 4259788,
+        "crosses_reference_record_boundary": false,
+        "length": 36953,
+        "node": "SAMD00193192",
+        "reference_segments": [
+          "NODE_12_length_169175_cov_13.551622:1294-38246"
+        ]
+      },
+      {
+        "alignment_end": 2681972,
+        "alignment_start": 2676944,
+        "crosses_reference_record_boundary": false,
+        "length": 5029,
+        "node": "PW_5ifnG8SSwbwRCiwbs5Wahp",
+        "reference_segments": [
+          "NODE_5_length_391544_cov_13.368862:273307-278335"
+        ]
+      },
+      {
+        "alignment_end": 5779942,
+        "alignment_start": 5774982,
+        "crosses_reference_record_boundary": true,
+        "length": 4961,
+        "node": "PW_9Cg5tSRuj3WekAkohxtNF8",
+        "reference_segments": [
+          "NODE_39_length_4452_cov_14.669423:3571-4452",
+          "NODE_40_length_4266_cov_155.920566:1-4079"
+        ]
+      }
+    ],
+    "recombination_removed_percent": 0.8070207348439278,
+    "recombination_removed_sites": 46943,
+    "reference_records": 65,
+    "retained_clonal_percent": 87.41961897783791,
+    "retained_clonal_sites": 5085048,
+    "sequences": 7
+  },
+  "reference": "SAMEA9453699",
+  "resources": {
+    "date_randomisation_jobs": 2,
+    "threads": 2
+  },
+  "sample_count": 7,
+  "slug": "Klebsiella_pneumoniae__ST147",
+  "species": "Klebsiella pneumoniae",
+  "status": "ready",
+  "temporal_signal": {
+    "dates_sha256": "78c690f8d2f5caa980b4f0fc8865eec7fdcb173e262f6971ecf7eeb7fa4307ae",
+    "method": "root_to_tip",
+    "observed": {
+      "r_squared": 0.0,
+      "rate": 1.44e-08
+    },
+    "observed_clock_sha256": "4e786f27ab5a115787ac42df34a6b57eddb63b5d6af036465865977d58346938",
+    "p_value_r_squared": 1.0,
+    "randomised": [
+      {
+        "r_squared": 0.04,
+        "rate": 9.225e-08
+      },
+      {
+        "r_squared": 0.93,
+        "rate": -4.545e-07
+      },
+      {
+        "r_squared": 0.0,
+        "rate": -2.056e-08
+      },
+      {
+        "r_squared": 0.31,
+        "rate": -2.678e-07
+      },
+      {
+        "r_squared": 0.62,
+        "rate": -3.737e-07
+      },
+      {
+        "r_squared": 0.14,
+        "rate": 1.801e-07
+      },
+      {
+        "r_squared": 0.03,
+        "rate": -8.534e-08
+      },
+      {
+        "r_squared": 0.0,
+        "rate": 9.174e-09
+      },
+      {
+        "r_squared": 0.84,
+        "rate": -4.972e-07
+      },
+      {
+        "r_squared": 0.04,
+        "rate": -9.193e-08
+      },
+      {
+        "r_squared": 0.08,
+        "rate": -1.316e-07
+      },
+      {
+        "r_squared": 0.28,
+        "rate": 2.728e-07
+      },
+      {
+        "r_squared": 0.67,
+        "rate": -3.965e-07
+      },
+      {
+        "r_squared": 0.06,
+        "rate": 1.169e-07
+      },
+      {
+        "r_squared": 0.53,
+        "rate": 4.253e-07
+      },
+      {
+        "r_squared": 0.02,
+        "rate": -7.066e-08
+      },
+      {
+        "r_squared": 0.6,
+        "rate": 4.053e-07
+      },
+      {
+        "r_squared": 0.95,
+        "rate": 1.375e-06
+      },
+      {
+        "r_squared": 0.16,
+        "rate": 1.9e-07
+      }
+    ],
+    "requested_randomisations": 19,
+    "seed": 7,
+    "sequence_length": 5085048,
+    "successful_randomisations": 19,
+    "test_label": "Root-to-tip date-permutation screen",
+    "tree_sha256": "db94a24d3eedaa655b747a117ccf1e15d22616deeed9c259a41110d92c97789a"
+  },
+  "temporal_signal_reason": "The observed root-to-tip fit was not stronger than randomised dates at the predefined threshold (p=1; threshold=0.05).",
+  "temporal_signal_supported": false,
+  "temporal_status": "not_supported"
+}

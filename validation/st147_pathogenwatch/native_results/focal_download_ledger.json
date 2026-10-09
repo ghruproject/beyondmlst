@@ -1,0 +1,26 @@
+[
+  {
+    "bytes": 5916112,
+    "requests": 2,
+    "seconds": 2.994,
+    "sha256": "cccdc0b848376fc159257aed0b80da2a137c554c1795231b99a8c828643857c0",
+    "source_genome_id": "2iNpme3TkKQVv7MFwugPF9",
+    "status": "downloaded"
+  },
+  {
+    "bytes": 5998150,
+    "requests": 2,
+    "seconds": 5.232,
+    "sha256": "6bd03dcccdcb5cc3c28247bd3d795b2a011e8e12d574e93a2ca37604f1eaf112",
+    "source_genome_id": "8HFG63i6tfFmeqns6auhFF",
+    "status": "downloaded"
+  },
+  {
+    "bytes": 5799718,
+    "requests": 2,
+    "seconds": 4.325,
+    "sha256": "c8f121adc945ac2552c983282c75139e1808f77217e0b2869fda461758fe0a3e",
+    "source_genome_id": "aLZnApmwKX44bLixaxccQn",
+    "status": "downloaded"
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "bulk_requests": 2,
+  "bulk_response_bytes": 6253133,
+  "contract": "numeric request IDs; gzip ZIP; exact UUID-name.fasta joins",
+  "deliberate_partial_failure": {
+    "failure_visible": true,
+    "missing_invalid_id": "999999999",
+    "requested": 2,
+    "requests": 2,
+    "returned_valid": 1
+  },
+  "records": [
+    {
+      "bulk_matches_single": true,
+      "bytes": 5941657,
+      "numeric_source_id": 174724,
+      "sha256": "25e7daa05260a38343bdef345dd587c176357777131fdacc5d49a1a097aeb8a4",
+      "single_requests": 2,
+      "source_genome_id": "tAYgKfJMnCBK81yvS4eiYN"
+    },
+    {
+      "bulk_matches_single": true,
+      "bytes": 5941528,
+      "numeric_source_id": 174727,
+      "sha256": "e5ccf021bd35326ebdb3f7bdc6ffc4832ecc592a6584fc9843c2f22701f829b0",
+      "single_requests": 2,
+      "source_genome_id": "qAzBoQ6TzMVYhFLR5z6aq9"
+    },
+    {
+      "bulk_matches_single": true,
+      "bytes": 5942123,
+      "numeric_source_id": 222661,
+      "sha256": "4ea43062d37729f9344a73923f0d826ccd11476d18402cdb63a1118f91a03283",
+      "single_requests": 2,
+      "source_genome_id": "kQW4Qtxmk3fzP1gGB2AKt4"
+    }
+  ],
+  "seconds": 25.77,
+  "verified_utc": "2026-10-09"
+}

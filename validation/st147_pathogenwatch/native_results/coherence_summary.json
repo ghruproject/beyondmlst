@@ -1,0 +1,140 @@
+{
+  "clonal_lineage_coherence.tsv": {
+    "flagged_samples": 0,
+    "rows": [
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "165.5",
+        "median_snp_proportion": "3.2546399e-05",
+        "ratio_to_cohort_median": "1.421",
+        "robust_z": "3.479",
+        "sample_id": "PW_5ifnG8SSwbwRCiwbs5Wahp"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "174.5",
+        "median_snp_proportion": "3.4316294e-05",
+        "ratio_to_cohort_median": "1.498",
+        "robust_z": "4.118",
+        "sample_id": "PW_9Cg5tSRuj3WekAkohxtNF8"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "107.0",
+        "median_snp_proportion": "2.1042083e-05",
+        "ratio_to_cohort_median": "0.9185",
+        "robust_z": "-0.6745",
+        "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "112.0",
+        "median_snp_proportion": "2.2025357e-05",
+        "ratio_to_cohort_median": "0.9614",
+        "robust_z": "-0.3195",
+        "sample_id": "PW_oSavMhBThwcTN6GSL6Rg9q"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "137.5",
+        "median_snp_proportion": "2.7040059e-05",
+        "ratio_to_cohort_median": "1.18",
+        "robust_z": "1.491",
+        "sample_id": "SAMD00193192"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "116.5",
+        "median_snp_proportion": "2.2910305e-05",
+        "ratio_to_cohort_median": "1",
+        "robust_z": "0",
+        "sample_id": "SAMEA122094000"
+      },
+      {
+        "cohort_median_snp_proportion": "2.2910305e-05",
+        "flagged": "false",
+        "median_raw_snps": "107.0",
+        "median_snp_proportion": "2.1042083e-05",
+        "ratio_to_cohort_median": "0.9185",
+        "robust_z": "-0.6745",
+        "sample_id": "SAMEA9453699"
+      }
+    ],
+    "samples": 7
+  },
+  "lineage_coherence.tsv": {
+    "flagged_samples": 0,
+    "rows": [
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "228.0",
+        "median_snp_proportion": "4.4041474e-05",
+        "ratio_to_cohort_median": "1.382",
+        "robust_z": "5.937",
+        "sample_id": "PW_5ifnG8SSwbwRCiwbs5Wahp"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "553.0",
+        "median_snp_proportion": "0.00010491217",
+        "ratio_to_cohort_median": "3.291",
+        "robust_z": "35.64",
+        "sample_id": "PW_9Cg5tSRuj3WekAkohxtNF8"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "167.0",
+        "median_snp_proportion": "3.0492023e-05",
+        "ratio_to_cohort_median": "0.9566",
+        "robust_z": "-0.6745",
+        "sample_id": "PW_aBbUpWyNcgnBayYVXLFaX4"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "173.5",
+        "median_snp_proportion": "3.1676895e-05",
+        "ratio_to_cohort_median": "0.9938",
+        "robust_z": "-0.09636",
+        "sample_id": "PW_oSavMhBThwcTN6GSL6Rg9q"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "195.5",
+        "median_snp_proportion": "3.6789676e-05",
+        "ratio_to_cohort_median": "1.154",
+        "robust_z": "2.398",
+        "sample_id": "SAMD00193192"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "174.0",
+        "median_snp_proportion": "3.1874381e-05",
+        "ratio_to_cohort_median": "1",
+        "robust_z": "0",
+        "sample_id": "SAMEA122094000"
+      },
+      {
+        "cohort_median_snp_proportion": "3.1874381e-05",
+        "flagged": "false",
+        "median_raw_snps": "170.5",
+        "median_snp_proportion": "3.1135509e-05",
+        "ratio_to_cohort_median": "0.9768",
+        "robust_z": "-0.3605",
+        "sample_id": "SAMEA9453699"
+      }
+    ],
+    "samples": 7
+  }
+}

@@ -150,3 +150,45 @@ focal figure source tables. The real-freeze test compares every exported row aga
 offline regeneration, in addition to the hand-counted subset. The compact fixture's
 internal payload SHA-256 is
 `9fff151f4d91916ed05169b50b9ecdb3268a53c28142043e2519d0a53d54e3dc`.
+
+## Completed native end-to-end result
+
+The **full** native laptop workflow completed on macOS ARM64 with seven samples,
+seven distinct dates, 5,816,827 aligned sites and 5,085,048 retained complete clonal
+sites. Raw and clonal lineage-coherence checks flagged **zero of seven** samples.
+The root-to-tip temporal-signal gate was **not supported**: observed R²=0, rate
+`1.44e-8`, permutation p=1.0 at the unchanged threshold 0.05. All 19 requested
+permutations completed. This bounded release plumbing run used 19 permutations;
+the reproducible production laptop/SLURM recipe retains 100. The failed gate was
+preserved: **zero supported dated trees** were claimed, while topology, geography,
+context interpretation, HTML report and supporting archive remained available.
+
+The actual command was:
+
+```bash
+chronoclade run tmp/st147-pilot/context/combined_metadata.csv \
+  --context-manifest tmp/st147-pilot/context/context_manifest.tsv \
+  --output tmp/st147-pilot/results --threads 2 --lineage-jobs 1 \
+  --randomisation-jobs 2 --date-randomisations 19 --min-samples 4 --seed 7
+```
+
+Recorded tools: SKA 0.5.1; IQ-TREE 3.1.3; ClonalFrameML 1.20; TreeTime 0.12.1.
+Evidence comes from actual analysis-log headers and version commands in the same
+Pixi environment. Sanitised actual `native_results/` files preserve report/temporal
+summaries, raw/clonal coherence rows, screening distances, clonal topology,
+execution resources, acquisition checksums and validation ledgers. Machine-local
+paths and output pointers are omitted. No dated-tree/node-date result is fabricated
+when the temporal gate fails.
+
+The separate small live bulk contract test verified three source-ID/content joins:
+each bulk FASTA exactly matched its independently downloaded single FASTA by
+SHA-256. Two bulk requests returned 6,253,133 response bytes in 25.77 seconds.
+A deliberately partial batch requested one valid source plus invalid numeric ID
+`999999999`: exactly one valid FASTA returned and the missing ID remained visible.
+All eight candidate assemblies additionally matched their expected provider SHA-1
+and sequence-base counts; a subsequent cache-resume validation made **zero network
+requests**. Compact public audit files are in `native_results/`.
+
+SLURM submission syntax is validated and a portable staging recipe is supplied.
+**No cluster job was submitted** in this pilot. This is a completed native laptop
+result plus an exercised offline reproduction path, not a claim of cluster execution.
