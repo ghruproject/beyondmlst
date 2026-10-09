@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import hashlib
+import shutil
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -295,10 +297,12 @@ def context_evidence(
         origins[key] = origins.get(key, 0) + 1
     contexts = [member for member in members if member.origin.strip().lower() == "context"]
     local = [member for member in members if member.origin.strip().lower() == "local"]
+    context_ids = {member.sample_id for member in contexts}
     relevant_rows = [
         row
         for row in manifest_rows
         if row.get("species") == members[0].species and row.get("lineage") == members[0].lineage
+        and row.get("sample_id") in context_ids
     ]
     nearest: list[dict[str, object]] = []
     for row in relevant_rows:
@@ -335,6 +339,12 @@ def context_evidence(
                        if row.get("source") == "pathogenwatch" and row.get("catalogue_path")}
     if len(catalogue_paths) > 1:
         raise WorkflowError("Context manifest refers to multiple frozen catalogues")
+    if not catalogue_paths:
+        shutil.rmtree(directory / "context_geography", ignore_errors=True)
+        for name in ("context_catalogue.json", "context_selection.json"):
+            (directory / name).unlink(missing_ok=True)
+        if not relevant_rows:
+            (directory / "context_manifest.tsv").unlink(missing_ok=True)
     if catalogue_paths:
         from chronoclade.context_geography import generate_context_geography
         from chronoclade.pathogenwatch import content_hash
@@ -588,6 +598,10 @@ def _temporal_signal(
     method: str,
     observed_clock: Path,
 ) -> dict[str, object]:
+    dates_sha256 = hashlib.sha256(json.dumps(
+        [(sample.sample_id, sample.collection_date) for sample in members],
+        separators=(",", ":")).encode()).hexdigest()
+    observed_sha256 = file_sha256(observed_clock)
     if not force and files.temporal_signal.exists():
         previous = json.loads(files.temporal_signal.read_text(encoding="utf-8"))
         if (
@@ -596,10 +610,12 @@ def _temporal_signal(
             and int(previous.get("seed", -1)) == seed
             and int(previous.get("sequence_length", -1)) == sequence_length
             and previous.get("tree_sha256") == file_sha256(tree)
+            and previous.get("dates_sha256") == dates_sha256
+            and previous.get("observed_clock_sha256") == observed_sha256
         ):
             return previous
     runner = run_full_tree_date_randomisation if method == "full_tree" else run_date_randomisation
-    return runner(
+    result = runner(
         tree=tree,
         sequence_length=sequence_length,
         samples=members,
@@ -609,6 +625,9 @@ def _temporal_signal(
         seed=seed,
         output=files.temporal_signal,
     )
+    result.update(dates_sha256=dates_sha256, observed_clock_sha256=observed_sha256)
+    files.temporal_signal.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    return result
 
 
 def _run_dated_tree(
