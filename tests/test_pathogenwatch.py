@@ -259,3 +259,15 @@ def test_real_country_aliases_do_not_split_groups():
     assert normalize_country("Myanmar") == normalize_country("MM")
     assert normalize_country("Myanmar (Burma)") == normalize_country("MM")
     assert normalize_country("UAE") == normalize_country("AE")
+
+
+def test_ena_biosample_accessions_are_recognised_and_deduplicated():
+    records = []
+    for ident in ("a", "b"):
+        raw = detail(ident)
+        raw.update(name="SAMEA8263140", sampleAccession="SAMEA8263140", runAccession=None)
+        row = normalize_record(search_row(ident), raw, organism_id="573", st="147")
+        assert row["biosample"] == "SAMEA8263140"
+        records.append(row)
+    units, audit = deduplicate_catalogue(records, ["SAMEA8263140"])
+    assert units == [] and audit["sample_units"] == 1 and audit["focal_excluded_units"] == 1

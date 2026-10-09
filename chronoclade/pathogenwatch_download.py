@@ -164,6 +164,7 @@ def download_assemblies(
         started = time.monotonic()
         cached = False
         requests = 0
+        stats = {}
         try:
             data = None
             if metadata.is_file():
@@ -183,8 +184,8 @@ def download_assemblies(
             if data is None:
                 stats = {}
                 if fetch:
-                    data = validate_fasta(fetch(source))
                     requests = 1
+                    data = validate_fasta(fetch(source))
                 else:
                     data = validate_fasta(
                         request_download(

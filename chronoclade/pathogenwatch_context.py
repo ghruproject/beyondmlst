@@ -321,17 +321,20 @@ def prepare_pathogenwatch_context(
             key: value for key, value in result.items() if key in ("summaries", "outputs")
         }
 
-    figures()
     write_audit(output / "context_selection.json", audit)
     if dry_run:
+        figures()
+        write_audit(output / "context_selection.json", audit)
         return audit
     if not pool:
+        figures()
         raise ContextError(
             "No QC-passing dated same-ST candidates remain; catalogue geography "
             "and exclusion audit are available"
         )
     key = load_api_key()
     if not key:
+        figures()
         raise ContextError(
             "Pathogenwatch FASTA download requires PATHOGENWATCH_API_KEY "
             "or protected ~/.config/chronoclade/pathogenwatch.json"
@@ -359,6 +362,7 @@ def prepare_pathogenwatch_context(
     audit["stage_losses"]["download_failure"] = len(pool) - len(downloaded)
     write_audit(output / "context_selection.json", audit)
     if not downloaded:
+        figures()
         raise ContextError("No validated Pathogenwatch FASTAs downloaded; see failure ledger")
     inputs = write_ska_inputs(output / "ska_inputs.tsv", focal, downloaded)
     distance_path = run_ska_screen(
@@ -379,6 +383,7 @@ def prepare_pathogenwatch_context(
     )
     audit["stage_losses"]["selection_limit"] = selection["screened_candidates"] - len(selected)
     if not selected:
+        figures()
         write_audit(output / "context_selection.json", audit)
         raise ContextError("SKA screening yielded no contextual genomes; see selection audit")
     write_candidate_table(

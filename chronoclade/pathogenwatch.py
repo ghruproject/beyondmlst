@@ -310,16 +310,16 @@ _COUNTRY_ALIASES = {
     "russian federation": "Russia",
     "viet nam": "Vietnam",
     "czech republic": "Czechia",
+    "turkey": "Türkiye",
+    "unknown region": "Unknown",
     "myanmar": "Myanmar (Burma)",
     "burma": "Myanmar (Burma)",
     "uae": "United Arab Emirates",
     "u.a.e.": "United Arab Emirates",
-    "turkey": "Türkiye",
-    "unknown region": "Unknown",
 }
 _MISSING = {"", "unknown", "none", "null", "na", "n/a", "not provided", "missing", "not collected"}
 _ACCESSION = re.compile(
-    r"\b(?:SAM[NED]\d+|[SED]RR\d+|GC[AF]_\d+(?:\.\d+)?|PRJ[END][AB]\d+|[SED]RP\d+)\b", re.I
+    r"\b(?:SAM[NED][A-Z]?\d+|[SED]RR\d+|GC[AF]_\d+(?:\.\d+)?|PRJ[END][AB]\d+|[SED]RP\d+)\b", re.I
 )
 
 
