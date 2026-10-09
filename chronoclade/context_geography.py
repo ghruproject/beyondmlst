@@ -326,6 +326,378 @@ def _write_table(path: Path, rows: list[dict], fields: Iterable[str], delimiter=
         writer.writerows(rows)
 
 
+def focused_geography_tables(result: Mapping[str, Any]) -> dict:
+    """A bounded report view; full catalogue rows and denominators stay unchanged.
+
+    Use the deepest level represented by a resolved focal assignment. Other
+    focal assignments remain visibly unresolved at this level, not silently
+    compared using a coarser prefix in the same composition denominator.
+    """
+    rows = result["rows"]
+    available_depths = sorted({int(r["prefix_depth"]) for r in rows}, reverse=True)
+    depth = next(
+        (
+            d
+            for d in available_depths
+            if any(
+                r["cohort"] == "focal_survey"
+                and r["prefix_depth"] == d
+                and r["assignment_category"] == "lineage"
+                for r in rows
+            )
+        ),
+        None,
+    )
+    base_depth = min(available_depths) if available_depths else None
+    counts = []
+    names = {"focal_survey": "Focal samples", "selected_context": "Selected public context"}
+    for cohort, label in names.items():
+        country_counts = Counter()
+        for row in rows:
+            if row["cohort"] == cohort and row["prefix_depth"] == base_depth:
+                country_counts[row["country"]] += row["count"]
+        denominator = sum(country_counts.values())
+        for country, count in sorted(country_counts.items()):
+            counts.append(
+                {
+                    "cohort": cohort,
+                    "cohort_label": label,
+                    "country": country,
+                    "count": count,
+                    "denominator": denominator,
+                    "percentage": count / denominator * 100 if denominator else 0,
+                }
+            )
+    keys = sorted(
+        {
+            r["prefix_key"]
+            for r in rows
+            if r["cohort"] == "focal_survey"
+            and r["prefix_depth"] == depth
+            and r["assignment_category"] == "lineage"
+        }
+    )
+    labels = {key: f"Group {index + 1}" for index, key in enumerate(keys)}
+    lookup, public = [], []
+    for key in keys:
+        focal = [
+            r
+            for r in rows
+            if r["cohort"] == "focal_survey"
+            and r["prefix_depth"] == depth
+            and r["prefix_key"] == key
+        ]
+        contexts = [
+            r
+            for r in rows
+            if r["cohort"] == "selected_context"
+            and r["prefix_depth"] == depth
+            and r["prefix_key"] == key
+        ]
+        matching = [
+            r
+            for r in rows
+            if r["cohort"] == "public_catalogue"
+            and r["prefix_depth"] == depth
+            and r["prefix_key"] == key
+        ]
+        representative = focal[0]
+        lookup.append(
+            {
+                "group_id": labels[key],
+                "prefix_depth": depth,
+                "prefix_key": key,
+                "full_prefix_label": representative["group_label"],
+                "scheme": representative["scheme"],
+                "scheme_version": representative["scheme_version"],
+                "focal_n": sum(r["count"] for r in focal),
+                "selected_context_n": sum(r["count"] for r in contexts),
+                "public_n": sum(r["count"] for r in matching),
+            }
+        )
+        for row in matching:
+            public.append(dict(row, group_id=labels[key]))
+    chosen_summaries = [dict(s) for s in result["summaries"] if s["depth"] == depth]
+    fallback_summaries = [dict(s) for s in result["summaries"] if s["depth"] == base_depth]
+    totals = {s["cohort"]: s["total_units"] for s in fallback_summaries}
+    unresolved = [
+        dict(r)
+        for r in rows
+        if r["prefix_depth"] == (depth or base_depth)
+        and r["assignment_category"] == "assignment_coverage"
+    ]
+    return {
+        "depth": depth,
+        "country_counts": counts,
+        "public_groups": public,
+        "group_lookup": lookup,
+        "assignment_coverage": unresolved,
+        "audit": {
+            "scope": dict(result.get("scope", {})),
+            "chosen_depth": depth,
+            "public_catalogue_n": result["sample_units"],
+            "focal_n": totals.get("focal_survey", 0),
+            "selected_context_n": totals.get("selected_context", 0),
+            "tree_participants_n": totals.get("focal_survey", 0)
+            + totals.get("selected_context", 0),
+            "focal_public_overlap_n": len(result["focal_overlap"]),
+            "matched_public_n": sum(g["public_n"] for g in lookup),
+            "groups_without_public_records": [g["group_id"] for g in lookup if not g["public_n"]],
+            "assignment_summaries": chosen_summaries or fallback_summaries,
+            "counting_unit": "deduplicated sample units; not patients or infections",
+            "denominator_rule": "Each public group has its own denominator including Unknown; focal and selected counts are separate.",
+            "depth_rule": "Deepest resolved focal prefix, 7 then 6 then 5; unresolved focal assignments remain outside these groups.",
+            "interpretation": "Shared cgLIN group membership is not evidence of exact nearest relatives or transmission.",
+        },
+    }
+
+
+def _focused_plot(rows: list[dict], path: Path, *, proportions: bool):
+    """Named country bars with readable n/% labels, kept out of the HTML DOM."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+
+    with plt.rc_context({"font.family": "DejaVu Serif", "svg.fonttype": "none", "font.size": 14}):
+        if proportions:
+            groups = list(dict.fromkeys(r["group_id"] for r in rows))
+            panels = [[r for r in rows if r["group_id"] == group] for group in groups]
+        else:
+            panels = [rows]
+        countries_per_panel = [len({r["country"] for r in panel}) for panel in panels]
+        fig, axes = plt.subplots(
+            len(panels),
+            1,
+            squeeze=False,
+            figsize=(8, max(4.6, sum(countries_per_panel) * 0.48 + len(panels) * 2)),
+        )
+        for ax, panel in zip(axes.flat, panels):
+            countries = sorted(
+                {r["country"] for r in panel},
+                key=lambda country: (
+                    country == "Unknown",
+                    -sum(r["count"] for r in panel if r["country"] == country),
+                    country,
+                ),
+            )
+            if proportions:
+                by_country = {r["country"]: r for r in panel}
+                values = [by_country[c]["percentage"] for c in countries]
+                bars = ax.barh(
+                    range(len(countries)),
+                    values,
+                    color=[country_colour(c) for c in countries],
+                    height=0.65,
+                )
+                for bar, country in zip(bars, countries):
+                    row = by_country[country]
+                    ax.text(
+                        bar.get_width() + 1,
+                        bar.get_y() + bar.get_height() / 2,
+                        f"{row['count']:,} ({row['percentage']:.1f}%)",
+                        va="center",
+                        fontsize=14,
+                    )
+                ax.set_xlim(0, max(25, max(values, default=0) * 1.55))
+                ax.set_xlabel("Share of this public group (%)\nUnknown included in denominator")
+                first = panel[0]
+                ax.set_title(
+                    f"{first['group_id']} · prefix depth {first['prefix_depth']} · public N={first['denominator']:,}\n"
+                    f"Known country={first['known_country_n']:,} · Unknown={first['unknown_n']:,}",
+                    loc="left",
+                    fontsize=14,
+                )
+            else:
+                offsets = {"focal_survey": -0.18, "selected_context": 0.18}
+                colours = {"focal_survey": "#303a46", "selected_context": "#b78151"}
+                for cohort, offset in offsets.items():
+                    cohort_rows = [r for r in panel if r["cohort"] == cohort]
+                    by_country = {r["country"]: r["count"] for r in cohort_rows}
+                    denominator = sum(by_country.values())
+                    label = (
+                        "Focal samples" if cohort == "focal_survey" else "Selected public context"
+                    )
+                    values = [by_country.get(c, 0) for c in countries]
+                    bars = ax.barh(
+                        [i + offset for i in range(len(countries))],
+                        values,
+                        height=0.32,
+                        color=colours[cohort],
+                        label=f"{label} (N={denominator:,})",
+                    )
+                    for bar, value in zip(bars, values):
+                        if value:
+                            ax.text(
+                                value + 0.04,
+                                bar.get_y() + bar.get_height() / 2,
+                                str(value),
+                                va="center",
+                                fontsize=14,
+                            )
+                ax.set_xlim(0, max(1, max((r["count"] for r in panel), default=0)) * 1.25)
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax.set_xlabel("Sample units (n)")
+                ax.set_title("Countries represented in the tree cohorts", loc="left", fontsize=14)
+                ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0, -0.28), fontsize=14)
+            ax.set_yticks(range(len(countries)), countries)
+            ax.invert_yaxis()
+            ax.spines[["top", "right"]].set_visible(False)
+            ax.grid(axis="x", color="#dddddd", linewidth=0.5, zorder=0)
+            ax.set_axisbelow(True)
+        fig.tight_layout(pad=1.6)
+        fig.savefig(path.with_suffix(".svg"), bbox_inches="tight")
+        fig.savefig(path.with_suffix(".png"), dpi=200, bbox_inches="tight")
+        plt.close(fig)
+
+
+def generate_focused_geography(result: Mapping[str, Any], output_dir: str | Path) -> dict:
+    """Save a lightweight main-report summary plus separate source tables/audit."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    focused = focused_geography_tables(result)
+    for previous in output_dir.glob("focused_*.svg"):
+        previous.unlink()
+    for previous in output_dir.glob("focused_*.png"):
+        previous.unlink()
+    files = []
+    for name, rows, fields in (
+        (
+            "focused_country_counts.csv",
+            focused["country_counts"],
+            ("cohort", "cohort_label", "country", "count", "denominator", "percentage"),
+        ),
+        ("focused_public_groups.csv", focused["public_groups"], (*FIELDS, "group_id")),
+        (
+            "focused_group_lookup.csv",
+            focused["group_lookup"],
+            (
+                "group_id",
+                "prefix_depth",
+                "prefix_key",
+                "full_prefix_label",
+                "scheme",
+                "scheme_version",
+                "focal_n",
+                "selected_context_n",
+                "public_n",
+            ),
+        ),
+        ("focused_assignment_coverage.csv", focused["assignment_coverage"], FIELDS),
+    ):
+        _write_table(output_dir / name, rows, fields)
+        files.append(str(output_dir / name))
+    audit_path = output_dir / "focused_scope_audit.json"
+    audit_path.write_text(json.dumps(focused["audit"], indent=2) + "\n")
+    files.append(str(audit_path))
+    audit = focused["audit"]
+    fragment = [
+        '<section id="context-geography">',
+        f"<p>The tree includes {audit['focal_n']:,} focal samples and {audit['selected_context_n']:,} selected public comparisons "
+        f"({audit['tree_participants_n']:,} genomes in total). The wider catalogue contains {audit['public_catalogue_n']:,} "
+        "quality-checked, deduplicated public sample units; these are a separate population, not extra tree participants.</p>",
+    ]
+    scope = result.get("scope", {})
+    for name, rows, proportions, caption in (
+        (
+            "focused_country_counts",
+            focused["country_counts"],
+            False,
+            "Figure 1. Countries of the focal samples and selected public context, with separate cohort counts. All named countries and Unknown are retained.",
+        ),
+        (
+            "focused_public_groups",
+            focused["public_groups"],
+            True,
+            "Figure 2. Country proportions among available public records within each focal-matching cgLIN group. Labels show count and percentage; Unknown remains in each group denominator. Focal counts are not added to public proportions.",
+        ),
+    ):
+        if rows:
+            if proportions:
+                fragment.append(
+                    "<p>Public proportions describe genetic groups matching your focal samples; "
+                    "they do not identify exact nearest relatives.</p>"
+                )
+            _focused_plot(rows, output_dir / name, proportions=proportions)
+            files.extend(str(output_dir / (name + suffix)) for suffix in (".svg", ".png"))
+            fragment.append(
+                f'<figure><a href="{name}.svg" target="_blank"><img src="{name}.svg" '
+                f'alt="{html.escape(caption)}" loading="lazy" style="width:100%;height:auto"></a>'
+                f'<figcaption>{html.escape(caption)} <a href="{name}.svg">Full-resolution SVG</a> · '
+                f'<a href="{name}.png">PNG</a></figcaption></figure>'
+            )
+    if scope:
+        fragment.append(
+            "<details><summary>Catalogue source, snapshot and quality filters</summary><p>Available public records: "
+            + html.escape(str(scope.get("description", "Frozen same-ST catalogue")))
+            + ". Snapshot: "
+            + html.escape(str(scope.get("snapshot", "unspecified")))
+            + ". "
+            + html.escape(
+                str(scope.get("filters", "QC passing; deduplicated; undated records retained"))
+            )
+            + ".</p></details>"
+        )
+    if focused["depth"] is None:
+        fragment.append(
+            "<p>Public group composition is unavailable: no comparable focal cgLIN assignment resolves at depths 7, 6 or 5. "
+            "Missing and unresolved assignments remain in the coverage table; no lineage group has been inferred.</p>"
+        )
+    else:
+        focal_summary = next(
+            s for s in audit["assignment_summaries"] if s["cohort"] == "focal_survey"
+        )
+        fragment.append(
+            f"<p>Comparison uses full-prefix depth {focused['depth']}; {focal_summary['assigned_units']:,} focal sample units resolve "
+            f"and {focal_summary['unresolved_units']:,} remain unresolved at this depth. Prefix depths are not SNP cutoffs.</p>"
+        )
+        if audit["groups_without_public_records"]:
+            fragment.append(
+                "<p>No eligible public records were available for "
+                + html.escape(", ".join(audit["groups_without_public_records"]))
+                + ".</p>"
+            )
+    if focused["group_lookup"]:
+        fragment.append(
+            "<details><summary>Group identifiers, schemes and separate cohort totals</summary>"
+            "<table><thead><tr><th>Group</th><th>Full prefix, scheme and version</th><th>Public N</th><th>Focal N</th><th>Selected N</th></tr></thead><tbody>"
+        )
+        for group in focused["group_lookup"]:
+            fragment.append(
+                "<tr><td>"
+                + html.escape(group["group_id"])
+                + "</td><td>"
+                + html.escape(group["full_prefix_label"])
+                + f"</td><td>{group['public_n']:,}</td><td>{group['focal_n']:,}</td><td>{group['selected_context_n']:,}</td></tr>"
+            )
+        fragment.append(
+            "</tbody></table><p>The scheme version is retained exactly, including Unknown where unavailable. "
+            "A Pathogenwatch source ID identifies a source genome record; it is not a lineage or patient identifier.</p></details>"
+        )
+    fragment.append(
+        f"<p>Focal sample units also present in the public catalogue: {audit['focal_public_overlap_n']:,}. "
+        "Their focal counts remain separate and do not increase public proportions.</p>"
+    )
+    fragment.append("<p>" + html.escape(CAUTION) + "</p>")
+    fragment.append(
+        '<p><a href="focused_country_counts.csv">Cohort country counts</a> · '
+        '<a href="focused_public_groups.csv">Focal-matching public proportions</a> · '
+        '<a href="focused_group_lookup.csv">Full group lookup</a> · '
+        '<a href="focused_assignment_coverage.csv">Unresolved assignment coverage</a> · '
+        '<a href="focused_scope_audit.json">Scope audit</a></p>'
+    )
+    fragment.append(
+        "<details><summary>Explore the complete country atlas</summary><p>"
+        '<a href="index.html">Open all catalogue groups, depths and cohort figures</a> · '
+        '<a href="country_composition.csv">Download the complete audited country table</a>.'
+        "</p></details></section>"
+    )
+    (output_dir / "focused_fragment.html").write_text("\n".join(fragment))
+    files.append(str(output_dir / "focused_fragment.html"))
+    return {"outputs": files, "focused": focused, "focused_report_html": "\n".join(fragment)}
+
+
 def _plot(rows: list[dict], path: Path, title: str, percentage: bool, caption: str):
     import matplotlib
 
@@ -408,6 +780,9 @@ def generate_context_geography(
     scope: Mapping[str, Any] | None = None,
 ) -> dict:
     """Write CSV/TSV, JSON audit, figures, and self-contained embeddable HTML fragment."""
+    catalogue_rows = list(catalogue_rows)
+    selected_source_ids = list(selected_source_ids)
+    focal_rows = list(focal_rows)
     depths = tuple(depths)
     result = geography_tables(
         catalogue_rows,
@@ -597,4 +972,19 @@ def generate_context_geography(
     )
     (output_dir / "index.html").write_text(document)
     result["outputs"].append(str(output_dir / "index.html"))
+    focused_result = (
+        result
+        if set(depths) == set(DEPTHS)
+        else geography_tables(
+            catalogue_rows,
+            selected_source_ids=selected_source_ids,
+            focal_rows=focal_rows,
+            depths=DEPTHS,
+            scope=scope,
+        )
+    )
+    focused = generate_focused_geography(focused_result, output_dir)
+    result["outputs"].extend(focused["outputs"])
+    result["focused"] = focused["focused"]
+    result["focused_report_html"] = focused["focused_report_html"]
     return result

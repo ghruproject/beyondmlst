@@ -207,7 +207,6 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
 
     assert "Root-to-tip permutation screen passed" in text
     assert ".decision.proceed { color:var(--green); }" in text
-    assert 'class="decision proceed">READY TO TEST' in text
     assert 'class="decision proceed">CONTINUE TO TEST' in text
     assert 'class="decision proceed">PROCEED' in text
     assert 'class="overall supported"' in text
@@ -217,19 +216,20 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
     assert "What should happen next?" in text
     assert "Does divergence increase with sampling time?" in text
     assert "Is this a coherent, dated lineage dataset?" in text
-    assert text.index("Is this a coherent, dated lineage dataset?") < text.index(
-        "Does divergence increase with sampling time?"
+    assert (
+        text.index('id="countries"')
+        < text.index('id="relatives"')
+        < text.index('id="interpretation"')
+        < text.index('id="dating"')
+        < text.index('id="prepare"')
     )
     assert "workflow's configured screening rule for time scaling" in text
     assert "without preserving genetic or outbreak clusters" in text
     assert text.index("Does divergence increase with sampling time?") < text.index(
         "Is the observed fit stronger than shuffled dates?"
     )
-    assert text.index("Is the observed fit stronger than shuffled dates?") < text.index(
+    assert text.index("What pattern is consistent with these genomes?") < text.index(
         "Estimate the dated phylogeny"
-    )
-    assert text.index("Estimate the dated phylogeny") < text.index(
-        "What pattern is consistent with these genomes?"
     )
     assert "Recombination-filtered genomic distances" in text
     assert "Candidate focal groups" in text
@@ -248,7 +248,7 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
     assert "Public contextual genomes" in text
     assert "SAMN1" in text
     assert "SKA distances" in text
-    assert "does not prove direct transmission" in text
+    assert "do not prove direct transmission" in text
     assert (tmp_path / "date_randomisation.svg").is_file()
     assert (tmp_path / "date_randomisation.png").is_file()
     assert (tmp_path / "date_randomisation.csv").is_file()
@@ -439,7 +439,7 @@ def test_embedded_country_svg_keeps_local_glyph_references(tmp_path):
 
     directory = tmp_path / "context_geography"
     directory.mkdir()
-    (directory / "fragment.html").write_text(
+    (directory / "focused_fragment.html").write_text(
         '<a href="country_composition.csv">Data</a>'
         '<svg><defs><path id="glyph" /></defs><use xlink:href="#glyph" /></svg>'
     )
@@ -447,3 +447,53 @@ def test_embedded_country_svg_keeps_local_glyph_references(tmp_path):
     assert 'href="context_geography/country_composition.csv"' in embedded
     assert 'xlink:href="#glyph"' in embedded
     assert "context_geography/#glyph" not in embedded
+
+
+def test_reader_order_focused_geography_and_opt_in_demonstration(tmp_path: Path) -> None:
+    geography = tmp_path / "context_geography"
+    geography.mkdir()
+    (geography / "focused_fragment.html").write_text(
+        '<p>Focused country result</p><img src="focused_country_counts.svg">'
+    )
+    (geography / "fragment.html").write_text("<p>Huge complete atlas</p>")
+    (geography / "index.html").write_text("Full atlas")
+    report = {
+        "species": "Klebsiella_pneumoniae",
+        "lineage": "ST147",
+        "sample_count": 7,
+        "distinct_dates": 7,
+        "temporal_signal": temporal_result(p_value=1.0),
+        "context": {"local_samples": 3, "context_samples": 4},
+        "demonstration": {
+            "label": "Public focal demonstration",
+            "description": "Public records <not patient isolates>",
+        },
+    }
+    text = write_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text()
+    assert "Focused country result" in text and "Huge complete atlas" not in text
+    assert 'src="context_geography/focused_country_counts.svg"' in text
+    assert 'href="context_geography/index.html"' in text
+    assert "Public records &lt;not patient isolates&gt;" in text
+    assert "Demonstration only; no epidemiological confidence is assigned" in text
+    assert "Illustrative rule output:" in text
+    assert text.index('id="countries"') < text.index('id="relatives"') < text.index('id="dating"')
+    assert "Dates do not support estimating a dated tree" in text
+    assert "Dated-tree figures, node-date intervals" not in text
+    report.pop("demonstration")
+    text = write_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text()
+    assert 'class="guardrail demonstration"' not in text
+
+
+def test_passed_date_test_without_tree_does_not_claim_dated_outputs(tmp_path: Path) -> None:
+    report = {
+        "species": "E_coli",
+        "lineage": "ST131",
+        "sample_count": 4,
+        "distinct_dates": 4,
+        "temporal_signal": temporal_result(),
+    }
+    text = write_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text()
+    assert "Dated-tree output is unavailable" in text
+    assert "The configured date test passed, but a dated-tree figure was not produced." in text
+    assert "Dated-tree figures, node-date intervals" not in text
+    assert "Time scaling was not performed" not in text

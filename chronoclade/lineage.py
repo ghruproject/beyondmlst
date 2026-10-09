@@ -15,6 +15,7 @@ from chronoclade.coherence import screen_alignment
 from chronoclade.errors import WorkflowError
 from chronoclade.evidence import build_public_health_evidence
 from chronoclade.metadata import Sample, select_reference
+from chronoclade.neighbourhood import build_neighbourhood_evidence
 from chronoclade.report import (
     assess_temporal_signal,
     write_fast_lineage_report,
@@ -889,6 +890,11 @@ def _run_lineage(
         output=files.directory,
         temporal_assessment=assessment,
     )
+    neighbourhood = build_neighbourhood_evidence(
+        tree=files.tree,
+        samples=members,
+        output=files.directory,
+    )
     temporal_supported = bool(assessment["supported"])
     if temporal_supported:
         if date_randomisation_method != "full_tree":
@@ -908,6 +914,15 @@ def _run_lineage(
         public_health,
         recombination_masking,
         time_tree_available,
+    )
+    report["neighbourhood"] = neighbourhood
+    report["outputs"].update(
+        {
+            "nearest_neighbours": str(files.directory / "nearest_neighbours.tsv"),
+            "neighbourhood_evidence": str(files.directory / "nearest_neighbours.json"),
+            "genetic_tree_plot": str(files.directory / "genetic_tree.svg"),
+            "genetic_tree_png": str(files.directory / "genetic_tree.png"),
+        }
     )
     (files.directory / "report.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8"

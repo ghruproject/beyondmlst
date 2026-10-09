@@ -151,7 +151,9 @@ def test_rerun_without_current_context_removes_stale_geography_and_downloads(
     assert _context_geography_visual(directory)
     evidence = context_evidence([sample(tmp_path)], manifest_rows, directory=directory)
     assert not evidence["geography_available"] and not evidence["manifest_available"]
-    assert _context_geography_visual(directory) == ""
+    unavailable = _context_geography_visual(directory)
+    assert "not available" in unavailable
+    assert "obsolete.svg" not in unavailable
     assert not geography.exists()
     assert not any(path.exists() for path in stale)
 

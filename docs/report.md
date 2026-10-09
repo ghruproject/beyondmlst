@@ -1,76 +1,65 @@
 # Reading the report
 
-Each lineage report follows the order in which an analyst should inspect the
-evidence. The temporal test and the public-health interpretation are separate.
-A lineage can fail the clock test and still have useful clonal distances and
-topology.
+The report starts with what was found, the countries represented and the closest
+analysed relatives. Dating comes afterwards: genetic relationships remain useful
+when collection dates cannot support reliable estimates of ancestral times.
 
-## 1. Check the analysis basis
+## Start with the summary
 
-The report begins with sample count, sampling span and the number of complete
-clonal sites. It records that the raw-distance screen, ClonalFrameML correction
-and post-recombination distance screen completed before temporal testing. These
-checks detect grossly divergent genomes; they do not prove every accession or
-metadata value is correct.
+The opening summary separates your focal samples (the genomes you want to
+investigate) from context genomes (the comparison set). It states whether dating
+is supported. An unsupported dating result means the analysis completed but did
+not establish enough clock information; it does not mean the software failed.
 
-The same section maps the recombination filter across the reference-ordered
-alignment. The upper track counts how many tree branches have an inferred
-importation in each bin. The lower track separates columns removed because they
-fall within at least one inferred import from columns removed only because a
-genome has an ambiguous base there. Exact branch, start and end coordinates are
-provided beside the figure.
+Public-data demonstrations are labelled explicitly. Their focal genomes are
+stand-ins, not a defined outbreak or patient cohort, and their automated
+interpretations must not be treated as epidemiological findings.
 
-For a multi-record reference, the interval table translates alignment positions
-back to record-local coordinates. The report explicitly flags any inferred tract
-that crosses a join between reference records because ClonalFrameML sees the
-concatenated alignment and may treat that artificial adjacency as continuous.
+## Countries and genetic groups
 
-ClonalFrameML's filtered FASTA is a shared alignment, not a sample-by-sample mask.
-If a column is inferred as imported on any branch, that column is removed from
-every sequence before clonal distances and temporal analysis.
+Country counts first compare focal samples with the context genomes selected for
+the tree. A separate figure describes public genomes in the cgLIN groups matching
+the focal samples. cgLIN codes describe genetic groups at increasingly specific
+levels; they are not SNP-distance cutoffs or transmission clusters.
 
-## 2. Explore the clock relationship
+Keep the denominators separate. A tree may contain seven analysed genomes while
+the public catalogue contains thousands of quality-checked, deduplicated sample
+units. Country percentages within a public group describe that available group,
+not the selected tree participants. Unknown countries remain in the denominator.
+The full catalogue atlas and source tables are available separately.
 
-The root-to-tip plot places collection date on the horizontal axis and genetic
-distance from the fitted root on the vertical axis. The slope estimates a rate;
-R² describes the fit of the regression.
+These figures describe submitted sequence records. Surveillance and submission
+coverage affect the proportions; country metadata does not establish where an
+infection was acquired, migration direction or population prevalence.
 
-Use this plot to inspect the direction of the slope, scatter, outliers and
-obvious clusters. Do not decide that temporal signal is present from R² alone.
+## Closest relatives and the genetic tree
 
-## 3. Test against random dates
+The first tree shows genetic relationships before time scaling. Its branch
+lengths represent model-estimated substitutions per site, not years. Focal tips
+are distinguished from comparison genomes and labelled with country and date.
 
-ChronoClade permutes collection dates among the tips and repeats the TreeTime
-clock fit. The report plots the null distributions for R² and clock rate beside
-the observed values.
+Per-sample neighbour tables use the final recombination-filtered SNP comparisons.
+A SNP is a differing DNA base at a position that can be compared between the two
+genomes. The callable-site count states how much sequence was comparable. Pairs
+with no comparable sites cannot establish closeness. Exact distance ties remain
+visible; the nearest rows are not a unique winner when several genomes tie.
 
-The empirical p-value is:
+A separate ranking uses patristic distance: the total length of branches linking
+two tips in the genetic tree. SNP counts and tree distances can rank relatives
+differently because they are different measures. Neither requires a dated tree.
+The earlier SKA distances were used to select a screening pool; they are not the
+final recombination-filtered relatedness result.
 
-```text
-(permuted R² values at least as large as observed R² + 1)
----------------------------------------------------------
-            (successful permutations + 1)
-```
+“Closest” always means among the genomes analysed in this run. A bounded context
+selection cannot establish the globally nearest public genome. Close genetic
+relationships alone do not establish transmission or infection direction.
 
-The default gate requires all requested permutations to complete, a positive
-observed rate, and p <= 0.05. ChronoClade stops time scaling when any condition
-fails.
+## Interpretation
 
-## 4. Inspect the dated tree
-
-Passing datasets receive a TreeTime phylogeny on a calendar axis. Horizontal
-intervals show the uncertainty in internal-node dates. The report also gives
-the clock rate and its standard deviation, root estimate, and summaries of
-node-interval width.
-
-## 5. Review topology, distance and context
-
-The working interpretation uses the recombination-filtered topology, clonal SNP
-distances, longitudinal span and placement of public context genomes. The
-evidence table states which observations support the interpretation and which
-inputs are missing.
-
-The report uses four labels:
+The working interpretation combines the corrected topology, SNP comparisons,
+sampling span and comparison genomes. Detailed evidence states what is available
+and what is missing. Automated labels are provisional: compare them with patient
+movement, referral, travel and sampling information.
 
 | Label | Sampled pattern |
 | --- | --- |
@@ -79,21 +68,40 @@ The report uses four labels:
 | Mixed | Several focal groups are present and at least one spans dates |
 | Indeterminate | Focal, longitudinal or contextual evidence is insufficient |
 
-These are working genomic descriptions. An analyst should compare them with
-patient movement, ward, referral, travel and sampling information.
+## Can this tree be placed on a calendar?
 
-## Downloadable evidence
+The report then explains whether genetic divergence increases with collection
+time and whether the observed relationship is stronger than results with shuffled
+dates. In the default root-to-tip screen, R² describes the fit and the empirical
+p-value compares it with the shuffled results. R² alone is not a pass criterion.
+Full TreeTime refits use the separately documented rate-interval criterion.
 
-Every chart has a vector SVG and, where useful, a high-resolution PNG. CSV and
-TSV files hold the numerical values. Newick or Nexus files preserve the trees;
-JSON files preserve the report inputs and decisions. `supporting_results.zip`
-packages the reader-facing evidence without the large intermediate alignments.
+Passing datasets receive a second view: the genetic tree placed on a calendar
+axis by TreeTime. This estimates ancestral dates under a clock model; it is not
+an independent confirmation of the topology or a transmission tree. Date
+intervals are conditional on the model, sampling dates and supplied topology.
+Unsupported datasets retain their genetic tree and neighbour analyses, with no
+endorsed ancestral calendar dates.
+
+## Methods and downloads
+
+Detailed alignment checks, recombination maps, coordinate tables and clock
+statistics are expandable. Raw and corrected distance screens detect grossly
+divergent genomes; they do not prove every accession or metadata value is correct.
+
+ClonalFrameML's shared filtered alignment removes a column from every genome when
+an import is inferred on any branch. Ambiguous-base filtering is counted
+separately. Multi-record reference joins are flagged for review because artificial
+adjacency can affect inferred intervals.
+
+Figures are exported as SVG and PNG, numerical values as CSV/TSV, trees as
+Newick/Nexus and decisions as JSON. The supporting-results ZIP holds the evidence
+actually available for that run.
 
 ## Fast-screen report
 
-Fast mode has three deliberately limited stages: PhiPack recombination
-detection, root-to-tip inspection on an uncorrected tree, and an unclustered
-date-permutation screen. It never presents a dated tree or a
-circulation/introduction interpretation. A PHI-positive block at the unadjusted
-screening threshold is an escalation signal for the full ClonalFrameML analysis,
-not a recombinant tract.
+Fast mode remains explicitly limited: recombination detection, a genetic tree
+without recombination correction, and a date-permutation screen. It never presents
+a dated tree, final clonal-neighbour analysis or an introduction interpretation.
+A PHI-positive block signals that the full analysis is needed; it is not itself
+a localised recombinant tract.
