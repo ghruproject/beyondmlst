@@ -129,8 +129,8 @@ def prepare_context_command(
         ),
     ] = None,
     cache_dir: Annotated[
-        Path, typer.Option("--cache-dir", help="atbfetcher assembly download cache")
-    ] = Path("~/.atbfetcher"),
+        Path, typer.Option("--cache-dir", help="Source-ID/content-hash assembly cache")
+    ] = Path("~/.cache/chronoclade/context"),
     country: Annotated[
         list[str] | None,
         typer.Option("--country", help="Country prefix to retain; repeat for several countries"),
@@ -166,6 +166,21 @@ def prepare_context_command(
         str,
         typer.Option("--source", help="atbfetcher source: auto, aws or osf"),
     ] = "auto",
+    context_source: Annotated[str, typer.Option(
+        "--context-source", help="Context provider: pathogenwatch (default) or legacy atb"
+    )] = "pathogenwatch",
+    catalogue: Annotated[Path | None, typer.Option(
+        "--catalogue", help="Frozen Pathogenwatch JSON catalogue; no live metadata requests"
+    )] = None,
+    cglin_export: Annotated[Path | None, typer.Option(
+        "--cglin-export", help="Validated cgLIN export for the same scheme"
+    )] = None,
+    focal_crosswalk: Annotated[Path | None, typer.Option(
+        "--focal-crosswalk", help="Focal sample/accession to Pathogenwatch ID CSV"
+    )] = None,
+    refresh_catalogue: Annotated[bool, typer.Option(
+        "--refresh-catalogue", help="Explicitly replace the cached public metadata snapshot"
+    )] = False,
     seed: Annotated[int, typer.Option("--seed")] = 20260818,
     dry_run: Annotated[
         bool,
@@ -222,6 +237,11 @@ def prepare_context_command(
             threads=threads,
             source=source,
             dry_run=dry_run,
+            context_source=context_source,
+            catalogue=catalogue,
+            cglin_export=cglin_export,
+            focal_crosswalk=focal_crosswalk,
+            refresh_catalogue=refresh_catalogue,
         )
     except (ContextError, MetadataError, OSError) as error:
         _fail(error)

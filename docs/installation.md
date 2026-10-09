@@ -43,3 +43,12 @@ pixi run docs
 
 The static site is written to `site/`. Use `pixi run docs-serve` while editing
 Markdown files.
+
+## Pathogenwatch credentials
+
+Public metadata discovery is anonymous and explicitly excludes private genomes.
+Authenticated sequence/cgLIN downloads use `PATHOGENWATCH_API_KEY`, or
+`~/.config/chronoclade/pathogenwatch.json` containing an `api_key` field with
+permissions `0600`. Never commit this file. Offline fixture tests need no
+credentials. The same Pixi CLI runs on macOS/Linux laptops and Linux SLURM
+workers; SLURM is optional. See the [pilot](pathogenwatch-pilot.md).

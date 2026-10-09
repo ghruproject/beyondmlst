@@ -206,12 +206,12 @@ def test_lineage_report_contains_visuals_verdict_and_guardrail(tmp_path: Path) -
     text = output.read_text(encoding="utf-8")
 
     assert "Root-to-tip permutation screen passed" in text
-    assert '.decision.proceed { color:var(--green); }' in text
+    assert ".decision.proceed { color:var(--green); }" in text
     assert 'class="decision proceed">READY TO TEST' in text
     assert 'class="decision proceed">CONTINUE TO TEST' in text
     assert 'class="decision proceed">PROCEED' in text
     assert 'class="overall supported"' in text
-    assert '.overall.supported { color:var(--green); }' in text
+    assert ".overall.supported { color:var(--green); }" in text
     assert "Consistent with local persistence plus additional introductions" in text
     assert "What does the genomic evidence support?" in text
     assert "What should happen next?" in text
@@ -333,9 +333,7 @@ def test_unsupported_report_omits_dated_tree_visual(tmp_path: Path) -> None:
 
 def test_supporting_bundle_is_reproducible(tmp_path: Path) -> None:
     (tmp_path / "result.csv").write_text("sample,value\nS1,1\n", encoding="utf-8")
-    (tmp_path / "phipack_recombination_regions.tsv").write_text(
-        "obsolete\n", encoding="utf-8"
-    )
+    (tmp_path / "phipack_recombination_regions.tsv").write_text("obsolete\n", encoding="utf-8")
 
     first = write_supporting_bundle(tmp_path).read_bytes()
     (tmp_path / "result.csv").touch()
@@ -357,9 +355,9 @@ def test_full_tree_report_explains_cr2_without_root_to_tip_p_value(tmp_path: Pat
         "public_health": {},
     }
 
-    text = write_lineage_report(
-        report, directory=tmp_path, p_value_threshold=0.05
-    ).read_text(encoding="utf-8")
+    text = write_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text(
+        encoding="utf-8"
+    )
 
     assert "Full TreeTime randomisation screen passed" in text
     assert "strict CR2 rule" in text
@@ -392,9 +390,9 @@ def test_fast_report_separates_recombination_root_to_tip_and_permutation_stages(
         },
     }
 
-    text = write_fast_lineage_report(
-        report, directory=tmp_path, p_value_threshold=0.05
-    ).read_text(encoding="utf-8")
+    text = write_fast_lineage_report(report, directory=tmp_path, p_value_threshold=0.05).read_text(
+        encoding="utf-8"
+    )
 
     assert "FAST SCREEN" in text
     assert "Is there a fast PHI signal that warrants recombination correction?" in text
@@ -434,3 +432,18 @@ def test_summary_report_links_lineage_reports(tmp_path: Path) -> None:
 
     assert "E_coli__ST131/report.html" in text
     assert "Supported" in text
+
+
+def test_embedded_country_svg_keeps_local_glyph_references(tmp_path):
+    from chronoclade.report import _context_geography_visual
+
+    directory = tmp_path / "context_geography"
+    directory.mkdir()
+    (directory / "fragment.html").write_text(
+        '<a href="country_composition.csv">Data</a>'
+        '<svg><defs><path id="glyph" /></defs><use xlink:href="#glyph" /></svg>'
+    )
+    embedded = _context_geography_visual(tmp_path)
+    assert 'href="context_geography/country_composition.csv"' in embedded
+    assert 'xlink:href="#glyph"' in embedded
+    assert "context_geography/#glyph" not in embedded

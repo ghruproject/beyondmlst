@@ -55,7 +55,7 @@ TreeTime dated phylogeny with node-date intervals
 
 ChronoClade accepts assembled bacterial genomes. It analyses each
 species/lineage combination independently and can use public context selected
-from AllTheBacteria. The current implementation uses SKA2, IQ-TREE,
+from Pathogenwatch, with AllTheBacteria retained as an explicit legacy route. The current implementation uses SKA2, IQ-TREE,
 ClonalFrameML and TreeTime in a Pixi environment.
 
 The software is an early working release. Its temporal estimates have been

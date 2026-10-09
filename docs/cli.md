@@ -61,3 +61,19 @@ pixi run chronoclade prepare-context focal_metadata.csv \
 Use `pixi run chronoclade prepare-context --help` for metadata filters and
 screening controls. Start with `--dry-run` to inspect the candidate pool before
 downloading assemblies.
+
+`--context-source pathogenwatch` is the default, currently supporting
+*K. pneumoniae* with `--scheme klebsiella`. `--catalogue FILE` imports a verified
+frozen JSON catalogue without live metadata access. Repeated runs reuse the
+frozen metadata; `--refresh-catalogue` explicitly fetches a new snapshot.
+`--cglin-export FILE` imports a validated CSV/TSV/JSON export and
+`--focal-crosswalk FILE` imports sample IDs and strongly verified public IDs.
+Without focal assignments, the report states that limitation.
+
+Use `--context-source atb` for the retained legacy ATB implementation.
+`--metadata-table` and `--source aws|osf` are ATB-specific and rejected for
+Pathogenwatch. No implicit provider fallback occurs. Selection is recomputed
+when called; downloads resume from checksum-verified source-ID caches.
+
+Country figures can be regenerated offline from `context_catalogue.json`
+without running phylogeny. See [context geography](context-geography.md).
