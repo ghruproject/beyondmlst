@@ -11,10 +11,11 @@ records, 5,721 accession-deduplicated units before QC, and 7,711 explicitly QC-p
 records. It measures 7,734 records with country/73 Unknown, and date precision of
 4,596 day, 46 month, 2,871 year, 260 missing and 34 invalid. These are raw record counts,
 not patients or infections. The complete source envelope content hash after canonical Myanmar/UAE alias
-normalisation is
-`f8142089ed06ed4e3dc15fd9816353e693bd26920d98881e4b2883b2362759d4`.
+normalisation and complete SAMN/SAMEA BioSample parsing is
+`bcffd21c69089623103170b0e770f6852db3178be0a07a2d029176f94eb4b8d7`.
 Raw responses are unchanged; re-normalisation removed all 39 apparent country
-conflicts because those values differed only by aliases. Use the saved run
+conflicts because those values differed only by aliases. Every raw record and every
+QC-passing deduplicated unit has a recognised BioSample after SAMEA parsing. Use the saved run
 manifest/provenance to verify the actual input file hashes.
 
 The full annotated **QC-passing** public catalogue deduplicates to 5,647 sample units.
