@@ -4,6 +4,13 @@ The report starts with what was found, the countries represented and the closest
 analysed relatives. Dating comes afterwards: genetic relationships remain useful
 when collection dates cannot support reliable estimates of ancestral times.
 
+Genome labels prefer a sequencing-run accession (SRR, ERR or DRR), then a
+BioSample accession, then an assembly accession when available. User-supplied
+focal sample names are retained. Internal Pathogenwatch IDs remain in the
+machine-readable results and label mapping; repeated accessions are disambiguated
+so separate genome records remain identifiable. The fast report includes
+`sample_labels.csv`, and assembly-stage snapshots retain `sample_labels.json`.
+
 ## Start with the summary
 
 The opening summary separates your focal samples (the genomes you want to

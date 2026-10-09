@@ -143,3 +143,19 @@ def test_report_shows_tree_and_concise_summary_before_collapsed_rankings(tmp_pat
     assert "<h2>" not in text
     assert "<details><summary>All ranked relatives and comparison measures" in text
     assert "<details open" not in text
+
+
+def test_native_renderers_use_accessions_without_changing_audit_ids(tmp_path):
+    samples, tree = inputs(tmp_path)
+    pairs(tmp_path, [("C1", 1, 100), ("C2", 2, 100), ("C3", 3, 100)])
+    labels = {"F": "F", "C1": "ERR123", "C2": "SAMN456", "C3": "C3"}
+    (tmp_path / "sample_labels.json").write_text(json.dumps(labels))
+
+    result = build_neighbourhood_evidence(tree=tree, samples=samples, output=tmp_path)
+    text = neighbourhood_report_html(tmp_path)
+
+    assert "Closest relatives of F" in text
+    assert "ERR123" in text and ">C1<" not in text
+    assert "ERR123" in (tmp_path / "genetic_tree.svg").read_text()
+    assert result["rows"][0]["context_sample"] == "C1"
+    assert sorted(result["tree_pages"][0]["tip_ids"]) == ["C1", "C2", "C3", "F"]

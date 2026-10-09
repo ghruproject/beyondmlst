@@ -18,6 +18,7 @@ import numpy as np
 from Bio import Phylo
 from Bio.Phylo.TreeConstruction import DistanceMatrix, DistanceTreeConstructor
 
+from chronoclade.sample_labels import sample_labels
 from chronoclade.context_refinement import _allele, _compatible, _lineage, _loci, _profile, _scope
 
 
@@ -397,6 +398,7 @@ def analyse_profiles(
     summary = {
         "schema_version": 1,
         "records_count": len(records),
+        "sample_labels": sample_labels(records),
         "seed": seed,
         "min_overlap": min_overlap,
         "distance_threshold": distance_threshold,
@@ -566,7 +568,8 @@ def analyse_profiles(
 
             if len(rows) <= 100:
                 fig, ax = plt.subplots(figsize=(9, max(4, len(rows) * 0.2)))
-                Phylo.draw(tree, axes=ax, do_show=False)
+                Phylo.draw(tree, axes=ax, do_show=False,
+                           label_func=lambda clade: summary["sample_labels"].get(clade.name, clade.name))
                 ax.set_xlabel("Fraction of mismatching callable cgMLST loci")
                 ax.set_title("Exploratory neighbour-joining tree")
                 fig.tight_layout()
@@ -758,6 +761,16 @@ def analyse_profiles(
     )
     for name, (rows, fields) in tables.items():
         summary["paths"][name] = _csv(output / f"{name}.csv", rows, fields)
+    summary["paths"]["sample_labels"] = _csv(
+        output / "sample_labels.csv",
+        [{"sample_id": row["sample_id"],
+          "display_label": summary["sample_labels"][row["sample_id"]],
+          "source_genome_id": row.get("source_genome_id", ""),
+          "run_accessions": ";".join(row.get("run_accessions") or []),
+          "biosample_accessions": ";".join(row.get("biosample_accessions") or [])}
+         for row in records],
+        ["sample_id", "display_label", "source_genome_id", "run_accessions", "biosample_accessions"],
+    )
     summary["paths"]["summary"] = str(output / "profile_analysis.json")
     (output / "profile_analysis.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n"

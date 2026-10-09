@@ -8,6 +8,17 @@ from chronoclade.profile_report import (
 )
 
 
+def test_report_uses_accession_without_changing_analysis_or_style(tmp_path):
+    analysis = {"nearest_neighbours": [{"query_id": "q", "context_id": "PW_public",
+                "status": "matched", "distance": 0}],
+                "sample_labels": {"q": "q", "PW_public": "SRR32641190"}}
+    html = write_profile_report(analysis, directory=tmp_path).read_text()
+    assert "SRR32641190" in html
+    assert "PW_public" not in html
+    assert analysis["nearest_neighbours"][0]["context_id"] == "PW_public"
+    assert "Archivo" in html
+
+
 def test_report_orders_summary_figures_and_groups_before_neighbours(tmp_path: Path) -> None:
     (tmp_path / "figures").mkdir()
     (tmp_path / "figures" / "pcoa.svg").write_text(

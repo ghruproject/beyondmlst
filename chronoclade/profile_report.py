@@ -7,6 +7,8 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
+from chronoclade.sample_labels import label_analysis, read_sample_labels
+
 from chronoclade.report import (
     _context_geography_visual,
     _context_selection_summary,
@@ -690,7 +692,7 @@ def write_profile_report(
 
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    data = _mapping(analysis)
+    data = label_analysis(_mapping(analysis), _mapping(analysis.get("sample_labels")))
     prov = _mapping(provenance)
     paths = _mapping(data.get("paths"))
     focal = data.get("records_count", data.get("sample_count", "Not reported"))
@@ -859,7 +861,7 @@ def write_corrected_report(report: dict, *, directory: Path) -> Path:
 
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
-    data = _mapping(report)
+    data = label_analysis(_mapping(report), read_sample_labels(directory))
     species = _text(data.get("species"))
     lineage = _text(data.get("lineage"))
     context = _mapping(data.get("context"))

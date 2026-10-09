@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from chronoclade.sample_labels import read_sample_labels as _sample_labels
+
 import copy
 import csv
 import hashlib
@@ -57,6 +59,10 @@ def _sha(path: Path) -> str:
 
 def _context(sample: Sample) -> bool:
     return sample.origin.strip().casefold() == "context"
+
+
+def _display_id(identifier: str, labels: dict[str, str]) -> str:
+    return labels.get(identifier, identifier)
 
 
 def _source_rows(directory: Path) -> dict[str, dict]:
@@ -167,6 +173,7 @@ def _render_page(
     page: int,
     page_count: int,
     total: int,
+    labels: dict[str, str] | None = None,
 ) -> None:
     """Draw real branch distances; avoid Bio.Phylo's unit-length fallback for zero trees."""
     import matplotlib
@@ -175,6 +182,7 @@ def _render_page(
     from matplotlib import pyplot as plt
 
     selected = set(page_ids)
+    labels = labels or {}
     view = copy.deepcopy(tree)
     for tip in list(view.get_terminals()):
         if tip.name not in selected:
@@ -216,7 +224,7 @@ def _render_page(
             day = sample.collection_date or "Unknown date"
             role = "FOCAL" if focal else "context"
             # Separate ID from metadata so the inline view keeps readable type.
-            label = f"{role} · {tip.name}\n{location} · {day}"
+            label = f"{role} · {_display_id(tip.name, labels)}\n{location} · {day}"
             axis.scatter(
                 depths[tip],
                 positions[tip],
@@ -401,6 +409,7 @@ def build_neighbourhood_evidence(
                 page=index + 1,
                 page_count=count,
                 total=len(ids),
+                labels=_sample_labels(output),
             )
             pages.append(
                 {
@@ -489,6 +498,7 @@ def neighbourhood_report_html(directory: Path) -> str:
     if not path.is_file():
         return ""
     data = json.loads(path.read_text(encoding="utf-8"))
+    labels = _sample_labels(directory)
     figures = []
     for page in data["tree_pages"]:
         suffix = f" (page {page['page']})" if len(data["tree_pages"]) > 1 else ""
@@ -529,7 +539,7 @@ def neighbourhood_report_html(directory: Path) -> str:
             if summary["rankings_agree"] is True
             else "A comparison measure is unavailable; agreement cannot be assessed."
         )
-        title = f"<h3>Closest relatives of {escape(focal_id)}</h3>"
+        title = f"<h3>Closest relatives of {escape(_display_id(focal_id, labels))}</h3>"
         if closest:
             body = "".join(
                 "<tr>"
@@ -544,7 +554,7 @@ def neighbourhood_report_html(directory: Path) -> str:
                             "Comparable sites",
                         ),
                         (
-                            row["context_sample"],
+                            _display_id(row["context_sample"], labels),
                             row["context_country"] or row["context_location"],
                             row["context_date"] or "Unknown",
                             row["clonal_snps"],
@@ -580,7 +590,7 @@ def neighbourhood_report_html(directory: Path) -> str:
                     if row["metric"] == "clonal_snps"
                     else "Genetic tree distance",
                     row["rank"],
-                    row["context_sample"],
+                    _display_id(row["context_sample"], labels),
                     row["context_country"] or row["context_location"],
                     row["context_date"] or "Unknown",
                     "—" if row["clonal_snps"] is None else row["clonal_snps"],
@@ -595,7 +605,7 @@ def neighbourhood_report_html(directory: Path) -> str:
                     "<tr>" + "".join(f"<td>{escape(str(v))}</td>" for v in values) + "</tr>"
                 )
             ranked_tables.append(
-                f'<h4>{escape(focal_id)}</h4><div class="table-scroll" tabindex="0" '
+                f'<h4>{escape(_display_id(focal_id, labels))}</h4><div class="table-scroll" tabindex="0" '
                 'role="region" aria-label="All ranked context relatives"><table><thead><tr>'
                 "<th>Ranked by</th><th>Rank</th><th>Context genome</th><th>Recorded location</th>"
                 "<th>Date</th><th>Clonal SNPs</th><th>Callable sites</th><th>SNP/site</th>"
