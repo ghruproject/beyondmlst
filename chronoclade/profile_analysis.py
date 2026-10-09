@@ -183,70 +183,36 @@ def _csv(path, rows, fields):
     return str(path)
 
 
-def _location_network(tree, rows):
-    """Optimal parsimony state ambiguity across roots; no probability interpretation."""
-    countries = {r["sample_id"]: str(r.get("country") or "Unknown") for r in rows}
-    roots = sorted(countries)[:5]
-    counts = Counter()
-    ambiguous = 0
-    for root in roots:
-        rooted = copy.deepcopy(tree)
-        rooted.root_with_outgroup(root)
-        locations = sorted(set(countries.values()) - {"Unknown"})
-        if not locations:
-            continue
-        costs = {}
-        for node in rooted.find_clades(order="postorder"):
-            if node.is_terminal():
-                observed = countries[node.name]
-                costs[node] = {
-                    state: 0 if observed in {state, "Unknown"} else float("inf")
-                    for state in locations
-                }
-            else:
-                costs[node] = {
-                    state: sum(
-                        min(costs[child][target] + (state != target) for target in locations)
-                        for child in node.clades
-                    )
-                    for state in locations
-                }
-        optimum = min(costs[rooted.root].values())
-        states = {
-            rooted.root: {state for state in locations if costs[rooted.root][state] == optimum}
-        }
-        possible = set()
-        for parent in rooted.find_clades(order="preorder"):
-            for child in parent.clades:
-                allowed = set()
-                for source in states[parent]:
-                    best = min(costs[child][target] + (source != target) for target in locations)
-                    for target in locations:
-                        if costs[child][target] + (source != target) == best:
-                            allowed.add((source, target))
-                states[child] = {target for _, target in allowed}
-                if len(allowed) > 1:
-                    ambiguous += 1
-                possible.update((source, target) for source, target in allowed if source != target)
-        counts.update(possible)
-    return {
-        "method": "ambiguous maximum-parsimony reconstruction across alternate tip roots",
-        "tested_roots": roots,
-        "ambiguous_edge_reconstructions": ambiguous,
-        "interpretation": "Possible location changes, not confirmed transmission. Root fractions "
-        "are sensitivity summaries, not probabilities or confidence intervals.",
-        "edges": [
-            {
-                "source": a,
-                "target": b,
-                "roots_with_possible_change": count,
-                "roots_tested": len(roots),
-                "root_fraction": count / len(roots),
-                "uncertain": True,
-            }
-            for (a, b), count in sorted(counts.items())
-        ],
-    }
+def _location_network(tree, rows, nearest_neighbours=None):
+    from chronoclade.profile_network import build_profile_network
+    return build_profile_network(tree, rows, nearest_neighbours)
+
+
+def write_profile_network_figures(output, cohort_id, network):
+    """Export alternate views for one report viewer, with a complete audit."""
+    from chronoclade.profile_network import draw_profile_network
+
+    output = Path(output)
+    network.setdefault("id", "all")
+    network.setdefault("label", "All inputs")
+    for index, model in enumerate([network] + network.get("views", [])):
+        stem = cohort_id + ("" if index == 0 else f"_subgroup_{index}")
+        model["network_figure"] = draw_profile_network(
+            model, output / f"{stem}_location_network.svg", focus_inputs=True
+        )
+        model["full_network_figure"] = draw_profile_network(
+            model, output / f"{stem}_location_network_all.svg", focus_inputs=False
+        )
+        model["nearest_country_connections_path"] = _csv(
+            output / f"{stem}_nearest_country_connections.csv", model["nearest_edges"],
+            ["source", "target", "query_count", "context_count", "comparison_count",
+             "query_ids", "context_ids", "allele_mismatches_min", "allele_mismatches_max",
+             "shared_loci_min", "shared_loci_max"],
+        )
+    audit = output / f"{cohort_id}_location_network.json"
+    audit.write_text(json.dumps(network, indent=2) + "\n")
+    network["audit_path"] = str(audit)
+    return network["network_figure"]
 
 
 def _plots(output, cohort_id, coords, rows, network):
@@ -278,47 +244,7 @@ def _plots(output, cohort_id, coords, rows, network):
     fig.savefig(path)
     plt.close(fig)
     paths["country_figure"] = str(path)
-    fig, ax = plt.subplots(figsize=(7, 5))
-    countries = sorted({e[key] for e in network["edges"] for key in ("source", "target")})
-    xy = {
-        name: (
-            np.cos(2 * np.pi * i / max(1, len(countries))),
-            np.sin(2 * np.pi * i / max(1, len(countries))),
-        )
-        for i, name in enumerate(countries)
-    }
-    for edge in network["edges"]:
-        ax.annotate(
-            "",
-            xy=xy[edge["target"]],
-            xytext=xy[edge["source"]],
-            arrowprops={
-                "arrowstyle": "->",
-                "linestyle": "--",
-                "alpha": 0.5,
-                "connectionstyle": "arc3,rad=.15",
-            },
-        )
-    for country, (x, y) in xy.items():
-        ax.scatter([x], [y], s=100)
-        ax.text(x, y + 0.08, country, ha="center")
-    if not countries:
-        ax.text(
-            0.5,
-            0.5,
-            "No location changes inferred from available metadata",
-            ha="center",
-            transform=ax.transAxes,
-        )
-    ax.set_title("Exploratory possible location changes\nAll links uncertain; root-dependent")
-    ax.set_xlim(-1.4, 1.4)
-    ax.set_ylim(-1.3, 1.4)
-    ax.axis("off")
-    fig.tight_layout()
-    path = output / f"{cohort_id}_location_network.svg"
-    fig.savefig(path)
-    plt.close(fig)
-    paths["network_figure"] = str(path)
+    paths["network_figure"] = write_profile_network_figures(output, cohort_id, network)
     return paths
 
 
@@ -725,17 +651,16 @@ def analyse_profiles(
             fig.savefig(diagnostic_path)
             plt.close(fig)
             cohort["root_to_tip_figure"] = str(diagnostic_path)
-            network = _location_network(tree, rows)
+            network = _location_network(tree, rows, nearest)
         else:
-            network = {
-                "edges": [],
-                "tested_roots": [],
-                "interpretation": "At least two profiles required.",
-            }
+            singleton_tree = Phylo.BaseTree.Tree(root=Phylo.BaseTree.Clade(name=rows[0]["sample_id"]))
+            network = _location_network(singleton_tree, rows, nearest)
             cohort["warnings"].append("Single comparable profile: no NJ tree or date diagnostic.")
         network["cohort_id"] = cohort_id
         summary["location_network"].append(network)
         cohort.update(_plots(output, cohort_id, coords, rows, network))
+        summary["paths"][f"{cohort_id}_network_audit"] = network["audit_path"]
+        summary["paths"][f"{cohort_id}_nearest_country_connections"] = network["nearest_country_connections_path"]
         cohort["pcoa_csv"] = _csv(
             output / f"{cohort_id}_pcoa.csv",
             [

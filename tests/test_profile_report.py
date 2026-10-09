@@ -361,10 +361,10 @@ def test_large_geography_and_network_tables_are_collapsed_and_network_figure_is_
 
     assert "Frozen public catalogue: 87 records" in catalogue
     assert 'class="coverage-details"><summary>Frozen public catalogue' in catalogue
-    assert "Possible location changes (72 edges)" in network
-    assert network.index('src="network.svg"') < network.index("Possible location changes")
-    assert "Fraction of tested roots with possible change" in network
-    assert "not probabilities, confidence scores, or evidence of transmission" in network
+    assert "Inferred country connections (72 links)" in network
+    assert network.index('src="network.svg"') < network.index("Inferred country connections")
+    assert "Root coverage fraction" in network
+    assert "not probability or confidence" in network
 
 
 def test_neighbour_table_prioritises_formatted_normalized_distance(tmp_path: Path) -> None:
@@ -471,3 +471,63 @@ def test_fast_group_index_links_only_existing_contained_reports_and_escapes(tmp_
     assert '787' in html and '252' in html and 'CG39' in html
     assert 'Archivo' in html
     assert '<img' not in html
+
+
+def test_network_viewer_filters_input_country_links_and_retains_all_nearest_ties(tmp_path: Path) -> None:
+    import json
+    import re
+
+    (tmp_path / "focus.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+    (tmp_path / "all.svg").write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+    output = write_profile_report({"location_network": [{
+        "cohort_id": "CG39", "input_countries": ["Greece"], "tested_roots": 5,
+        "network_figure": "focus.svg", "full_network_figure": "all.svg",
+        "edges": [{"source": "Greece", "target": "Italy"}, {"source": "India", "target": "France"}],
+        "nearest_edges": [{"source": "Greece", "target": "Italy", "comparison_count": 3,
+            "allele_mismatches_min": 1, "allele_mismatches_max": 2,
+            "shared_loci_min": 620, "shared_loci_max": 629}],
+        "views": [{"label": '</script><img src=x onerror=alert(1)>',
+            "input_countries": ["Greece"], "network_figure": "focus.svg",
+            "full_network_figure": "all.svg", "nearest_edges": [{"source": "Greece", "target": "Unknown"}]}],
+    }]}, directory=tmp_path)
+    html = output.read_text()
+    payload = re.search(r'<script type="application/json" data-network-views>(.*?)</script>', html).group(1)
+    views = json.loads(payload)
+    assert "</script>" not in payload
+    assert views[1]["label"] == '</script><img src=x onerror=alert(1)>'
+    assert '<img src=x onerror=' not in html
+    assert 'src="focus.svg"' in views[0]["input"]
+    assert 'src="all.svg"' in views[0]["all"]
+    assert "India" not in views[0]["input"]
+    assert "India" in views[0]["all"]
+    assert "1–2" in views[0]["input"]
+    assert "620–629" in views[0]["input"]
+    assert "Unknown" in views[1]["input"]
+    assert '<option value="input">Input-country links</option>' in html
+    assert '<option value="0">All inputs</option>' in html
+    assert '<noscript>' in html
+    assert "not probability or confidence" in html
+    assert "estimation or sampling" in html
+
+
+def test_network_viewer_excludes_foreign_missing_and_non_image_paths(tmp_path: Path) -> None:
+    import json
+    import re
+
+    foreign = tmp_path.parent / (tmp_path.name + "-foreign.svg")
+    foreign.write_text('<svg xmlns="http://www.w3.org/2000/svg"/>')
+    try:
+        output = write_profile_report({"location_network": [{
+            "cohort_id": "CG39", "network_figure": str(foreign),
+            "full_network_figure": "missing.svg", "views": [{"label": "Missing metadata"}],
+        }]}, directory=tmp_path)
+        html = output.read_text()
+        assert str(foreign) not in html
+        payload = re.search(r'<script type="application/json" data-network-views>(.*?)</script>', html).group(1)
+        views = json.loads(payload)
+        assert '<img' not in views[0]["input"]
+        assert '<img' not in views[0]["all"]
+        assert "Not reported" in html
+        assert "No closest-relative country connections" in views[1]["input"]
+    finally:
+        foreign.unlink()
