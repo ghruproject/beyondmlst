@@ -44,12 +44,16 @@ A nominated public focal stand-in set has a common resolved depth-7 prefix
 
 | Source genome ID | BioSample | Collection date | Country |
 |---|---|---|---|
-| k6RA17dLahES7gXCbfqgPv | SAMN21163368 | 2013 | Singapore |
-| h1KCajmAVsy9WoF7nmxtTn | SAMN11853676 | 2015 | Oman |
-| 7LyY3MxHcNrEftnq7JU8wo | SAMN15868620 | 2017 | United States |
+| aLZnApmwKX44bLixaxccQn | SAMD00193192 | 2016-01-01 | Myanmar (Burma) |
+| 2iNpme3TkKQVv7MFwugPF9 | SAMEA9453699 | 2019 | Italy |
+| 8HFG63i6tfFmeqns6auhFF | SAMEA122094000 | 2022 | India |
 
 They were selected from QC-passing dated public entries with valid shared depth-7
-annotation, different years and strong accession links. This is a public demonstration,
+annotation, different years and strong accession links. Each has exactly one public
+source genome record and was checked through the actual focal resolver against all
+7,807 annotated records: complete assignments at prefix depths 5, 6 and 7. An earlier
+raw-source nomination was rejected when the focal resolver exposed contradictory
+assignments among BioSample aliases; no contradictory code was silently borrowed. This is a public demonstration,
 not a private focal survey. Their public records remain once in the full-public
 composition; their aliases must be excluded from context selection. The worked run
 must verify downloaded assemblies and retain source/checksum crosswalks before
