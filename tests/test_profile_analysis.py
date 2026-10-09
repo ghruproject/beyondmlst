@@ -18,6 +18,19 @@ def record(name, calls=None, **kwargs):
     }
 
 
+def test_accessions_label_tree_but_preserve_distance_and_tree_identity(tmp_path):
+    rows = [record("q", origin="local"),
+            record("PW_public", run_accessions=["SRR32641190"],
+                   biosample_accessions=["SAMN46159676"])]
+    result = analyse_profiles(rows, output=tmp_path, bootstrap_replicates=0)
+    assert result["sample_labels"]["PW_public"] == "SRR32641190"
+    assert result["nearest_neighbours"][0]["context_id"] == "PW_public"
+    tree = result["cohorts"][0]
+    assert "PW_public" in Path(tree["tree_path"]).read_text()
+    assert "SRR32641190" in Path(tree["tree_figure"]).read_text()
+    assert "SAMN46159676" in Path(result["paths"]["sample_labels"]).read_text()
+
+
 def test_categorical_distance_ties_and_separate_temporal_outputs(tmp_path):
     rows = [
         record("q", origin="local", collection_date="2020", country="UK"),

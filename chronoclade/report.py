@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from chronoclade.sample_labels import read_sample_labels as _sample_labels
+
 import json
 import zipfile
 from html import escape
@@ -242,6 +244,7 @@ def _public_health_visual(report: dict[str, object], directory: Path) -> tuple[s
     """Return the reader summary and the detailed public-health evidence separately."""
     raw_public_health = report.get("public_health", {})
     public_health = raw_public_health if isinstance(raw_public_health, dict) else {}
+    labels = _sample_labels(directory)
     raw_scenario = public_health.get("scenario", {})
     scenario = raw_scenario if isinstance(raw_scenario, dict) else {}
     code = str(scenario.get("code", "indeterminate"))
@@ -315,7 +318,8 @@ def _public_health_visual(report: dict[str, object], directory: Path) -> tuple[s
         nearest_text = "—"
         if isinstance(nearest, dict):
             nearest_text = (
-                f"{nearest.get('sample_id', '')} ({nearest.get('clonal_snps', '—')} SNPs)"
+                f"{labels.get(str(nearest.get('sample_id', '')), str(nearest.get('sample_id', '')))} "
+                f"({nearest.get('clonal_snps', '—')} SNPs)"
             )
         group_rows.append(
             "<tr>"
@@ -327,7 +331,7 @@ def _public_health_visual(report: dict[str, object], directory: Path) -> tuple[s
             f"<td>{escape(', '.join(str(value) for value in locations) or '—')}</td>"
             f"<td>{escape(_display_summary(group.get('within_group_clonal_snps')))}</td>"
             f"<td>{escape(nearest_text)}</td>"
-            f"<td><details><summary>View IDs</summary>{escape(', '.join(str(value) for value in sample_ids))}</details></td>"
+            f"<td><details><summary>View IDs</summary>{escape(', '.join(labels.get(str(value), str(value)) for value in sample_ids))}</details></td>"
             "</tr>"
         )
     group_table = (
@@ -686,6 +690,7 @@ def _context_selection_summary(directory: Path) -> str:
 
 
 def _context_section(context: dict[str, object], directory: Path) -> str:
+    labels = _sample_labels(directory)
     context_count = int(context.get("context_samples", 0))
     context_locations = context.get("context_locations", [])
     context_locations = context_locations if isinstance(context_locations, list) else []
@@ -699,10 +704,10 @@ def _context_section(context: dict[str, object], directory: Path) -> str:
         distance_text = "—" if distance is None else f"{float(distance):.3g}"
         rows.append(
             "<tr>"
-            f"<td>{escape(str(value.get('sample_id', '')))}</td>"
+            f"<td>{escape(labels.get(str(value.get('sample_id', '')), str(value.get('sample_id', ''))))}</td>"
             f"<td>{escape(str(value.get('country', '') or 'Unknown'))}</td>"
             f"<td>{escape(str(value.get('collection_date', '') or 'Unknown'))}</td>"
-            f"<td>{escape(str(value.get('nearest_focal', '')))}</td>"
+            f"<td>{escape(labels.get(str(value.get('nearest_focal', '')), str(value.get('nearest_focal', ''))))}</td>"
             f"<td>{escape(distance_text)}</td></tr>"
         )
     if not context_count:

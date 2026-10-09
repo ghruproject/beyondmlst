@@ -79,7 +79,7 @@ def stage_mocks(monkeypatch):
     calls = {"resolve": [], "analysis": [], "materialise": [], "workflow": []}
     inputs = {
         "queries": [row("q", origin="local")],
-        "context": [row("c", accession="ACC")],
+        "context": [row("c", accession="ERR123")],
         "provenance": {"source": "frozen fixture"},
     }
 
@@ -149,6 +149,9 @@ def test_full_only_corrected_and_downloads_selected_records(tmp_path, stage_mock
     )
     assert calls["workflow"] == ["corrected"]
     assert [r["sample_id"] for r in calls["materialise"][0]] == ["q", "c"]
+    assert json.loads(
+        (tmp_path / "assembly" / "Klebsiella_pneumoniae__ST147" / "sample_labels.json").read_text()
+    ) == {"q": "q", "c": "ERR123"}
     assert set(result["stages"]) == {"fast", "full"}
     directory = tmp_path / "assembly" / "Klebsiella_pneumoniae__ST147"
     assert (directory / "report.full.html").read_text() == "corrected"
@@ -234,6 +237,14 @@ def test_stage_snapshots_keep_figures_and_tables_immutable(tmp_path, stage_mocks
     ).parent
     finished_directory = Path(result["lineages"][0]["outputs"]["html_report"]).parent
     assert full_directory != finished_directory
+    assert json.loads((full_directory / "sample_labels.json").read_text()) == {
+        "q": "q",
+        "c": "ERR123",
+    }
+    assert json.loads((finished_directory / "sample_labels.json").read_text()) == {
+        "q": "q",
+        "c": "ERR123",
+    }
     assert (full_directory / "genetic_tree.svg").read_text() == "corrected"
     assert (full_directory / "nearest_neighbours.csv").read_text() == "corrected"
     assert (finished_directory / "genetic_tree.svg").read_text() == "full"

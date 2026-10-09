@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any
 
 from chronoclade.errors import WorkflowError
+from chronoclade.metadata import slugify_lineage
 from chronoclade.pathogenwatch import content_hash
+from chronoclade.sample_labels import sample_labels
 
 
 def _write_json(path: Path, value: Any) -> None:
@@ -456,6 +458,8 @@ def run_staged_workflow(
         )
         result["context_selections"].append({"species": key[0], "lineage": key[1], **selection})
         members = group + selected
+        labels_path = output / "assembly" / slugify_lineage(*key) / "sample_labels.json"
+        _write_json(labels_path, sample_labels(members))
         selected_records.extend(selected)
         for row in members:
             if row["sample_id"] in used:

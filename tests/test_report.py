@@ -4,6 +4,7 @@ from pathlib import Path
 
 import chronoclade.country_network as country_network
 from chronoclade.report import (
+    _context_section,
     _context_selection_summary,
     assess_temporal_signal,
     write_fast_lineage_report,
@@ -11,6 +12,28 @@ from chronoclade.report import (
     write_supporting_bundle,
     write_summary_report,
 )
+
+
+def test_native_context_table_uses_accession_labels_from_snapshot_mapping(tmp_path: Path) -> None:
+    (tmp_path / "sample_labels.json").write_text(json.dumps({"PW_1": "ERR123", "PW_2": "SAMN456"}))
+    html = _context_section(
+        {
+            "context_samples": 1,
+            "context_locations": ["UK"],
+            "nearest_screening_contexts": [
+                {
+                    "sample_id": "PW_1",
+                    "country": "UK",
+                    "collection_date": "2020",
+                    "nearest_focal": "PW_2",
+                    "min_ska_distance": 0.01,
+                }
+            ],
+        },
+        tmp_path,
+    )
+    assert "ERR123" in html and "SAMN456" in html
+    assert "PW_1" not in html and "PW_2" not in html
 
 
 def temporal_result(*, rate: float = 1e-6, p_value: float = 0.01) -> dict[str, object]:
