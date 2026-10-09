@@ -22,9 +22,14 @@ Measured coverage and group sizes are:
 
 | Full-prefix depth | Assigned units | Unresolved units | Groups | Singleton groups | Largest group |
 |---|---:|---:|---:|---:|---:|
-| 5 | 5,644 | 3 | 111 | 83 | 4,430 |
-| 6 | 5,632 | 15 | 256 | 184 | 2,589 |
-| 7 | 5,632 | 15 | 661 | 462 | 1,793 |
+| 5 | 5,558 | 89 | 104 | 76 | 4,371 |
+| 6 | 5,546 | 101 | 240 | 169 | 2,558 |
+| 7 | 5,546 | 101 | 635 | 441 | 1,767 |
+
+Duplicate biological-sample assignment conflicts are conservatively unresolved at
+every depth: 88 conflicted units plus 1 partial unit at depth 5, and 13 partial
+units at depths 6/7. Raw genome counts reconcile as 7,711 records across 5,647
+units.
 
 Depth 5 is the initial overview because it has the highest assignment coverage and
 fewest rows. Deeper views remain available in expandable sections and source tables.
