@@ -223,44 +223,6 @@ def _metric_cards(values: list[tuple[str, object]]) -> str:
     ) + "</dl>"
 
 
-def _rep_framework() -> str:
-    """Describe REP terminology without assigning epidemiological status to genomes."""
-    rows = [
-        {
-            "term": "Reoccurring",
-            "meaning": "Repeated acute outbreaks with intervening periods of little or no illness.",
-            "status": "Not assessed",
-            "reason": "Collection-year observations do not establish outbreaks or quiet periods in surveillance.",
-        },
-        {
-            "term": "Emerging",
-            "meaning": "A previously novel or rare strain causes increasing illness or has that potential.",
-            "status": "Not assessed",
-            "reason": "Selected genome counts provide no surveillance denominators, illness trend or evidence of increasing illness potential.",
-        },
-        {
-            "term": "Persisting",
-            "meaning": "Illness continues consistently over a long period.",
-            "status": "Not assessed",
-            "reason": "Sampling across years does not establish consistent illness or uninterrupted circulation.",
-        },
-    ]
-    return (
-        '<p><a href="https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html">'
-        "CDC's Reoccurring, Emerging, and Persisting (REP) terminology</a> describes patterns of illness. "
-        "ChronoClade does not assign official CDC REP designations, including to Klebsiella. "
-        "Here we report observations in sampled genomes.</p>"
-        '<details class="evidence-files"><summary>REP definitions and evidence needed</summary>'
-        + _table(
-            rows,
-            [("term", "REP term"), ("meaning", "Epidemiological meaning"),
-             ("status", "Status in this analysis"), ("reason", "Why")],
-            empty="REP classification is not assessed.",
-        )
-        + '</details>'
-    )
-
-
 def _group_cards(value: object, *, kind: str, bootstrap_requested: object = None) -> str:
     rows = _records(value)
     if not rows:
@@ -783,7 +745,6 @@ def write_profile_report(
     geography_rows = _records(geography) or _records(data.get("country_breakdown"))
     nearest = data.get("nearest_neighbours", data.get("nearest_relative"))
     groups = data.get("genetic_groups")
-    persistence = data.get("temporal_persistence")
     concentration = data.get("time_place_concentration")
     root_tip = data.get("root_to_tip")
     root_tip_text = "Allele-distance root-to-tip is exploratory and does not pass the final clock gate."
@@ -814,7 +775,7 @@ def write_profile_report(
         '<nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#geography">Countries</a><a href="#nearest">Closest relatives</a><a href="#network">Country network</a><a href="#groups">Groups</a><a href="#root-to-tip">Dates</a><a href="#downloads">Methods &amp; files</a></nav>',
         f'<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{message}{warnings}{_metric_cards(summary_values)}'
         f'<p>{escape(input_description)}</p><p>Public comparison typing: {escape(context_description)}.</p>'
-        '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic grouping, observation across collection years, and concentration in a particular time and place are reported separately.</p></div></section>',
+        '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic relationships and concentration in time and place are reported separately.</p></div></section>',
         f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
         f'<h3>Your input genomes</h3><p>The samples you supplied for investigation.</p>{_geography_table(input_geography, label="Your input genomes", include_origin=True)}'
         f'<h3>Public comparison genomes</h3><p>Additional genomes selected for comparison.</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
@@ -829,12 +790,10 @@ def write_profile_report(
         + "</div><p class=\"muted\">The neighbour-joining tree is a profile-distance view. Branches do not represent time or prove transmission.</p></div></section>",
         f'<section class="stage" id="network"><div class="stage-body"><h2>Location network</h2><p>Reconstructed location changes depend on the selected rooted tree and supplied metadata. Root fractions report how often a possible change appeared across tested roots; they are not support values, probabilities or proof of transmission or acquisition direction.</p>{_cohort_figures(data.get("cohorts"), directory, "network_figure", "Location network")}{_location_network(data.get("location_network"))}</div></section>',
         f'<section class="stage" id="groups"><div class="stage-body"><h2>How do the genomes group genetically?</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
-        '<p class="muted">Genetic group stability refers to locus-bootstrap co-assignment. It does not establish recurrence, persistence of illness or an emerging strain.</p>'
+        '<p class="muted">Genetic group stability describes how consistently genomes group when loci are resampled.</p>'
         '<details class="evidence-files"><summary>Inspect genetic groups and bootstrap results</summary>'
         f'{_group_cards(groups, kind="general", bootstrap_requested=data.get("bootstrap_replicates"))}</details></div></section>',
-        '<section class="stage" id="persistence"><div class="stage-body"><h2>Recurrence and persistence in sampled genomes (REP-inspired)</h2>'
-        f'{_rep_framework()}<h3>Observation across collection years</h3><p>The years represented by each genetic group are described here. Repeated observations do not establish repeated outbreaks or continuous illness.</p>{_group_cards(persistence, kind="persistence")}</div></section>',
-        f'<section class="stage" id="concentration"><div class="stage-body"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. This measure is separate from observation across collection years and does not establish an outbreak.</p>{_group_cards(concentration, kind="concentration")}</div></section>',
+        f'<section class="stage" id="concentration"><div class="stage-body"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. These observations do not establish an outbreak.</p>{_group_cards(concentration, kind="concentration")}</div></section>',
         f'<section class="stage" id="root-to-tip"><div class="stage-body"><h2>Exploratory root-to-tip screen</h2><p>{escape(root_tip_text.strip())}</p>{_root_to_tip(root_tip)}</div></section>',
         f'<section class="stage" id="coverage"><div class="stage-body"><h2>Coverage and exclusions</h2>{_provenance_notes(prov)}<h3>Query and context inputs</h3>{_input_coverage(prov)}'
         f'<h3>Public context selection</h3>{_context_funnel(prov)}'
