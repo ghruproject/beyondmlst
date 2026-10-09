@@ -303,3 +303,32 @@ def test_unsupported_finish_snapshot_excludes_stale_dated_products(tmp_path, sta
         assert "temporal_signal.json" in archive.namelist()
         assert "date_randomisation.csv" in archive.namelist()
         assert not any("node_dates" in name or "timetree" in name for name in archive.namelist())
+
+
+@pytest.mark.parametrize("stale_default", [False, True])
+def test_snapshot_uses_advertised_corrected_report_and_normalises_entry(tmp_path, stale_default):
+    from chronoclade.staged_workflow import _snapshot_stage
+
+    directory = tmp_path / "lineage"
+    directory.mkdir()
+    report = directory / "corrected_report.html"
+    report.write_text('<img src="genetic_tree.svg"><a href="../../fast/report.html">Fast</a>')
+    (directory / "genetic_tree.svg").write_text("corrected relationships")
+    if stale_default:
+        (directory / "report.html").write_text("stale dated report")
+    record = {
+        "analysis_mode": "corrected",
+        "outputs": {"html_report": str(report)},
+    }
+    _snapshot_stage(record, "full")
+    entry = directory / "stages" / "full" / "report.html"
+    assert record["outputs"]["html_report"] == str(entry)
+    assert 'src="genetic_tree.svg"' in entry.read_text()
+    assert 'href="../../../../fast/report.html"' in entry.read_text()
+    assert "stale dated report" not in entry.read_text()
+    saved = json.loads((entry.parent / "report.json").read_text())
+    assert saved["outputs"]["html_report"] == str(entry)
+    assert 'src="stages/full/genetic_tree.svg"' in (directory / "report.full.html").read_text()
+    with zipfile.ZipFile(entry.parent / "supporting_results.zip") as archive:
+        assert archive.read("genetic_tree.svg").decode() == "corrected relationships"
+        assert json.loads(archive.read("report.json"))["outputs"]["html_report"] == str(entry)

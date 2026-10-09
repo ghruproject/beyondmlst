@@ -1,0 +1,19 @@
+{
+  "status": "validated",
+  "profiles": 11,
+  "ids": [
+    "84F8rMr1SD3JLxSxZ71nTr",
+    "968PifQu71USbx2iyDBEL5",
+    "bndRrZP5ZZ7J3YyioAkHLC",
+    "dSX4wG2VrFdfZT9MZQKcAK",
+    "eAMovyJSo59faeGPhbUBtC",
+    "f2QVS4HarrV2kQvYb7stPn",
+    "g4Ap5UxrTFBdSvdop3q9ug",
+    "mQr9MLUoTzLpV6ZW4JF24P",
+    "quKda6GBXgAyqQYLtEf5T2",
+    "sGMLPUemAJrDg7AwgPTfzw",
+    "vj6gra646PVBf4R5Jzbbvy"
+  ],
+  "sha256": "9ce498e0662102f72f09e93535d229027b2bcd406ce7600ca51fe4a0997d49c8",
+  "artifact": "tmp/ccre-rep-validation/input_audit/st147_cgmlst_serial_retry.bin"
+}

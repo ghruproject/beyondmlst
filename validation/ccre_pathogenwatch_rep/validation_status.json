@@ -1,0 +1,440 @@
+{
+  "schema_version": 1,
+  "snapshot_date": "2026-10-09",
+  "overall_status": "All 47 focal queries have valid fast profiles. ST39 (4+6) and ST147 (4+4) completed all stages with 100 successful date permutations each; temporal gates were unsupported and both withheld time trees. Earlier ST147 six-context coherence failure and rejected/recovered upstream export preserved.",
+  "fast_runs": [
+    {
+      "lineage": "ST39",
+      "stage": "fast",
+      "status": "completed",
+      "focal_queries": {
+        "total": 36,
+        "profiles_available": 36,
+        "profiles_missing": 0
+      },
+      "public_context": {
+        "total": 80,
+        "profiles_available": 80,
+        "profiles_missing": 0
+      },
+      "profile_limit": 80,
+      "seed": 20260927,
+      "comparable_pairs": 6670,
+      "report_rep_classifications": "All three terms explicitly not assessed",
+      "input_fingerprint": "b6b00e4d335992f20a7f7f20e7d05f825a0d51baee497e1a469c83d4f9a5ab7c",
+      "analysis_sha256": "d2aaabd76007d442fd247575bc3ce0f96075ca3281b756dbcc55646d8ed72520",
+      "analysis_exports": [
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "downloaded",
+          "requested_count": 36,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        },
+        {
+          "download": "klebsiella-lincodes",
+          "job": "lincodes-3390273-2",
+          "status": "downloaded",
+          "requested_count": 36,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        },
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "downloaded",
+          "requested_count": 80,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        },
+        {
+          "download": "klebsiella-lincodes",
+          "job": "lincodes-3390273-2",
+          "status": "downloaded",
+          "requested_count": 80,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        }
+      ],
+      "observed_report_sha256": "61aad742f730a642e4761dd653deb8660a3319bcf102d3b6dd5fe7a9173e35f3",
+      "report_output_audit": "ST39_fast_report_output_audit.json"
+    },
+    {
+      "lineage": "ST147",
+      "stage": "fast",
+      "status": "completed",
+      "focal_queries": {
+        "total": 11,
+        "profiles_available": 11,
+        "profiles_missing": 0
+      },
+      "public_context": {
+        "total": 80,
+        "profiles_available": 80,
+        "profiles_missing": 0
+      },
+      "profile_limit": 80,
+      "seed": 20260927,
+      "comparable_pairs": 4095,
+      "report_rep_classifications": "All three terms explicitly not assessed",
+      "input_fingerprint": "98dc5896a525f88127b8c82fd80a30b69e31bb67cb2480bf23d5392b9477638a",
+      "analysis_sha256": "401e8ed42afd21d99c49414a4c65b7c54954c0978dc4cbe56cb877992809d1ac",
+      "analysis_exports": [
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "downloaded",
+          "requested_count": 11,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        },
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "downloaded",
+          "requested_count": 80,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        }
+      ],
+      "observed_report_sha256": "0f34f84314e190e6ac8fa73aa9832a927f1952c510f09a821c60602135778810",
+      "report_output_audit": "ST147_fast_report_output_audit.json"
+    }
+  ],
+  "native_runs": [
+    {
+      "lineage": "ST147",
+      "query_subset_size": 4,
+      "public_context_size": 6,
+      "status": "failed_lineage_coherence",
+      "flagged_sample": "PW_73f6h9aWpgxZT9XSRMQNzA",
+      "coherence_tsv_sha256": "2a0095c101f33d6dadc3e2d6fd05216dfb2cdd0995d3c2d329075f91f30f9271",
+      "interpretation": "The safeguard stopped the corrected genomic workflow; full and finish completion are not claimed."
+    },
+    {
+      "lineage": "ST39",
+      "query_subset_size": 4,
+      "public_context_size": 6,
+      "genome_assemblies": 10,
+      "status": "completed_all_stages",
+      "validation_role": "100-permutation end-to-end workflow validation on the nominated subsets; not a lineage-wide biological assessment.",
+      "stages": {
+        "fast": "completed",
+        "full": "completed",
+        "finish": "completed"
+      },
+      "input_fingerprint": "46b8f39c078667f6e89029966dc634c4cf54c2bf5f79f4300d01cf6d76667c59",
+      "temporal_status": "not_supported",
+      "temporal_signal_supported": false,
+      "temporal_signal_reason": "The estimated evolutionary rate was not positive. Sampling dates do not support reliable time scaling for this lineage.",
+      "observed_root_to_tip_rate": -1.448e-08,
+      "observed_r_squared": 0.0,
+      "successful_randomisations": 100,
+      "requested_randomisations": 100,
+      "p_value_r_squared": 1.0,
+      "timetree_written": false,
+      "report_output_audit": "ST39_report_output_audit.json",
+      "temporal_signal_file": "ST39_temporal_signal.json",
+      "context_selection": {
+        "species": "Klebsiella pneumoniae",
+        "lineage": "ST39",
+        "context_budget": 6,
+        "available_contexts": 80,
+        "selected_contexts": 6,
+        "nearest_per_query": 2,
+        "seed": 20260927,
+        "decisions": [
+          {
+            "sample_id": "PW_jSFrP6Asb7SXNYXgkonkUr",
+            "reason": "cgmlst_neighbour:SAMEA8262495:rank=1"
+          },
+          {
+            "sample_id": "PW_c9rLmrKK3z49L38VqRXZTr",
+            "reason": "cgmlst_neighbour:SAMEA8263207:rank=1"
+          },
+          {
+            "sample_id": "PW_8ARbgsYqF9MbHVHFqVWJXC",
+            "reason": "cgmlst_neighbour:SAMEA8262495:rank=2"
+          },
+          {
+            "sample_id": "PW_fJ8q71xAauuWF7GZY36oAJ",
+            "reason": "cgmlst_neighbour:SAMEA8263207:rank=2"
+          },
+          {
+            "sample_id": "PW_mHysQTJFi5APGfzLiP7vmx",
+            "reason": "genetic_group_time_region_representative"
+          },
+          {
+            "sample_id": "PW_gUGJsHFSWQhGVqareCSJZR",
+            "reason": "genetic_group_time_region_representative"
+          }
+        ],
+        "queries_without_selected_comparable_neighbour": [],
+        "scope": "Selection within the recorded profile catalogue; diversity uses cgMLST distance, not calendar time."
+      },
+      "geography_focal_sample_units": 4,
+      "geography_selected_public_sample_units": 5,
+      "geography_total_sample_unit_entries": 9,
+      "geography_count_policy": "Sample-unit entries summed across separately deduplicated focal and public cohorts; overlap is counted in each cohort.",
+      "known_cli_parameters": {
+        "mode": "finish",
+        "profile_limit": 80,
+        "context_size": 6,
+        "nearest_per_query": 2,
+        "profile_bootstraps": 10,
+        "min_samples": 4,
+        "date_randomisations": 100,
+        "date_randomisation_method": "root-to-tip",
+        "temporal_p_value": 0.05,
+        "seed": 20260927,
+        "threads": 2,
+        "lineage_jobs": 1,
+        "randomisation_jobs": 2
+      },
+      "scope_limit": "Reduced context budget selected before clock outcomes; does not validate the default 50-context budget.",
+      "observed_report_json_hashes": {
+        "full": "9400a887b6f0936d33411e3db90078bd72057625e4e29a397a75d76adb48f722",
+        "finish": "2734652ccac2160b75234093fc1a2d94c4ba24830cd6f90a1cdbdbc0ac4fb920"
+      }
+    },
+    {
+      "lineage": "ST147",
+      "query_subset_size": 4,
+      "public_context_size": 4,
+      "genome_assemblies": 8,
+      "status": "completed_all_stages",
+      "validation_role": "100-permutation end-to-end workflow validation on the nominated subsets; not a lineage-wide biological assessment.",
+      "stages": {
+        "fast": "completed",
+        "full": "completed",
+        "finish": "completed"
+      },
+      "input_fingerprint": "b99435215e70f2b56e0e4991ca1dfb937bf5c83213d465d3c725fa43133d4834",
+      "temporal_status": "not_supported",
+      "temporal_signal_supported": false,
+      "temporal_signal_reason": "The observed root-to-tip fit was not stronger than randomised dates at the predefined threshold (p=0.416; threshold=0.05).",
+      "observed_root_to_tip_rate": 1.474e-06,
+      "observed_r_squared": 0.26,
+      "successful_randomisations": 100,
+      "requested_randomisations": 100,
+      "p_value_r_squared": 0.4158415841584158,
+      "timetree_written": false,
+      "report_output_audit": "ST147_report_output_audit.json",
+      "temporal_signal_file": "ST147_temporal_signal.json",
+      "context_selection": {
+        "species": "Klebsiella pneumoniae",
+        "lineage": "ST147",
+        "context_budget": 4,
+        "available_contexts": 80,
+        "selected_contexts": 4,
+        "nearest_per_query": 1,
+        "seed": 20260927,
+        "decisions": [
+          {
+            "sample_id": "PW_4uXKjLQ6MAYZzS9Ku3LomK",
+            "reason": "cgmlst_neighbour:SAMEA8262410:rank=1"
+          },
+          {
+            "sample_id": "PW_dSX4wG2VrFdfZT9MZQKcAK",
+            "reason": "cgmlst_neighbour:SAMEA8262863:rank=1"
+          },
+          {
+            "sample_id": "PW_5QBztQAyWwoSvDjZsMDVxJ",
+            "reason": "cgmlst_neighbour:SAMEA8263900:rank=1"
+          },
+          {
+            "sample_id": "PW_3v5HQbzKDa6tTPeW8XZ3tQ",
+            "reason": "genetic_group_time_region_representative"
+          }
+        ],
+        "queries_without_selected_comparable_neighbour": [],
+        "scope": "Selection within the recorded profile catalogue; diversity uses cgMLST distance, not calendar time."
+      },
+      "geography_focal_sample_units": 4,
+      "geography_selected_public_sample_units": 4,
+      "geography_total_sample_unit_entries": 8,
+      "geography_count_policy": "Sample-unit entries summed across separately deduplicated focal and public cohorts; overlap is counted in each cohort.",
+      "known_cli_parameters": {
+        "mode": "finish",
+        "profile_limit": 80,
+        "context_size": 4,
+        "nearest_per_query": 1,
+        "profile_bootstraps": 10,
+        "min_samples": 4,
+        "date_randomisations": 100,
+        "date_randomisation_method": "root-to-tip",
+        "temporal_p_value": 0.05,
+        "seed": 20260927,
+        "threads": 2,
+        "lineage_jobs": 1,
+        "randomisation_jobs": 2
+      },
+      "scope_limit": "Reduced context budget selected before clock outcomes; does not validate the default 50-context budget.",
+      "observed_report_json_hashes": {
+        "full": "9dbcb002392b1101a0d300721a3b6a1ccf95ef2584ab22c74f9eac116035ede3",
+        "finish": "359b9a3fb4e14d52dd1db3d7067e86c60ad2b221dcdc37bd4d126292a14663b1"
+      }
+    }
+  ],
+  "prior_rejected_export_attempts": [
+    {
+      "lineage": "ST147",
+      "stage": "fast",
+      "status": "completed",
+      "focal_queries": {
+        "total": 11,
+        "profiles_available": 0,
+        "profiles_missing": 11
+      },
+      "public_context": {
+        "total": 80,
+        "profiles_available": 80,
+        "profiles_missing": 0
+      },
+      "profile_limit": 80,
+      "seed": 20260927,
+      "comparable_pairs": 3160,
+      "report_rep_classifications": "All three terms explicitly not assessed",
+      "input_fingerprint": "c33493f527ab04faf3dec38c8f10164c7b81c2fd60a6cfb27dcabf8f299532cf",
+      "analysis_sha256": "0556860749b87403f7570095ab495a98a68b003aef88ac75480afca977635f3f",
+      "analysis_exports": [
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "unavailable",
+          "reason": "cgMLST export contains an unrequested genome or empty locus"
+        },
+        {
+          "download": "cgmlst",
+          "job": "cgmlst-573-2",
+          "status": "downloaded",
+          "requested_count": 80,
+          "scope_provenance": "server-advertised analysis job; typing database version and fingerprint unavailable"
+        }
+      ],
+      "observed_report_sha256": "c9ada4a5c8374dad7d3d3e48c46f27024483d4f414a24c93d52f28516d0b0c73"
+    }
+  ],
+  "hash_scope": "Source/input hashes identify unchanged input evidence. Report hashes identify artifacts after final style/caption/alias regeneration; any later rerun or rendering change requires new hashes.",
+  "prior_native_smoke_runs": [
+    {
+      "lineage": "ST39",
+      "query_subset_size": 4,
+      "public_context_size": 6,
+      "genome_assemblies": 10,
+      "status": "completed_all_stages",
+      "stages": {
+        "fast": "completed",
+        "full": "completed",
+        "finish": "completed"
+      },
+      "input_fingerprint": "f9757e8a796c96387f284e4e42921973cecba9c2b0d97786a3bc1dfe638ffa59",
+      "temporal_status": "not_supported",
+      "temporal_signal_supported": false,
+      "temporal_signal_reason": "The estimated evolutionary rate was not positive. Sampling dates do not support reliable time scaling for this lineage.",
+      "observed_root_to_tip_rate": -1.448e-08,
+      "observed_r_squared": 0.0,
+      "successful_randomisations": 10,
+      "requested_randomisations": 10,
+      "p_value_r_squared": 1.0,
+      "timetree_written": false,
+      "report_output_audit": "ST39_report_output_audit.json",
+      "temporal_signal_file": "ST39_temporal_signal.json",
+      "geography_focal_sample_units": 4,
+      "geography_selected_public_sample_units": 5,
+      "geography_total_sample_units": 9,
+      "geography_count_policy": "Sample-unit entries across separately deduplicated focal and public cohorts; overlapping sample units may contribute once to each cohort. Not genome assembly counts.",
+      "known_cli_parameters": {
+        "mode": "finish",
+        "profile_limit": 80,
+        "context_size": 6,
+        "nearest_per_query": 2,
+        "date_randomisations": 10,
+        "date_randomisation_method": "root-to-tip",
+        "temporal_p_value": 0.05,
+        "seed": 20260927,
+        "threads": 2,
+        "date_randomisation_jobs": 2,
+        "min_samples": 4,
+        "profile_bootstraps": 10,
+        "lineage_jobs": 1
+      },
+      "interpretation_scope": "Reduced-replicate workflow smoke test. Minimum empirical p with 10 permutations is 1/11, above the 0.05 gate; this run cannot establish clock support or a definitive lineage-wide lack of temporal signal.",
+      "observed_report_json_hashes": {
+        "full": "f913663147cb39b71623d37c50f7010f4fcb144aebe9d20986d854db6f85de8d",
+        "finish": "9e85a1e973e81f29a06d5e0cbacc04bf6ffed7688ade7b0eadcfe41e4bdb161b"
+      },
+      "validation_role": "Historical 10-permutation smoke test; superseded by the completed 100-permutation run recorded above."
+    },
+    {
+      "lineage": "ST147",
+      "query_subset_size": 4,
+      "public_context_size": 4,
+      "genome_assemblies": 8,
+      "status": "completed_all_stages",
+      "stages": {
+        "fast": "completed",
+        "full": "completed",
+        "finish": "completed"
+      },
+      "input_fingerprint": "d2b81455c182dcec20f77bf7b63db5ce5f5d83362f03466c7fdca8f350184a87",
+      "temporal_status": "not_supported",
+      "temporal_signal_supported": false,
+      "temporal_signal_reason": "The observed root-to-tip fit was not stronger than randomised dates at the predefined threshold (p=0.455; threshold=0.05).",
+      "observed_root_to_tip_rate": 1.474e-06,
+      "observed_r_squared": 0.26,
+      "successful_randomisations": 10,
+      "requested_randomisations": 10,
+      "p_value_r_squared": 0.45454545454545453,
+      "timetree_written": false,
+      "report_output_audit": "ST147_report_output_audit.json",
+      "temporal_signal_file": "ST147_temporal_signal.json",
+      "context_selection": {
+        "species": "Klebsiella pneumoniae",
+        "lineage": "ST147",
+        "context_budget": 4,
+        "available_contexts": 80,
+        "selected_contexts": 4,
+        "nearest_per_query": 1,
+        "seed": 20260927,
+        "decisions": [
+          {
+            "sample_id": "PW_4uXKjLQ6MAYZzS9Ku3LomK",
+            "reason": "cgmlst_neighbour:SAMEA8262410:rank=1"
+          },
+          {
+            "sample_id": "PW_dSX4wG2VrFdfZT9MZQKcAK",
+            "reason": "cgmlst_neighbour:SAMEA8262863:rank=1"
+          },
+          {
+            "sample_id": "PW_5QBztQAyWwoSvDjZsMDVxJ",
+            "reason": "cgmlst_neighbour:SAMEA8263900:rank=1"
+          },
+          {
+            "sample_id": "PW_3v5HQbzKDa6tTPeW8XZ3tQ",
+            "reason": "genetic_group_time_region_representative"
+          }
+        ],
+        "queries_without_selected_comparable_neighbour": [],
+        "scope": "Selection within the recorded profile catalogue; diversity uses cgMLST distance, not calendar time."
+      },
+      "scope_limit": "Reduced context budget selected before clock results; does not validate the default 50-context budget.",
+      "known_cli_parameters": {
+        "mode": "finish",
+        "profile_limit": 80,
+        "context_size": 4,
+        "nearest_per_query": 1,
+        "date_randomisations": 10,
+        "date_randomisation_method": "root-to-tip",
+        "temporal_p_value": 0.05,
+        "seed": 20260927,
+        "threads": 2,
+        "date_randomisation_jobs": 2,
+        "min_samples": 4,
+        "profile_bootstraps": 10,
+        "lineage_jobs": 1
+      },
+      "interpretation_scope": "Reduced-replicate workflow smoke test. Minimum empirical p with 10 permutations is 1/11, above the 0.05 gate; this run cannot establish clock support or a definitive lineage-wide lack of temporal signal.",
+      "observed_report_json_hashes": {
+        "full": "9dbcb002392b1101a0d300721a3b6a1ccf95ef2584ab22c74f9eac116035ede3",
+        "finish": "2b79950a2c789cc5b40c5c21b0ac7bc7ef248b25d5c0293619e57eb3cca1c596"
+      },
+      "validation_role": "Historical 10-permutation smoke test; superseded by the completed 100-permutation run recorded above."
+    }
+  ]
+}

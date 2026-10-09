@@ -160,6 +160,7 @@ def select_assembly_context(
 
 def _stage_landing(output: Path, name: str, records: list[dict]) -> Path:
     from html import escape
+    from chronoclade.report import report_styles
 
     path = output / f"{name}.html"
     links = []
@@ -180,10 +181,12 @@ def _stage_landing(output: Path, name: str, records: list[dict]) -> Path:
     path.write_text(
         '<!doctype html><html lang="en"><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f"<title>ChronoClade {name}</title><body><h1>{escape(name.title())} results</h1>"
-        '<a href="index.html">All completed stages</a><ul>'
+        f"<title>ChronoClade {name}</title><style>{report_styles()}</style><body><main class=\"shell\">"
+        '<header class="identity"><div class="identity-mark">ChronoClade · ANALYSIS REPORTS</div><div class="identity-copy">'
+        f"<h1>{escape(name.title())} results</h1></div></header>"
+        '<section class="stage"><div class="stage-body"><a href="index.html">All completed stages</a><ul>'
         + "".join(links)
-        + "</ul></body></html>",
+        + "</ul></div></section></main></body></html>",
         encoding="utf-8",
     )
     return path
@@ -191,7 +194,8 @@ def _stage_landing(output: Path, name: str, records: list[dict]) -> Path:
 
 def _snapshot_stage(record: dict, stage: str) -> None:
     """Freeze reader-facing assets so later analysis cannot change an earlier report."""
-    directory = Path(record["outputs"]["html_report"]).parent
+    source_report = Path(record["outputs"]["html_report"])
+    directory = source_report.parent
     destination = directory / "stages" / stage
     shutil.rmtree(destination, ignore_errors=True)
     destination.mkdir(parents=True)
@@ -230,7 +234,14 @@ def _snapshot_stage(record: dict, stage: str) -> None:
                 return str(candidate)
         return value
 
+    # Writers may use a stage-specific filename. The advertised source, rather
+    # than a stale report.html left by another mode, supplies the snapshot entry.
+    entry = destination / "report.html"
+    copied_report = destination / source_report.name
+    if copied_report != entry:
+        shutil.copy2(copied_report, entry)
     snapshot_record = relocated(record)
+    snapshot_record["outputs"]["html_report"] = str(entry)
     _write_json(destination / "report.json", snapshot_record)
     from chronoclade.report import write_supporting_bundle
     write_supporting_bundle(destination)
@@ -330,6 +341,11 @@ def run_staged_workflow(
         bootstrap_replicates=bootstrap_replicates,
         distance_threshold=distance_threshold,
     )
+    species_names = sorted({row["species"] for row in queries})
+    lineage_names = sorted({row.get("lineage") or "Unassigned" for row in queries})
+    if len(species_names) == 1:
+        analysis["species"] = species_names[0]
+    analysis["lineage"] = ", ".join(lineage_names)
     def geography(rows: list[dict]) -> list[dict]:
         counts: dict[tuple, int] = defaultdict(int)
         for row in rows:

@@ -959,10 +959,12 @@ def _run_lineage(
                 "supporting_results": str(files.directory / "supporting_results.zip"),
             },
         }
+        report["outputs"]["html_report"] = str(
+            write_corrected_report(report, directory=files.directory)
+        )
         (files.directory / "report.json").write_text(
             json.dumps(report, indent=2) + "\n", encoding="utf-8"
         )
-        write_corrected_report(report, directory=files.directory)
         write_supporting_bundle(files.directory)
         return report
     valid_dates = {sample.sample_id: sample.collection_date for sample in dated_members}

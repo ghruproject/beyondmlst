@@ -97,10 +97,13 @@ def test_corrected_stage_and_insufficient_date_finish_skip_temporal_analysis(
         monkeypatch.setattr(
             "chronoclade.lineage.build_country_network", lambda *args, **kwargs: {}
         )
-        monkeypatch.setattr(
-            "chronoclade.profile_report.write_corrected_report",
-            lambda report, *, directory: observed.append((mode, report["temporal_status"], report["temporal_signal_reason"])),
-        )
+        def corrected_report(report, *, directory):
+            observed.append((mode, report["temporal_status"], report["temporal_signal_reason"]))
+            path = directory / "corrected_report.html"
+            path.write_text("corrected")
+            return path
+
+        monkeypatch.setattr("chronoclade.profile_report.write_corrected_report", corrected_report)
         monkeypatch.setattr("chronoclade.lineage.write_supporting_bundle", lambda path: path)
 
         def unexpected(*args, **kwargs):
@@ -135,6 +138,14 @@ def test_corrected_stage_and_insufficient_date_finish_skip_temporal_analysis(
     assert "Fewer than three usable distinct collection dates" in finish["temporal_signal_reason"]
     assert not (tmp_path / "finish" / "full" / "temporal_signal.json").exists()
     assert len(observed) == 2
+    import json
+
+    for report in (corrected, finish):
+        html = Path(report["outputs"]["html_report"])
+        assert html.name == "corrected_report.html"
+        assert html.read_text() == "corrected"
+        saved = json.loads((html.parent / "report.json").read_text())
+        assert saved["outputs"]["html_report"] == str(html)
 
 
 def test_unknown_locations_are_missing_traits_not_countries(tmp_path: Path) -> None:

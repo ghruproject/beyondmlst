@@ -14,6 +14,7 @@ import io
 import json
 from pathlib import Path
 import re
+import time
 from typing import Any, Iterable
 from urllib.parse import urlencode, urlsplit
 import zipfile
@@ -38,6 +39,10 @@ from chronoclade.query_typing import load_query_typing, type_query_assemblies
 
 class ProfileInputError(ValueError):
     """Input identities or frozen profile data cannot be resolved safely."""
+
+
+class CGMLSTExportIdentityError(ProfileInputError):
+    """A response contains a genome outside the exact requested batch."""
 
 
 def collection_id(value: str) -> str:
@@ -270,8 +275,10 @@ def parse_cgmlst_export(data: bytes, requested: Iterable[str], *, job: str) -> l
     expected, profiles, ambiguous = set(requested), {}, {}
     for item in reader:
         ident, locus, allele = item["Genome ID"], item["Gene"], item["Allele ID"].strip()
-        if ident not in expected or not locus:
-            raise ProfileInputError("cgMLST export contains an unrequested genome or empty locus")
+        if ident not in expected:
+            raise CGMLSTExportIdentityError("cgMLST export contains an unrequested genome")
+        if not locus:
+            raise ProfileInputError("cgMLST export contains an empty locus")
         calls = profiles.setdefault(ident, {})
         missing = allele in {"", "0", "-", "?", "None", "null"}
         if not missing and not (
@@ -354,19 +361,38 @@ def _analysis_exports(
                 assignments = []
                 for start in range(0, len(eligible), 100):
                     batch = eligible[start : start + 100]
-                    data = request_download(
-                        "/api/downloads/cgmlst?" + urlencode({"job": job}),
-                        api_key=client.api_key,
-                        base_url=client.base_url,
-                        body={"ids": ",".join(str(row["numeric_source_id"]) for row in batch)},
-                    )
-                    destination = output / f"cgmlst_{job}_{start}.bin"
-                    destination.write_bytes(data)
-                    assignments.extend(
-                        parse_cgmlst_export(
-                            data, [row["source_genome_id"] for row in batch], job=job
+                    requested_ids = [row["source_genome_id"] for row in batch]
+                    for attempt in range(3):
+                        data = request_download(
+                            "/api/downloads/cgmlst?" + urlencode({"job": job}),
+                            api_key=client.api_key,
+                            base_url=client.base_url,
+                            body={"ids": ",".join(str(row["numeric_source_id"]) for row in batch)},
                         )
-                    )
+                        suffix = f"_retry{attempt}" if attempt else ""
+                        destination = output / f"cgmlst_{job}_{start}{suffix}.bin"
+                        destination.write_bytes(data)
+                        try:
+                            parsed = parse_cgmlst_export(data, requested_ids, job=job)
+                        except CGMLSTExportIdentityError:
+                            # Concurrent upstream jobs can return another selection's
+                            # file. Preserve it, reject every call, then retry exactly
+                            # this batch; never filter unrelated genomes into a result.
+                            provenance.setdefault("analysis_export_identity_retries", []).append(
+                                {
+                                    "job": job,
+                                    "attempt": attempt + 1,
+                                    "requested_source_ids": requested_ids,
+                                    "rejected_export": str(destination.resolve()),
+                                    "rejected_export_sha256": hashlib.sha256(data).hexdigest(),
+                                }
+                            )
+                            if attempt == 2:
+                                raise
+                            time.sleep(2**attempt)
+                            continue
+                        assignments.extend(parsed)
+                        break
                 # No complete universe/call fraction is inferred from the observed export.
                 by_id = {row["source_genome_id"]: row for row in assignments}
                 rows = [
@@ -681,6 +707,25 @@ def _stable_records(value: Any) -> Any:
     return value
 
 
+def _frozen_cglin(rows: list[dict], assignments: list[dict]) -> list[dict]:
+    """Apply the explicit export as the sole cgLIN namespace, including missing IDs.
+
+    Live/native typing can still supply allele profiles. Its cluster release must
+    not replace the user's frozen cluster assignments or leak into unmatched IDs.
+    """
+    clean = [
+        {key: value for key, value in row.items() if not key.startswith("cglin_") and key != "cgst"}
+        for row in rows
+    ]
+    annotated = annotate_catalogue(clean, assignments)
+    for row in annotated:
+        row["cglin_scope_source"] = "user_frozen_export"
+        row["cglin_database_version_status"] = (
+            "unavailable" if row.get("cglin_scheme_version") == "unknown" else "user_declared"
+        )
+    return annotated
+
+
 def resolve_profile_inputs(
     metadata: Path | None,
     *,
@@ -740,6 +785,14 @@ def resolve_profile_inputs(
     frozen_rows = load_catalogue(catalogue)["rows"] if catalogue else []
     public_assignments = load_public_typing(public_typing) if public_typing else []
     cglin_assignments = load_cglin_export(cglin_export) if cglin_export else []
+    if cglin_export:
+        provenance["cglin_authority"] = {
+            "source": "user_frozen_export",
+            "input": provenance["inputs"]["cglin_export"],
+            "policy": "Explicit export is authoritative for queries and context; unmatched IDs remain unassigned in this frozen namespace.",
+            "scheme_versions": sorted({row["cglin_scheme_version"] for row in cglin_assignments}),
+            "database_version_inferred_from_live_jobs": False,
+        }
     provided_context: list[dict] = []
     if collection:
         if accessions:
@@ -881,9 +934,9 @@ def resolve_profile_inputs(
     if public_assignments:
         queries = annotate_public_typing(queries, public_assignments)
         provided_context = annotate_public_typing(provided_context, public_assignments)
-    if cglin_assignments:
-        queries = annotate_catalogue(queries, cglin_assignments)
-        provided_context = annotate_catalogue(provided_context, cglin_assignments)
+    if cglin_export:
+        queries = _frozen_cglin(queries, cglin_assignments)
+        provided_context = _frozen_cglin(provided_context, cglin_assignments)
     if not collection and any(
         str(row.get("numeric_source_id", "")).isdigit()
         and not row.get("cgmlst_profile")
@@ -909,6 +962,8 @@ def resolve_profile_inputs(
             for row in queries:
                 if row["sample_id"] in by_sample:
                     row.update(by_sample[row["sample_id"]])
+    if cglin_export:
+        queries = _frozen_cglin(queries, cglin_assignments)
     scopes = {(row["species"].casefold(), row["lineage"]) for row in queries}
     context = [
         _canonical(dict(row, sample_id="PW_" + row["source_genome_id"]), origin="context")
@@ -946,6 +1001,10 @@ def resolve_profile_inputs(
     if catalogue_rows:
         catalogue_rows, catalogue_audit = deduplicate_catalogue(catalogue_rows)
         provenance["catalogue_deduplication"] = catalogue_audit
+    if public_assignments:
+        catalogue_rows = annotate_public_typing(catalogue_rows, public_assignments)
+    if cglin_export:
+        catalogue_rows = _frozen_cglin(catalogue_rows, cglin_assignments)
     provenance["catalogue_metadata_count"] = len(catalogue_rows)
     excluded_inputs = queries + provided_context
     query_ids = {
@@ -963,8 +1022,8 @@ def resolve_profile_inputs(
         provenance["context_deduplication"] = audit
     if public_assignments:
         context = annotate_public_typing(context, public_assignments)
-    if cglin_assignments:
-        context = annotate_catalogue(context, cglin_assignments)
+    if cglin_export:
+        context = _frozen_cglin(context, cglin_assignments)
     unbounded_context_count = len(context)
     context, refinement_audit = _refined_context_pool(
         context, queries, limit=profile_limit, seed=seed
@@ -1004,6 +1063,17 @@ def resolve_profile_inputs(
         by_id = {row["source_genome_id"]: row for row in exported}
         context = [by_id.get(row["source_genome_id"], row) for row in context]
     context.extend(provided_context)
+    if cglin_export:
+        queries = _frozen_cglin(queries, cglin_assignments)
+        context = _frozen_cglin(context, cglin_assignments)
+        provenance["cglin_authority"]["matched_records"] = {
+            label: sum(row.get("cglin_export_record_count", 0) > 0 for row in rows)
+            for label, rows in [
+                ("queries", queries),
+                ("context", context),
+                ("catalogue_rows", catalogue_rows),
+            ]
+        }
     coverage = {}
     for label, rows in [("queries", queries), ("context", context)]:
         for row in rows:

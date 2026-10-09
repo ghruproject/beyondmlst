@@ -137,10 +137,16 @@ actually available for that run.
 
 The public `fast` report is profile-first: it describes profile coverage,
 country/region composition, exploratory PCoA and neighbour-joining views,
-descriptive genetic groups, profile neighbours, persistence across years and
-time/place concentration. Persistence and concentration are reported as
-separate observations. Profile-stage root-to-tip diagnostics and location
-networks are exploratory, not clock gates or transmission evidence.
+descriptive genetic groups, profile neighbours, observations across collection
+years and time/place concentration. **Recurrence and persistence in sampled
+genomes (REP-inspired)** explains [CDC's REP terminology](https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html)
+and marks reoccurring, emerging and persisting status as not assessed, with
+reasons. The report assigns no official CDC REP designation, including to
+Klebsiella. Genetic group stability under locus resampling, observations across
+years and time/place concentration answer separate questions. Selected genome
+counts and dated-tip spans cannot establish illness trends, outbreaks or
+consistent illness. Profile-stage root-to-tip diagnostics and location networks
+are exploratory, not clock gates or transmission evidence.
 
 `full` produces corrected assembly-based genomic evidence but does not assess
 dates. `finish` adds date randomisation and a dated tree only when the temporal

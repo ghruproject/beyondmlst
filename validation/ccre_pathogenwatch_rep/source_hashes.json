@@ -1,0 +1,98 @@
+{
+  "algorithm": "SHA-256",
+  "source_labels_are_portable": true,
+  "sources": [
+    {
+      "source": "ccre_greece/manifest.tsv",
+      "sha256": "76a3476a960e855ed1201fbbb674775cdad26ebc276d6f5831a115db0cfaaa2a"
+    },
+    {
+      "source": "ccre_greece/sources/mmc2.xlsx",
+      "sha256": "a486d288842447fed0d50d97ed9e78471b8a2c671fc6015f95bee230d5c2443a"
+    },
+    {
+      "source": "ccre_greece/metadata/focal.csv",
+      "sha256": "705264502cdd8f5bf69c6ef43ece35c5d72276250d32278f2b09378f046b9fc1"
+    },
+    {
+      "source": "ccre_greece/metadata/ST147_focal.csv",
+      "sha256": "1fc94ca5b5443391ea6d3c5e67f1c637ee634d13c184dbc1c72a23ae5279314d"
+    },
+    {
+      "source": "ccre_greece/sources/ENA_PRJEB39943_read_run.tsv",
+      "sha256": "0ff8689e4df6b44ec0c98dc451496aea6795db0e9ad18f0c1289e327d737f4d5"
+    },
+    {
+      "source": "ccre_greece/sources/ENA_PRJEB51224_read_run.tsv",
+      "sha256": "b4d4f3abd49292640e197d380b5a2a8d7803d85607b256fe8e9d9aaf1c7d4adf"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_1.json",
+      "sha256": "8cc30978ca1fd1e833f44403820c0be492f2bf7fe7b7a9757a455e65f64d8b8a"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_2.json",
+      "sha256": "7f555b296c38f224f3e1b13525f528bebc19cb1ca839f5a4117794dc09911058"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_3.json",
+      "sha256": "f3daaab6aa31ae3f21eeea9b2429c04ed4d7d92d86c7725a4cf90e285619af9c"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_4.json",
+      "sha256": "1033c9a20bbb7b2fb12ce9c287dfdb25214a16322ff6d6edde4dbca58ab713ee"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_5.json",
+      "sha256": "859eea3d7aa5dfcf3b5c0515dc37a82cd18ad37c91702da0af29a96ca0bafa6a"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_genomes_page_6.json",
+      "sha256": "35d608318e0c436fa4f1a5a92433e9eb283a86997dd5680211814f031d0c70ee"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_quasipneumoniae_genomes_page_1.json",
+      "sha256": "1f82c670fc3ab8434ed1faed0dbc15350790101177952e4ad139e63eedcea54e"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_quasivariicola_genomes_page_1.json",
+      "sha256": "61e6057a65ab4284f75a5e3e9ede453bebe400fd664d7956d8f386abd98f1f14"
+    },
+    {
+      "source": "ccre_greece/sources/pathogenwatch_variicola_genomes_page_1.json",
+      "sha256": "4dc4ba9d55c54cb3dfd2cbdaf100dedf11f7aae29beb729c1b92f2d5a8b737df"
+    },
+    {
+      "source": "supplied_st147/st147_pathogenwatch_lin.csv",
+      "sha256": "a8ed5ef279316596f41b458e20911b2d90a6534f0fad1deec884b4204eb88d60"
+    },
+    {
+      "source": "supplied_st147/st147_pathogenwatch_samples.csv",
+      "sha256": "d1c031975cd1dc12e3800726ea97049027952157619090ede0394c7ad1c5383c"
+    },
+    {
+      "source": "supplied_st147/st147_cglin_groups.csv",
+      "sha256": "d70a4963612903992f8b62b2370d62e062ee11e8c3d0a2561252d5ea358fb59f"
+    },
+    {
+      "source": "input_audit/input_audit.json",
+      "sha256": "a7cc838bc974c2cfd60405b1fbc931864e52b27f74ae24d311fe7d87977dff78"
+    },
+    {
+      "source": "input_audit/focal_accession_crosswalk_audit.csv",
+      "sha256": "4ea307ab099351a8b58cba9ee2502390ddf2379fc0efd8b19833b316714e0ed6"
+    },
+    {
+      "source": "input_audit/st39_public_crosswalk.json",
+      "sha256": "d462234d41fdffcdc278f373eff4f06e37a5b338c44b6ff875e76edb0806a72a"
+    },
+    {
+      "source": "input_audit/st147_public_crosswalk.json",
+      "sha256": "f5b2331b63cf3c18fb2a57040104748ecab864d528f977a71c837ebdc3c4dbc2"
+    },
+    {
+      "source": "input_audit/st147_public_details.json",
+      "sha256": "2a02d7f21f0027e977b6094f767c33a2fcf232f30acae764504c883e0f5d1293"
+    }
+  ]
+}

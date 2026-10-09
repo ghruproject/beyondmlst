@@ -58,7 +58,7 @@ def test_report_orders_summary_figures_and_groups_before_neighbours(tmp_path: Pa
     assert html.index("id=\"nearest\"") < html.index("id=\"figures\"")
     assert html.index("id=\"nearest\"") < html.index("id=\"groups\"")
     assert html.index("id=\"persistence\"") < html.index("id=\"concentration\"")
-    assert "persistence across years" in html
+    assert "observation across collection years" in html
     assert "concentration in a particular time and place" in html
     assert 'src="figures/pcoa.svg"' in html
     assert 'src="figures/cohort_nj.svg"' in html
@@ -131,7 +131,7 @@ def test_corrected_report_marks_dating_not_assessed_and_keeps_guardrails(tmp_pat
     )
     html = output.read_text(encoding="utf-8")
 
-    assert "Corrected genetic relationships" in html
+    assert "Recombination-adjusted analysis" in html
     assert "Fewer than three usable distinct collection dates" in html
     assert "No temporal test or calendar tree is implied" in html
     assert "not proof of transmission" in html
@@ -270,6 +270,25 @@ def test_query_only_neighbours_are_summarised_and_expandable(tmp_path: Path) -> 
     assert html.count('id="Q0"') == 0
 
 
+def test_nearest_relatives_display_engine_comparison_group_with_legacy_fallback(tmp_path: Path) -> None:
+    output = write_profile_report(
+        {
+            "nearest_neighbours": [
+                {"query_id": "Q1", "context_id": "C1", "cohort_id": "cohort_1", "cohort": "obsolete"},
+                {"query_id": "Q2", "context_id": "C2", "cohort": "legacy_cohort"},
+            ],
+        },
+        directory=tmp_path,
+    )
+    html = output.read_text(encoding="utf-8")
+    nearest = html.split('id="nearest"', 1)[1].split('id="figures"', 1)[0]
+
+    assert "Comparison group" in nearest
+    assert "cohort_1" in nearest
+    assert "legacy_cohort" in nearest
+    assert "obsolete" not in nearest
+
+
 def test_persistence_summary_does_not_claim_recurrence_for_one_year(tmp_path: Path) -> None:
     output = write_profile_report(
         {
@@ -296,6 +315,36 @@ def test_persistence_summary_does_not_claim_recurrence_for_one_year(tmp_path: Pa
     assert "Observed in one collection year (2024); persistence cannot be assessed." in persistence
     assert "year-to-year persistence cannot be assessed" in persistence
     assert "Observed across collection years; gaps do not establish continuous persistence." not in persistence
+
+
+def test_rep_framework_does_not_classify_sampled_genomes_as_cdc_rep_strains(tmp_path: Path) -> None:
+    output = write_profile_report(
+        {
+            "species": "Klebsiella pneumoniae",
+            "records_count": 3,
+            "coverage": {"available_profiles": 3},
+            "temporal_persistence": [{
+                "group_id": "G1", "observed_years": [2020, 2022, 2024],
+                "interpretation": "Persisting strain established by three sampled years.",
+            }],
+        },
+        directory=tmp_path,
+    )
+    html = output.read_text(encoding="utf-8")
+    persistence = html.split('id="persistence"', 1)[1].split('id="concentration"', 1)[0]
+
+    assert "Recurrence and persistence in sampled genomes (REP-inspired)" in persistence
+    assert "https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html" in persistence
+    assert "Reoccurring" in persistence and "Emerging" in persistence and "Persisting" in persistence
+    assert persistence.count("Not assessed") == 3
+    assert "surveillance denominators" in persistence
+    assert "outbreaks or quiet periods" in persistence
+    assert "consistent illness or uninterrupted circulation" in persistence
+    assert "does not assign official CDC REP designations, including to Klebsiella" in persistence
+    assert "Observed across 3 collection years" in persistence
+    assert "Persisting strain established" not in persistence
+    assert "Stable-group results" not in html
+    assert "Genetic group stability refers to locus-bootstrap co-assignment" in html
 
 
 def test_large_geography_and_network_tables_are_collapsed_and_network_figure_is_first(

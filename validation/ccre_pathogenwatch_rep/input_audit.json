@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "source_files_modified": false,
+  "original_focal_counts": {
+    "ST39": {
+      "focal_count": 36,
+      "resolved_count": 36,
+      "hospital_counts": {
+        "GR03": 4,
+        "GR08": 1,
+        "GR04": 2,
+        "GR01": 7,
+        "GR13": 2,
+        "GR09": 2,
+        "GR18": 2,
+        "GR05": 2,
+        "GR12": 1,
+        "GR07": 1,
+        "GR17": 1,
+        "GR02": 3,
+        "GR15": 6,
+        "GR11": 2
+      },
+      "date_min": "2019-05-03",
+      "date_max": "2019-10-11"
+    },
+    "ST147": {
+      "focal_count": 11,
+      "resolved_count": 11,
+      "hospital_counts": {
+        "GR03": 1,
+        "GR17": 3,
+        "GR04": 3,
+        "GR05": 2,
+        "GR15": 2
+      },
+      "date_min": "2019-05-02",
+      "date_max": "2019-07-10"
+    }
+  },
+  "exact_join_policy": "BioSample to exact ENA run to exact PW external run; UUID and numeric id from same saved PW record. No name or fuzzy joins; nonunique mappings excluded.",
+  "public_join_policy": "Unique public record with BOTH sampleAccession and runAccession equal to the verified focal BioSample and ENA run. No fuzzy or name-only join.",
+  "query_assembly_policy": "Input CSVs omit assembly paths. Retrieve the matching public Pathogenwatch query assembly; a same-isolate public record can have a different assembly from the original collection or ATB.",
+  "subset_selection": "Earliest collection date first, then repeatedly choose remaining record with greatest minimum date distance to already selected; prefer a previously unused hospital while any remain; ties by date, hospital, BioSample. No genetic, cluster, branch or temporal-signal fields used.",
+  "public_evidence_hashes": [
+    {
+      "lineage": "ST39",
+      "catalogue_sha256": "04606980b007ae6b4147337b2ac8304f3e8d3ae617555a033f9f33064a7dcf55",
+      "snapshot_sha256": "7c10818c447333f0e3004b75e86bde9cee9fd1c2ea81dfc9e7a371ca6537d2e4"
+    },
+    {
+      "lineage": "ST147",
+      "raw_details_sha256": "2a02d7f21f0027e977b6094f767c33a2fcf232f30acae764504c883e0f5d1293",
+      "api": "GET https://pathogen.watch/api/genomes/details?id=UUID with no authentication headers"
+    }
+  ],
+  "unresolved_focal_count": 0,
+  "st147_historical_typing": {
+    "records": 7804,
+    "deduplicated_samples": 5620,
+    "scheme": "scgMLST629_S",
+    "scheme_version": "unknown",
+    "export_date": "unavailable",
+    "contains_assemblies": false,
+    "full_typing_catalogue_included_here": false
+  },
+  "input_files": [
+    {
+      "file": "ST39_queries_public_all.csv",
+      "rows": 36,
+      "sha256": "549e8ab5a5f0819ca7720e239dab7bfefc0fd57c7b56d3d4a4286997e69c8ade"
+    },
+    {
+      "file": "ST39_queries_public_subset4.csv",
+      "rows": 4,
+      "sha256": "dcc5b4a450f84c00bb9f6b4b535dd1233adaffb9fc8fd1b988ae0e85c1f53522"
+    },
+    {
+      "file": "ST147_queries_public_all.csv",
+      "rows": 11,
+      "sha256": "a8ab22a4cd4b7cb796a1750eeff498d209acf0a2e2009098374007d4d2a4dc71"
+    },
+    {
+      "file": "ST147_queries_public_subset4.csv",
+      "rows": 4,
+      "sha256": "652afe4377b1690c9c690376b0728fa74dcce9e900b93420592b022a1d135260"
+    }
+  ]
+}

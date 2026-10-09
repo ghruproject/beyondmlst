@@ -438,8 +438,12 @@ def focused_geography_tables(result: Mapping[str, Any]) -> dict:
             "public_catalogue_n": result["sample_units"],
             "focal_n": totals.get("focal_survey", 0),
             "selected_context_n": totals.get("selected_context", 0),
+            "composition_sample_units_n": totals.get("focal_survey", 0)
+            + totals.get("selected_context", 0),
+            "composition_count_note": "Sample-unit entries summed across separately deduplicated focal and public cohorts; overlap is counted in each cohort.",
             "tree_participants_n": totals.get("focal_survey", 0)
             + totals.get("selected_context", 0),
+            "tree_participants_n_note": "Legacy key for geography sample units; not a tree assembly count.",
             "focal_public_overlap_n": len(result["focal_overlap"]),
             "matched_public_n": sum(g["public_n"] for g in lookup),
             "groups_without_public_records": [g["group_id"] for g in lookup if not g["public_n"]],
@@ -594,9 +598,11 @@ def generate_focused_geography(result: Mapping[str, Any], output_dir: str | Path
     audit = focused["audit"]
     fragment = [
         '<section id="context-geography">',
-        f"<p>The tree includes {audit['focal_n']:,} focal samples and {audit['selected_context_n']:,} selected public comparisons "
-        f"({audit['tree_participants_n']:,} genomes in total). The wider catalogue contains {audit['public_catalogue_n']:,} "
-        "quality-checked, deduplicated public sample units; these are a separate population, not extra tree participants.</p>",
+        f"<p>The country summaries include {audit['focal_n']:,} focal sample units and {audit['selected_context_n']:,} selected public sample units "
+        f"({audit['composition_sample_units_n']:,} sample-unit entries across separately deduplicated focal and public cohorts). "
+        "These geography counts apply QC and accession deduplication; they are not the number of genome assemblies in the tree. "
+        f"The wider catalogue contains {audit['public_catalogue_n']:,} quality-checked, deduplicated public sample units; "
+        "these are a separate comparison pool, not extra tree participants.</p>",
     ]
     scope = result.get("scope", {})
     for name, rows, proportions, caption in (

@@ -14,7 +14,15 @@ from chronoclade.report import (
     _neighbourhood_visual,
     _public_health_visual,
     _recombination_visual,
+    report_styles,
 )
+
+
+def _profile_styles() -> str:
+    """Use the established lineage-report design for profile and corrected reports."""
+    return report_styles() + """
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border:1px solid var(--ink);margin:24px 0}.metrics>div{padding:16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}dt{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}dd{margin:6px 0 0;font-size:21px;font-weight:700;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.muted,.empty{color:var(--muted)}.notice,.caution{background:#fff8dc;padding:15px;margin:18px 0}.table-wrap{max-width:100%;overflow:auto;scrollbar-color:var(--blue) #e5e7ec}.table-wrap table{min-width:580px}.table-wrap:focus-visible{outline:3px solid #ffb800;outline-offset:3px}.figures{display:block}.figures figure{margin:28px 0}.figures img{max-height:none;object-fit:contain}.groups{display:block}.group{padding:22px 0;border-top:1px solid var(--line)}.group h3{margin:0 0 12px}.group .metrics{margin:16px 0}.compact-group,.coverage-details{border-top:1px solid var(--line);padding:0;background:#fff}.compact-group summary,.coverage-details summary{cursor:pointer;padding:14px 0;font-weight:700}.compact-group[open]{padding-bottom:18px}.warnings{margin:8px 0}.profile-subsection{margin-top:32px}.profile-subsection h2{font-size:27px}.profile-subsection>p{margin-top:12px}@media(max-width:800px){.table-wrap table{min-width:580px}.metrics{grid-template-columns:1fr}.metrics>div{border-right:0}.table-wrap th:first-child,.table-wrap td:first-child{position:sticky;left:0;background:#fff}.contents{overflow:auto}}
+    """
 
 
 def _mapping(value: object) -> dict[str, Any]:
@@ -213,6 +221,44 @@ def _metric_cards(values: list[tuple[str, object]]) -> str:
     ) + "</dl>"
 
 
+def _rep_framework() -> str:
+    """Describe REP terminology without assigning epidemiological status to genomes."""
+    rows = [
+        {
+            "term": "Reoccurring",
+            "meaning": "Repeated acute outbreaks with intervening periods of little or no illness.",
+            "status": "Not assessed",
+            "reason": "Collection-year observations do not establish outbreaks or quiet periods in surveillance.",
+        },
+        {
+            "term": "Emerging",
+            "meaning": "A previously novel or rare strain causes increasing illness or has that potential.",
+            "status": "Not assessed",
+            "reason": "Selected genome counts provide no surveillance denominators, illness trend or evidence of increasing illness potential.",
+        },
+        {
+            "term": "Persisting",
+            "meaning": "Illness continues consistently over a long period.",
+            "status": "Not assessed",
+            "reason": "Sampling across years does not establish consistent illness or uninterrupted circulation.",
+        },
+    ]
+    return (
+        '<p><a href="https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html">'
+        "CDC's Reoccurring, Emerging, and Persisting (REP) terminology</a> describes patterns of illness. "
+        "ChronoClade does not assign official CDC REP designations, including to Klebsiella. "
+        "Here we report observations in sampled genomes.</p>"
+        '<details class="evidence-files"><summary>REP definitions and evidence needed</summary>'
+        + _table(
+            rows,
+            [("term", "REP term"), ("meaning", "Epidemiological meaning"),
+             ("status", "Status in this analysis"), ("reason", "Why")],
+            empty="REP classification is not assessed.",
+        )
+        + '</details>'
+    )
+
+
 def _group_cards(value: object, *, kind: str, bootstrap_requested: object = None) -> str:
     rows = _records(value)
     if not rows:
@@ -310,9 +356,9 @@ def _group_details(rows: list[dict[str, Any]], *, kind: str) -> str:
                     f"Observed across {year_count} collection years"
                     + (f" ({_text(year_values)})." if year_values else ".")
                 )
-                interpretation = _text(
-                    row.get("interpretation"),
-                    "Observed across collection years; gaps do not establish continuous persistence.",
+                interpretation = (
+                    "Observed across collection years; gaps do not establish continuous persistence. "
+                    "These observations do not establish a reoccurring or persisting strain in the epidemiological sense."
                 )
             elif year_values:
                 summary = f"Observed in one collection year ({_text(year_values[0])}); persistence cannot be assessed."
@@ -501,6 +547,7 @@ def _nearest_neighbour_table(rows: list[dict[str, Any]]) -> str:
     for row in rows:
         item = dict(row)
         item["distance"] = _number(row.get("distance"))
+        item["cohort_id"] = row.get("cohort_id") or row.get("cohort")
         try:
             item["allele_comparison"] = (
                 f"{int(row.get('allele_differences')):,} / {int(row.get('shared_called_loci')):,}"
@@ -512,7 +559,7 @@ def _nearest_neighbour_table(rows: list[dict[str, Any]]) -> str:
         normalized,
         [("query_id", "Query"), ("context_id", "Nearest relative"),
          ("distance", "Normalized distance"), ("allele_comparison", "Allele differences / shared loci"),
-         ("call_overlap", "Call overlap"), ("cohort", "Cohort"), ("country", "Country"), ("year", "Year")],
+         ("call_overlap", "Call overlap"), ("cohort_id", "Comparison group"), ("country", "Country"), ("year", "Year")],
         empty="No nearest relatives were reported.",
     )
 
@@ -647,10 +694,14 @@ def write_profile_report(
     prov = _mapping(provenance)
     paths = _mapping(data.get("paths"))
     focal = data.get("records_count", data.get("sample_count", "Not reported"))
-    heading = _text(data.get("title", "Profile-first analysis"))
+    heading = _text(data.get("title", "Genome comparison"))
     species = data.get("species")
     if species:
-        heading = f"{heading} — {_text(species)}"
+        heading = f"{_text(species).replace('_', ' ')} {_text(data.get('lineage'), '')}".strip()
+    identity_heading = (
+        f"<i>{escape(_text(species).replace('_', ' '))}</i><span>{escape(_text(data.get('lineage'), ''))}</span>"
+        if species else escape(heading)
+    )
     message = ""
     raw_profiles = _mapping(data.get("coverage")).get(
         "available_profiles", _mapping(data.get("coverage")).get("profiles_available")
@@ -677,7 +728,6 @@ def write_profile_report(
     summary_values = [
         ("Input records", focal),
         ("Usable profiles", raw_profiles if raw_profiles is not None else _mapping(data.get("coverage")).get("profiles_available", "Not reported")),
-        ("Stage", stage),
     ]
     context_coverage = _mapping(_mapping(prov.get("coverage")).get("context"))
     public_context_count = context_coverage.get("total")
@@ -723,40 +773,42 @@ def write_profile_report(
         else ""
     )
     sections = [
-        '<header><p class="eyebrow">CHRONOCLADE · PROFILE FIRST</p>'
-        f"<h1>{escape(heading)}</h1><p>Stage: {escape(stage)} · Schema: {escape(_text(data.get('schema_version')))}</p></header>",
-        f'<main>{message}{warnings}<section id="summary"><h2>What the profiles show</h2>{_metric_cards(summary_values)}'
-        f'<p class="muted">Profile assignments describe genetic similarity at the typing scheme used. Stable-group results are reported as two separate questions: persistence across years, and concentration in a particular time and place.</p></section>',
-        f'<section id="coverage"><h2>Coverage and exclusions</h2>{_provenance_notes(prov)}<h3>Query and context inputs</h3>{_input_coverage(prov)}'
-        f'<h3>Public context selection</h3>{_context_funnel(prov)}'
-        f'<h3>Profile analysis</h3>{_coverage(data)}</section>',
-        f'<section id="geography"><h2>Country breakdown</h2>'
+        '<main class="shell"><header class="identity"><div class="identity-mark">ChronoClade · ANALYSIS REPORT</div>'
+        f'<div class="identity-copy"><h1>{identity_heading}</h1><p>{escape(_text(focal))} genomes · Profile comparison</p></div></header>'
+        '<nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#geography">Countries</a><a href="#nearest">Closest relatives</a><a href="#network">Country network</a><a href="#groups">Groups</a><a href="#root-to-tip">Dates</a><a href="#downloads">Methods &amp; files</a></nav>',
+        f'<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{message}{warnings}{_metric_cards(summary_values)}'
+        '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic grouping, observation across collection years, and concentration in a particular time and place are reported separately.</p></div></section>',
+        f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
         f'<h3>Analysed input metadata</h3>{_geography_table(data.get("metadata_geography"), label="Analysed input metadata", include_origin=True)}'
         f'<h3>Frozen public catalogue</h3>{_geography_table(data.get("public_catalogue_geography"), label="Frozen public catalogue", include_origin=False)}'
         f'{legacy_geography}'
         f'{country_figures}'
-        '<p class="muted">Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. The tables above separately summarize resolved input metadata by origin, including rows without profiles, and the full frozen public catalogue. These pools have different denominators. Unknown country and region values remain visible.</p></section>',
-        f'<section id="nearest"><h2>Nearest relatives</h2><p>These rankings are limited to the profiles included in this analysis and their callable shared loci.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</section>',
-        '<section id="figures"><h2>Figures</h2><div class="figures">'
+        '<p class="muted">Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. The tables above separately summarize resolved input metadata by origin, including rows without profiles, and the full frozen public catalogue. These pools have different denominators. Unknown country and region values remain visible.</p></div></section>',
+        f'<section class="stage" id="nearest"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These rankings use the shared cgMLST loci in the analysed profiles.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
+        '<section class="stage" id="figures"><div class="stage-body"><h2>How are the genomes related?</h2><div class="figures">'
         + pcoa_figures
         + tree_figures
-        + "</div><p class=\"muted\">The neighbour-joining tree is a profile-distance view. Branches do not represent time or prove transmission.</p></section>",
-        f'<section id="groups"><h2>Genetic groups</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
-        f'{_group_cards(groups, kind="general", bootstrap_requested=data.get("bootstrap_replicates"))}</section>',
-        f'<section id="persistence"><h2>Persistence across years</h2><p>Groups that recur across sampling years are described here. This measure is separate from concentration in one time and place.</p>{_group_cards(persistence, kind="persistence")}</section>',
-        f'<section id="concentration"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. This measure is separate from persistence across years.</p>{_group_cards(concentration, kind="concentration")}</section>',
-        f'<section id="root-to-tip"><h2>Exploratory root-to-tip screen</h2><p>{escape(root_tip_text.strip())}</p>{_root_to_tip(root_tip)}</section>',
-        f'<section id="network"><h2>Location network</h2><p>Reconstructed location changes depend on the selected rooted tree and supplied metadata. Root fractions report how often a possible change appeared across tested roots; they are not support values, probabilities or proof of transmission or acquisition direction.</p>{_cohort_figures(data.get("cohorts"), directory, "network_figure", "Location network")}{_location_network(data.get("location_network"))}</section>',
-        f'<section id="cohorts"><h2>Cohort trees</h2>{_cohorts(data.get("cohorts"), directory)}</section>',
-        f'<section id="downloads"><h2>Available evidence files</h2>{_download_links(directory, paths)}</section>',
-        '</main><footer>ChronoClade profile-first report</footer>',
+        + "</div><p class=\"muted\">The neighbour-joining tree is a profile-distance view. Branches do not represent time or prove transmission.</p></div></section>",
+        f'<section class="stage" id="network"><div class="stage-body"><h2>Location network</h2><p>Reconstructed location changes depend on the selected rooted tree and supplied metadata. Root fractions report how often a possible change appeared across tested roots; they are not support values, probabilities or proof of transmission or acquisition direction.</p>{_cohort_figures(data.get("cohorts"), directory, "network_figure", "Location network")}{_location_network(data.get("location_network"))}</div></section>',
+        f'<section class="stage" id="groups"><div class="stage-body"><h2>How do the genomes group genetically?</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
+        '<p class="muted">Genetic group stability refers to locus-bootstrap co-assignment. It does not establish recurrence, persistence of illness or an emerging strain.</p>'
+        '<details class="evidence-files"><summary>Inspect genetic groups and bootstrap results</summary>'
+        f'{_group_cards(groups, kind="general", bootstrap_requested=data.get("bootstrap_replicates"))}</details></div></section>',
+        '<section class="stage" id="persistence"><div class="stage-body"><h2>Recurrence and persistence in sampled genomes (REP-inspired)</h2>'
+        f'{_rep_framework()}<h3>Observation across collection years</h3><p>The years represented by each genetic group are described here. Repeated observations do not establish repeated outbreaks or continuous illness.</p>{_group_cards(persistence, kind="persistence")}</div></section>',
+        f'<section class="stage" id="concentration"><div class="stage-body"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. This measure is separate from observation across collection years and does not establish an outbreak.</p>{_group_cards(concentration, kind="concentration")}</div></section>',
+        f'<section class="stage" id="root-to-tip"><div class="stage-body"><h2>Exploratory root-to-tip screen</h2><p>{escape(root_tip_text.strip())}</p>{_root_to_tip(root_tip)}</div></section>',
+        f'<section class="stage" id="coverage"><div class="stage-body"><h2>Coverage and exclusions</h2>{_provenance_notes(prov)}<h3>Query and context inputs</h3>{_input_coverage(prov)}'
+        f'<h3>Public context selection</h3>{_context_funnel(prov)}'
+        f'<h3>Profile analysis</h3>{_coverage(data)}</div></section>',
+        f'<section class="stage" id="cohorts"><div class="stage-body"><h2>Cohort trees</h2>{_cohorts(data.get("cohorts"), directory)}</div></section>',
+        f'<section class="stage" id="downloads"><div class="stage-body"><h2>Available evidence files</h2>{_download_links(directory, paths)}</div></section>',
+        '<footer class="report-close"><div>Generated by ChronoClade. Profile distances, group summaries and source tables are preserved in the supporting files.</div></footer></main>',
     ]
     document = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>""" + escape(heading) + """</title><style>
-:root{font-family:Arial,Helvetica,sans-serif;color:#232634;background:#f6f7fa;font-synthesis:none;--ink:#232634;--purple:#532b72;--teal:#3c7383;--line:#d8dce4;--soft:#eef3f5;--muted:#5b6270}
-*{box-sizing:border-box}body{margin:0;line-height:1.55}header{padding:42px max(22px,calc((100vw - 1100px)/2));background:#fff;border-bottom:1px solid var(--line)}h1{font-size:clamp(1.8rem,4vw,3rem);line-height:1.1;margin:.2rem 0;color:var(--purple)}h2{font-size:1.45rem;margin:0 0 14px;color:var(--purple)}h3{margin:0;color:var(--teal)}p{max-width:82ch}.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.14em;color:var(--teal)}main{max-width:1100px;margin:auto;padding:22px}section{padding:28px;margin:18px 0;background:#fff;border:1px solid var(--line);border-radius:14px}footer{padding:30px;text-align:center;color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0;margin:18px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}.metrics div{padding:14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}dt{color:var(--muted);font-size:.86rem}dd{margin:4px 0 0;font-size:1.15rem;font-weight:700;overflow-wrap:anywhere}.muted,.empty,figcaption{color:var(--muted)}.empty{padding:12px;background:#f4f5f7;border-radius:8px}.notice,.caution{padding:14px 16px;background:#fff4da;border-left:4px solid #b47400;border-radius:4px;margin:14px 0}.table-wrap{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:8px}.table-wrap:focus{outline:3px solid #7db6c5}table{border-collapse:collapse;width:100%;min-width:580px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f2f4f7}tbody tr:last-child>*{border-bottom:0}.figures{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:18px}figure{margin:0;padding:12px;border:1px solid var(--line);border-radius:9px;min-width:0}figure img{display:block;width:100%;max-height:600px;object-fit:contain;background:#fff}figcaption{padding-top:8px}.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:12px}.group{border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}.group .metrics{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}.group .metrics div{padding:9px}.compact-groups{display:grid;gap:8px}.compact-group,.coverage-details{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:#fbfcfd}.compact-group summary,.coverage-details summary{cursor:pointer;color:var(--teal);line-height:1.5}.compact-group[open]{background:#fff}.warnings{margin:8px 0}.caution{background:#fff8ed}a{color:#245d70;text-decoration-thickness:1px;text-underline-offset:3px}a:focus-visible{outline:3px solid #007b9a;outline-offset:3px}ul{padding-left:1.4rem}@media(max-width:600px){main{padding:12px}section{padding:18px;margin:12px 0}header{padding:28px 18px}.table-wrap{font-size:.9rem}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+""" + _profile_styles() + """
 </style></head><body>""" + "\n".join(sections) + "</body></html>"
     output = directory / "profile_report.html"
     output.write_text(document, encoding="utf-8")
@@ -793,8 +845,9 @@ def write_stage_index(output: Path, stages: dict) -> Path:
     links = "".join(entries) or '<li class="empty">No stage reports are available yet.</li>'
     page = (
         '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<title>ChronoClade staged reports</title><style>body{font:16px/1.5 Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 18px;color:#232634}h1{color:#532b72}li{padding:12px;border-bottom:1px solid #ddd}a{color:#245d70}</style>'
-        '<h1>ChronoClade staged reports</h1><ul>' + links + '</ul></html>'
+        '<title>ChronoClade analysis reports</title><style>' + _profile_styles() + '</style><body><main class="shell">'
+        '<header class="identity"><div class="identity-mark">ChronoClade · RUN SUMMARY</div><div class="identity-copy"><h1>Analysis reports</h1><p>Choose a completed analysis.</p></div></header>'
+        '<section class="stage"><div class="stage-body"><ul>' + links + '</ul></div></section></main></body></html>'
     )
     index = output / "index.html"
     index.write_text(page, encoding="utf-8")
@@ -830,13 +883,13 @@ def write_corrected_report(report: dict, *, directory: Path) -> Path:
     )
     if temporal_status == "not_assessed":
         temporal_section = (
-            '<section id="dating"><h2>Dating</h2><p><strong>Not assessed in this stage.</strong> '
-            f"{escape(temporal_reason)}</p><p>No temporal test or calendar tree is implied by this report.</p></section>"
+            '<section class="stage" id="dating"><div class="stage-body"><h2>Dating</h2><p><strong>Not assessed in this stage.</strong> '
+            f"{escape(temporal_reason)}</p><p>No temporal test or calendar tree is implied by this report.</p></div></section>"
         )
     else:
         temporal_section = (
-            '<section id="dating"><h2>Dating status</h2>'
-            f"<p>{escape(temporal_status)}: {escape(temporal_reason)}</p></section>"
+            '<section class="stage" id="dating"><div class="stage-body"><h2>Dating status</h2>'
+            f"<p>{escape(temporal_status)}: {escape(temporal_reason)}</p></div></section>"
         )
 
     context_values = [
@@ -868,7 +921,7 @@ def write_corrected_report(report: dict, *, directory: Path) -> Path:
                 f'<li><a href="{escape(relative.as_posix(), quote=True)}">{escape(label)}</a></li>'
             )
     stage_link = ""
-    fast_candidates = [directory / "../../fast/profile_report.html", directory / "../../fast/index.html"]
+    fast_candidates = [directory / prefix / name for prefix in ("../../fast", "../../../../fast") for name in ("profile_report.html", "index.html")]
     for candidate in fast_candidates:
         if candidate.is_file():
             from os.path import relpath
@@ -884,17 +937,18 @@ def write_corrected_report(report: dict, *, directory: Path) -> Path:
     document = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
 <title>ChronoClade corrected report — {escape(species)} {escape(lineage)}</title><style>
-:root{{font-family:Arial,Helvetica,sans-serif;color:#232634;background:#f6f7fa;--purple:#532b72;--teal:#3c7383;--line:#d8dce4;--muted:#5b6270}}*{{box-sizing:border-box}}body{{margin:0;line-height:1.55}}header{{padding:38px max(22px,calc((100vw - 1100px)/2));background:#fff;border-bottom:1px solid var(--line)}}main{{max-width:1100px;margin:auto;padding:22px}}section{{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;margin:18px 0}}h1,h2{{color:var(--purple)}}h1{{font-size:clamp(1.8rem,4vw,3rem);line-height:1.1;margin:.2rem 0}}h2{{font-size:1.4rem;margin:0 0 12px}}.eyebrow{{font-size:.78rem;font-weight:700;letter-spacing:.13em;color:var(--teal)}}.metrics{{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));border:1px solid var(--line);border-radius:9px;overflow:hidden}}.metrics div{{padding:13px;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}}dt{{font-size:.85rem;color:var(--muted)}}dd{{margin:5px 0 0;font-weight:700;overflow-wrap:anywhere}}a{{color:#245d70;text-underline-offset:3px}}figure img{{width:100%;height:auto}}.muted{{color:var(--muted)}}.notice{{padding:14px;background:#fff4da;border-left:4px solid #b47400}}@media(max-width:600px){{header{{padding:28px 18px}}main{{padding:12px}}section{{padding:18px}}}}
-</style></head><body><header><p class="eyebrow">CHRONOCLADE · CORRECTED GENETIC ANALYSIS</p>
-<h1>{escape(species)} {escape(lineage)}</h1><p>Corrected genetic relationships, public context and recombination evidence</p>{stage_link}</header><main>
-<section id="summary"><h2>Analysis summary</h2>{_metric_cards(context_values)}<p class="muted">Country composition and corrected-tree counts use the records available to this analysis. Public-catalogue totals, where reported, have a separate denominator.</p></section>
-<section id="countries"><h2>Country and region breakdown</h2>{selection}{geography}<p class="muted">Recorded locations describe submitted metadata. They do not establish where infection was acquired or population prevalence.</p></section>
-<section id="relationships"><h2>Corrected genomic relationships</h2>{neighbours}</section>
-<section id="recombination"><h2>Recombination evidence</h2>{recombination}</section>
-<section id="interpretation"><h2>Genomic interpretation</h2>{public_summary}{public_evidence}</section>
-<section id="network"><h2>Location network</h2>{network}<p class="muted">Location changes depend on the rooted tree and supplied sample metadata. They include reconstruction uncertainty and are not proof of transmission or acquisition direction.</p></section>
+{_profile_styles()}
+</style></head><body><main class="shell"><header class="identity"><div class="identity-mark">ChronoClade · ANALYSIS REPORT</div><div class="identity-copy">
+<h1><i>{escape(species.replace("_", " "))}</i><span>{escape(lineage)}</span></h1><p>{escape(_text(count))} genomes · Recombination-adjusted analysis</p>{stage_link}</div></header>
+<nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#countries">Countries</a><a href="#relationships">Closest relatives</a><a href="#network">Country network</a><a href="#interpretation">Interpretation</a><a href="#dating">Dating</a><a href="#outputs">Methods &amp; files</a></nav>
+<section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{_metric_cards(context_values)}<p class="muted">Country composition and corrected-tree counts use the records available to this analysis. Public-catalogue totals, where reported, have a separate denominator.</p></div></section>
+<section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2>{selection}{geography}<p class="muted">Recorded locations describe submitted metadata. They do not establish where infection was acquired or population prevalence.</p></div></section>
+<section class="stage" id="relationships"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2>{neighbours}</div></section>
+<section class="stage" id="recombination"><div class="stage-body"><h2>Recombination evidence</h2>{recombination}</div></section>
+<section class="stage" id="interpretation"><div class="stage-body"><h2>Genomic interpretation</h2>{public_summary}{public_evidence}</div></section>
+<section class="stage" id="network"><div class="stage-body"><h2>What location changes does the tree suggest?</h2>{network}<p class="muted">Location changes depend on the rooted tree and supplied sample metadata. They include reconstruction uncertainty and are not proof of transmission or acquisition direction.</p></div></section>
 {temporal_section}
-<section id="outputs"><h2>Available files</h2>{links_section}</section></main></body></html>"""
+<section class="stage" id="outputs"><div class="stage-body"><h2>Available files</h2>{links_section}</div></section><footer class="report-close"><div>Generated by ChronoClade. The supporting files preserve the corrected tree and comparison results.</div></footer></main></body></html>"""
     output = directory / "corrected_report.html"
     output.write_text(document, encoding="utf-8")
     return output
