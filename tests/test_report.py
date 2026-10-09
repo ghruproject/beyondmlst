@@ -1,7 +1,9 @@
+import json
 import zipfile
 from pathlib import Path
 
 from chronoclade.report import (
+    _context_selection_summary,
     assess_temporal_signal,
     write_fast_lineage_report,
     write_lineage_report,
@@ -497,3 +499,42 @@ def test_passed_date_test_without_tree_does_not_claim_dated_outputs(tmp_path: Pa
     assert "The configured date test passed, but a dated-tree figure was not produced." in text
     assert "Dated-tree figures, node-date intervals" not in text
     assert "Time scaling was not performed" not in text
+
+
+def test_selection_summary_keeps_catalogue_and_tree_populations_separate(tmp_path: Path) -> None:
+    audit = {
+        "context_source": "pathogenwatch",
+        "same_st_accessions": 7807,
+        "deduplication": {"retained_units": 5647},
+        "qc_pass_candidates": 5644,
+        "dated_hq_metadata_candidates": 5372,
+        "metadata_filtered_candidates": 5372,
+        "candidate_pool": 8,
+        "screened_candidates": 8,
+        "selected_contexts": 4,
+        "nearest_per_focal": 1,
+        "seed": 7,
+    }
+    (tmp_path / "context_selection.json").write_text(json.dumps(audit))
+    text = _context_selection_summary(tmp_path)
+    for count in ("7,807", "5,647", "5,644", "5,372"):
+        assert count in text
+    assert "wider catalogue supplies the country figures, including undated samples" in text
+    assert "counts a shared neighbour once" in text
+    assert "Nearest means nearest within the screened pool" in text
+    assert "seed 7" in text
+    assert "country and collection-year groups" in text
+    assert 'href="context_selection.json"' in text
+    assert "See all filtering steps and counts" in text
+
+
+def test_selection_summary_does_not_invent_missing_audit_counts(tmp_path: Path) -> None:
+    assert _context_selection_summary(tmp_path) == ""
+    path = tmp_path / "context_selection.json"
+    path.write_text(json.dumps({"context_source": "ncbi", "same_st_accessions": 7807}))
+    assert _context_selection_summary(tmp_path) == ""
+    path.write_text(json.dumps({"context_source": "pathogenwatch", "selected_contexts": 4}))
+    text = _context_selection_summary(tmp_path)
+    assert "<strong>4</strong> selected comparisons" in text
+    assert "Matching public records" not in text
+    assert "seed" not in text

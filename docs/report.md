@@ -17,6 +17,15 @@ interpretations must not be treated as epidemiological findings.
 
 ## Countries and genetic groups
 
+For Pathogenwatch runs with a selection audit, the report shows the matching
+record count, eligible sample count, screened pool and final comparison count
+before the country figures. Expand the filtering steps to see quality checks,
+duplicate removal, focal exclusions, usable-date requirements and metadata
+filters. The download pool is sampled across country/year groups with a fixed
+seed; closest screened candidates are retained first, with shared neighbours
+counted once, and remaining places filled by background comparisons. Pool and
+comparison limits are run settings, not fixed biological thresholds.
+
 Country counts first compare focal samples with the context genomes selected for
 the tree. A separate figure describes public genomes in the cgLIN groups matching
 the focal samples. cgLIN codes describe genetic groups at increasingly specific

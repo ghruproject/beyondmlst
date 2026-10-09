@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import zipfile
 from html import escape
 from pathlib import Path
@@ -452,6 +453,101 @@ def _timetree_section(
       </div>
     </section>
     """
+
+
+def _context_selection_summary(directory: Path) -> str:
+    """Explain the recorded Pathogenwatch selection funnel without inventing counts."""
+    path = directory / "context_selection.json"
+    if not path.is_file():
+        return ""
+    audit = json.loads(path.read_text(encoding="utf-8"))
+    if audit.get("context_source") != "pathogenwatch":
+        return ""
+    deduplication = audit.get("deduplication", {})
+    stages = [
+        (
+            "Matching public records",
+            audit.get("same_st_accessions"),
+            "Same species and sequence type; multiple records may represent one biological sample.",
+        ),
+        (
+            "Quality-passing public samples",
+            deduplication.get("retained_units"),
+            "Quality checks applied and duplicate records collapsed by sample accession. This wider catalogue supplies the country figures, including undated samples.",
+        ),
+        (
+            "After excluding focal samples",
+            audit.get("qc_pass_candidates"),
+            "Your focal samples are removed from the candidate comparisons so they cannot be selected as their own neighbours.",
+        ),
+        (
+            "With usable collection dates",
+            audit.get("dated_hq_metadata_candidates"),
+            "Samples without a usable date are excluded from this dated analysis; they remain in the wider country catalogue.",
+        ),
+        (
+            "After requested metadata filters",
+            audit.get("metadata_filtered_candidates"),
+            "Any requested country, year, host or isolation-source restrictions are applied.",
+        ),
+        (
+            "Downloaded screening pool",
+            audit.get("candidate_pool"),
+            "A bounded pool is sampled across country and collection-year groups before genetic screening.",
+        ),
+        (
+            "Successfully screened",
+            audit.get("screened_candidates"),
+            "Downloaded genomes with usable SKA comparisons to the focal samples.",
+        ),
+        (
+            "Public comparisons in the final tree",
+            audit.get("selected_contexts"),
+            "Nearest screened candidates are retained first; remaining places are filled across country and year groups.",
+        ),
+    ]
+    # Older or incomplete audits still show only their recorded stages.
+    rows = "".join(
+        f'<tr><td data-label="Selection stage">{escape(label)}</td>'
+        f'<td data-label="Count"><strong>{count:,}</strong></td>'
+        f'<td data-label="What this means">{escape(description)}</td></tr>'
+        for label, count, description in stages
+        if isinstance(count, int) and not isinstance(count, bool)
+    )
+    if not rows:
+        return ""
+    nearest = audit.get("nearest_per_focal")
+    seed = audit.get("seed")
+    settings = ""
+    if isinstance(nearest, int) and isinstance(seed, int):
+        settings = (
+            f"The selection requests up to {nearest:,} closest comparison genomes per focal sample, "
+            "counts a shared neighbour once, then fills the remaining places with background "
+            "comparisons. Country/year groups are visited in rounds using a seeded shuffle "
+            f"(seed {seed}); rerunning the same frozen inputs and settings reproduces the selection."
+        )
+    headline = " → ".join(
+        f"<strong>{count:,}</strong> {escape(label)}"
+        for label, count in (
+            ("matching records", audit.get("same_st_accessions")),
+            ("eligible samples", audit.get("metadata_filtered_candidates")),
+            ("screened", audit.get("screened_candidates")),
+            ("selected comparisons", audit.get("selected_contexts")),
+        )
+        if isinstance(count, int) and not isinstance(count, bool)
+    )
+    table = (
+        "<table><thead><tr><th>Selection stage</th><th>Count</th><th>What this means</th></tr></thead><tbody>"
+        + rows
+        + "</tbody></table>"
+    )
+    return f"""<section class="card" id="context-selection"><h3>How were the public comparisons selected?</h3>
+      <p>{headline}.</p>
+      <p>The initial pool is balanced across country and collection-year groups, then screened for genetic similarity. Closest comparisons are retained first, with remaining places filled by background samples.</p>
+      <p class="guardrail">Nearest means nearest within the screened pool, not the entire public database.</p>
+      <details class="evidence-files"><summary>See all filtering steps and counts</summary><p>{escape(settings)}</p>{_table_region(table, label="Public comparison selection")}
+      <p>This subsample is not a random prevalence survey; country figures describe the recorded public samples, not national disease burden.</p>
+      <p><a href="context_selection.json">Download the complete selection audit</a></p></details></section>"""
 
 
 def _context_section(context: dict[str, object], directory: Path) -> str:
@@ -991,7 +1087,7 @@ def write_lineage_report(
     <p>{escape(timing_boundary)}</p>
     <details class="terms"><summary>Terms used in this report</summary><p><strong>Focal genomes</strong> are the samples you supplied. <strong>Public genomes</strong> are comparison samples from the source database. A <strong>SNP</strong> is a difference at one DNA position. <strong>cgLIN</strong> groups genomes by a hierarchical core-genome typing code; a shared code is a grouping aid, not proof of transmission. Countries describe recorded sample collection locations, not inferred routes of spread.</p></details>
   </div></section>
-  <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples, selected public comparisons, and the wider public groups.</p><p>The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes.</p>{_context_geography_visual(directory)}</div></section>
+  <section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2><p class="question">Your focal samples, selected public comparisons, and the wider public groups.</p><p>The wider comparison uses cgLIN genetic groups from the full public catalogue. These groups show country composition; exact closest-relative rankings below use SNP and tree distances among analysed genomes.</p>{_context_selection_summary(directory)}{_context_geography_visual(directory)}</div></section>
   <section class="stage" id="relatives"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These comparisons cover the genomes included in this analysis. They cannot identify the closest genome in the entire public catalogue or prove direct transmission.</p>{neighbourhood_visual}</div></section>
   <section class="stage" id="interpretation"><div class="stage-body"><h2>What pattern is consistent with these genomes?</h2>{public_health_summary}<p class="guardrail">Genetic similarity and country records alone do not prove direct transmission, local circulation, or a definitive number of introductions. Interpret these results alongside patient, place and sampling information.</p><details class="evidence-files"><summary>Biological interpretation: evidence and sensitivity checks</summary>{public_health_evidence}</details></div></section>
   <section class="stage" id="dating"><div class="stage-body"><h2>Can this analysis estimate when ancestors existed?</h2><div class="overall {escape(status)}"><b>{escape(timing_label)}</b></div><p>{escape(timing_boundary)}</p><p>{escape(str(assessment["reason"]))}</p>
@@ -1149,7 +1245,7 @@ header,section{{display:block}}.mark{{padding:16px 22px;overflow-wrap:anywhere}}
 </style></head><body><main><header><div class="mark">ChronoClade<br>FAST SCREEN</div><div class="header-body"><h1><i>{species}</i><br>{lineage}</h1><p>This is a triage report. It uses an uncorrected fast tree to decide whether a full recombination-aware analysis is worth prioritising. It does not estimate a dated phylogeny or infer circulation and introductions.</p><div class="status {status_class}">{escape(next_action)}</div></div></header>
 <nav class="contents" aria-label="Report topics"><a href="#countries">Countries</a><a href="#relatives">Closest relatives</a><a href="#fast-dating">Date screen</a><a href="#fast-methods">Methods</a></nav>
 {_demonstration_banner(report)}
-<section id="countries"><div class="body"><h2>Where were the samples collected?</h2><p>Country summaries describe collection records and cgLIN groups in the public catalogue. The catalogue comparison population is larger than the genomes in the screening tree.</p>{_context_geography_visual(directory)}</div></section>
+<section id="countries"><div class="body"><h2>Where were the samples collected?</h2><p>Country summaries describe collection records and cgLIN groups in the public catalogue. The catalogue comparison population is larger than the genomes in the screening tree.</p>{_context_selection_summary(directory)}{_context_geography_visual(directory)}</div></section>
 <section id="relatives"><div class="body"><h2>Which analysed genomes are closest relatives?</h2><p>The fast screen uses an uncorrected tree. Corrected closest-relative evidence requires the full analysis.</p></div></section>
 <details id="fast-methods"><summary>Recombination screening methods and files</summary><section><div class="number">1<small>RECOMBINATION</small></div><div class="body"><div class="stage-head"><div><h2>Is there a fast PHI signal that warrants recombination correction?</h2><p>PhiPack Profile tests for incompatibility within bounded, reference-ordered blocks.</p></div><strong class="decision {recombination_class}">{recombination_decision}</strong></div><div class="metrics"><div><small>Blocks tested</small><b>{int(recombination.get("tested_core_blocks", 0))}</b></div><div><small>PHI-positive blocks</small><b>{significant_blocks}</b></div><div><small>Minimum p-value</small><b>{minimum_p_text}</b></div></div><p>{boundary}</p><p class="note">{localisation_limit} {multiple_testing_limit} This adapts Parsnp's PhiPack Profile settings to fixed 250 kb blocks of the SKA reference-ordered alignment. Unlike Parsnp's locally collinear blocks, these divisions have no biological meaning.</p><details><summary>Screen output and inputs</summary>{recombination_downloads}</details></div></section></details>
 <div id="fast-dating"><h2>Can the sampling dates support a full dating analysis?</h2></div>
