@@ -771,7 +771,7 @@ def test_explicit_frozen_cglin_survives_query_typing_and_context_live_exports(
     )
     assert exported == ["A", "C"]
     assert result["context"][0]["source_genome_id"] == "C"
-    assert result["context"][0]["profile_pool_selection_reason"] == "lineage_priority:q"
+    assert result["context"][0]["profile_pool_selection_reason"] == "adaptive_cglin_level_5"
     for row in result["queries"] + result["context"]:
         assert row["cglin_raw"] == "1_2_3_4_5_6_7_8_9_10"
         assert row["cglin_scheme_version"] == "unknown"

@@ -451,9 +451,17 @@ def run(
         typer.Option(
             "--profile-limit",
             min=0,
-            help="Maximum public contexts in the profile analysis; queries retained separately",
+            help="Public comparison limit for inputs without adaptive cgLIN context; 0 disables public context",
         ),
     ] = 500,
+    tree_limit: Annotated[
+        int, typer.Option("--tree-limit", min=2,
+                          help="Tips shown per fast NJ tree; all inputs and nearest ties are retained")
+    ] = 80,
+    lin_min_context: Annotated[
+        int, typer.Option("--lin-min-context", min=1,
+                          help="Public samples required per input LIN prefix before narrowing context")
+    ] = 20,
     context_size: Annotated[
         int,
         typer.Option(
@@ -501,6 +509,8 @@ def run(
             typing_config=typing_config,
             cglin_export=cglin_export,
             profile_limit=profile_limit,
+            tree_limit=tree_limit,
+            lin_min_context=lin_min_context,
             context_size=context_size,
             nearest_per_query=nearest_per_query,
             include_genomes=include_genome,

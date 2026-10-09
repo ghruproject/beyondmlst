@@ -33,6 +33,8 @@ def test_accessions_label_tree_but_preserve_distance_and_tree_identity(tmp_path)
     assert "SRR32641190 | Country unknown | Date unknown" in svg
     assert "Input genomes" in svg and "Public comparisons" in svg
     assert "#2166ac" in svg and "#666666" in svg
+    assert "Nearest public relatives (ties included)" in svg
+    assert "#e66101" in svg
     assert "Inner" not in svg
     assert "SAMN46159676" in Path(result["paths"]["sample_labels"]).read_text()
 
@@ -49,6 +51,10 @@ def test_categorical_distance_ties_and_separate_temporal_outputs(tmp_path):
     assert len(result["nearest_neighbours"]) == 2
     assert all(row["allele_differences"] == 1 for row in result["nearest_neighbours"])
     assert all(row["tied_neighbours"] == 2 for row in result["nearest_neighbours"])
+    svg = Path(result["cohorts"][0]["tree_figure"]).read_text()
+    assert "Nearest public relatives (ties included)" in svg
+    # The two nearest public tips and the legend use the orange star outline.
+    assert svg.count("stroke: #e66101") >= 3
     assert result["temporal_persistence"][0]["observed_years"] == [2020, 2021]
     assert result["time_place_concentration"][0]["largest_cell_fraction_of_annotated"] == 1 / 3
     assert result["root_to_tip"][0]["points"][2]["precision"] == "year"
@@ -197,3 +203,17 @@ def test_impossible_future_dates_retained_but_excluded_from_time_analysis(tmp_pa
     assert neighbour["date_status"] == "future_collection_date"
     assert neighbour["cohort_id"] == "cohort_1"
     assert any("future collection dates" in warning for warning in result["cohorts"][0]["warnings"])
+
+
+def test_tree_limit_retains_nearest_ties_without_limiting_distance_search(tmp_path):
+    rows = [record("q", origin="local")]
+    rows += [record(f"near{i}", [2, 1, 1, 1]) for i in range(3)]
+    rows += [record(f"far{i}", [2, 2, 2, 2]) for i in range(4)]
+    result = analyse_profiles(rows, output=tmp_path, tree_limit=3, bootstrap_replicates=0)
+    assert result["coverage"]["comparable_pairs"] == 28
+    assert {r["context_id"] for r in result["nearest_neighbours"]} == {"near0", "near1", "near2"}
+    cohort = result["cohorts"][0]
+    assert set(cohort["tree_display_sample_ids"]) == {"q", "near0", "near1", "near2"}
+    assert len(cohort["sample_ids"]) == 8
+    assert "far3" in Path(cohort["tree_path"]).read_text()
+    assert "far3" not in Path(cohort["tree_figure"]).read_text()
