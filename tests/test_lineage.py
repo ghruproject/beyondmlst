@@ -47,6 +47,96 @@ def test_dated_tree_keeps_the_root_used_for_temporal_testing(tmp_path: Path, mon
     assert observed["inputs"] == (files.clock_dir / "rerooted.newick", files.metadata)
 
 
+def test_corrected_stage_and_insufficient_date_finish_skip_temporal_analysis(
+    tmp_path: Path, monkeypatch
+) -> None:
+    from types import SimpleNamespace
+
+    from chronoclade.lineage import _run_lineage
+    from chronoclade.metadata import Sample
+
+    samples = [
+        Sample(
+            sample_id,
+            tmp_path / f"{sample_id}.fasta",
+            date,
+            "UK",
+            "Klebsiella pneumoniae",
+            "ST147",
+            "local",
+        )
+        for sample_id, date in (("A", "2020"), ("B", "2021"), ("C", ""))
+    ]
+    observed = []
+
+    def run_case(monkeypatch, output: Path, mode: str):
+        monkeypatch.setattr(
+            "chronoclade.lineage.select_reference",
+            lambda members: SimpleNamespace(assembly=tmp_path / "reference.fa"),
+        )
+        monkeypatch.setattr("chronoclade.lineage._write_lineage_inputs", lambda *args: None)
+        monkeypatch.setattr("chronoclade.lineage.context_evidence", lambda *args, **kwargs: {})
+        monkeypatch.setattr(
+            "chronoclade.lineage._run_core_phylogeny",
+            lambda files, *args: (files.tree, files.filtered_alignment, {}),
+        )
+        monkeypatch.setattr("chronoclade.lineage.complete_alignment_sites", lambda path: 1000)
+        monkeypatch.setattr("chronoclade.lineage.alignment_length", lambda path: 1200)
+        monkeypatch.setattr(
+            "chronoclade.lineage.write_recombination_evidence",
+            lambda **kwargs: {"inferred_importation_intervals": 0},
+        )
+        monkeypatch.setattr(
+            "chronoclade.lineage.build_public_health_evidence",
+            lambda **kwargs: {"scenario": {"code": "indeterminate"}},
+        )
+        monkeypatch.setattr(
+            "chronoclade.lineage.build_neighbourhood_evidence", lambda **kwargs: {}
+        )
+        monkeypatch.setattr("chronoclade.lineage._run_location_tree", lambda *args: None)
+        monkeypatch.setattr(
+            "chronoclade.lineage.build_country_network", lambda *args, **kwargs: {}
+        )
+        monkeypatch.setattr(
+            "chronoclade.profile_report.write_corrected_report",
+            lambda report, *, directory: observed.append((mode, report["temporal_status"], report["temporal_signal_reason"])),
+        )
+        monkeypatch.setattr("chronoclade.lineage.write_supporting_bundle", lambda path: path)
+
+        def unexpected(*args, **kwargs):
+            raise AssertionError("Temporal analysis must not run in this stage")
+
+        monkeypatch.setattr("chronoclade.lineage._run_observed_clock", unexpected)
+        monkeypatch.setattr("chronoclade.lineage._run_dated_tree", unexpected)
+        monkeypatch.setattr("chronoclade.lineage._temporal_signal", unexpected)
+        item = {"slug": mode, "species": "Klebsiella pneumoniae", "lineage": "ST147"}
+        return _run_lineage(
+            item,
+            samples,
+            output=output,
+            threads=1,
+            randomisation_jobs=1,
+            randomisations=100,
+            temporal_p_value=0.05,
+            seed=1,
+            force=False,
+            context_manifest_rows=[],
+            mode=mode,
+            date_randomisation_method="root_to_tip",
+        )
+
+    corrected = run_case(monkeypatch, tmp_path / "corrected", "corrected")
+    assert corrected["temporal_status"] == "not_assessed"
+    assert corrected["temporal_signal_reason"] == "Dating is assessed only in the finish stage."
+    assert not (tmp_path / "corrected" / "corrected" / "temporal_signal.json").exists()
+
+    finish = run_case(monkeypatch, tmp_path / "finish", "full")
+    assert finish["temporal_status"] == "not_assessed"
+    assert "Fewer than three usable distinct collection dates" in finish["temporal_signal_reason"]
+    assert not (tmp_path / "finish" / "full" / "temporal_signal.json").exists()
+    assert len(observed) == 2
+
+
 def test_unknown_locations_are_missing_traits_not_countries(tmp_path: Path) -> None:
     import csv
     from chronoclade.lineage import _write_lineage_inputs
@@ -191,3 +281,27 @@ def test_lineage_removes_stale_typing_when_audit_does_not_declare_it(tmp_path, m
     (destination / "native_public_typing.json").write_text("stale result")
     context_evidence([sample], [], directory=destination)
     assert not (destination / "native_public_typing.json").exists()
+
+
+def test_future_collection_dates_excluded_and_clock_uses_validated_dates(tmp_path, monkeypatch):
+    from datetime import date
+    from chronoclade.lineage import _dated_members, _run_observed_clock
+    from chronoclade.metadata import Sample
+
+    valid = Sample("valid", tmp_path / "valid.fa", "2020", "UK", "Klebsiella pneumoniae", "ST147", "local")
+    future = Sample("future", tmp_path / "future.fa", str(date.today().year + 10),
+                    "UK", "Klebsiella pneumoniae", "ST147", "context")
+    assert _dated_members([valid, future]) == [valid]
+    assert future.collection_date == str(date.today().year + 10)
+    files = LineageFiles.in_directory(tmp_path)
+    files.metadata.write_text("raw original metadata")
+    clock_dates = tmp_path / "clock_dates.csv"
+    clock_dates.write_text("sample_id,collection_date\nvalid,2020\nfuture,\n")
+    calls = []
+    monkeypatch.setattr("chronoclade.lineage._run_command",
+                        lambda command, **kwargs: calls.append((command, kwargs["inputs"])))
+    _run_observed_clock(files, tmp_path / "tree.nwk", 100, False)
+    _run_dated_tree(files, 100, False)
+    assert all(str(clock_dates) in command and clock_dates in inputs
+               for command, inputs in calls)
+    assert files.metadata.read_text() == "raw original metadata"

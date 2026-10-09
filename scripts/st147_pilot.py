@@ -209,6 +209,8 @@ def main(argv=None) -> int:
         command = prefix + [
             "run",
             str(context / "combined_metadata.csv"),
+            "--mode",
+            "finish",
             "--context-manifest",
             str(context / "context_manifest.tsv"),
             "--output",

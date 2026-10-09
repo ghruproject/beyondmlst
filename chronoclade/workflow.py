@@ -27,6 +27,7 @@ from chronoclade.report import write_summary_report
 
 TOOLS_BY_MODE = {
     "full": ("ska", "iqtree", "ClonalFrameML", "treetime"),
+    "corrected": ("ska", "iqtree", "ClonalFrameML", "treetime"),
     "fast": ("ska", "iqtree", "Profile", "treetime"),
 }
 REQUIRED_TOOLS = tuple(dict.fromkeys(tool for tools in TOOLS_BY_MODE.values() for tool in tools))
@@ -136,7 +137,7 @@ def run_workflow(
     """Run every lineage through alignment, recombination and dating stages."""
 
     if mode not in TOOLS_BY_MODE:
-        raise WorkflowError("mode must be 'full' or 'fast'")
+        raise WorkflowError("mode must be 'full', 'corrected' or 'fast'")
     if date_randomisation_method not in {"root_to_tip", "full_tree"}:
         raise WorkflowError("date randomisation method must be 'root_to_tip' or 'full_tree'")
     if mode == "fast" and date_randomisation_method != "root_to_tip":

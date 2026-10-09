@@ -153,6 +153,7 @@ The actual command was:
 
 ```bash
 chronoclade run tmp/st147-pilot/context/combined_metadata.csv \
+  --mode finish \
   --context-manifest tmp/st147-pilot/context/context_manifest.tsv \
   --output tmp/st147-pilot/results --threads 2 --lineage-jobs 1 \
   --randomisation-jobs 2 --date-randomisations 19 --min-samples 4 --seed 7

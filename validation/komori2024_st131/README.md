@@ -58,6 +58,7 @@ Run the full analysis:
 ```bash
 pixi run chronoclade run \
   validation/komori2024_st131/verified/metadata.csv \
+  --mode finish \
   --output validation/komori2024_st131/verified/results \
   --threads 8 \
   --lineage-jobs 1 \

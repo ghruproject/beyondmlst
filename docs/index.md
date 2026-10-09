@@ -1,67 +1,61 @@
 # ChronoClade
 
-ChronoClade tests for measurable evolution in longitudinal bacterial genome
-collections. It starts with a recombination-corrected phylogeny, asks whether
-genetic divergence is associated with sampling time, and compares the observed
-clock fit with a null distribution made by permuting sample dates.
-
-A positive rate and a date-randomisation p-value at or below the chosen threshold
-permit time scaling with TreeTime. Collections that fail this test retain their
-clonal phylogeny and distance analysis, but ChronoClade does not report inferred
-node dates for them.
+ChronoClade compares a query collection with public genomic context, then
+builds deeper genomic and temporal evidence in stages. The default `fast` mode
+uses public typing profiles and metadata; it does not download context
+assemblies or run a molecular clock. Use `full` for corrected assembly-based
+genomic analysis and `finish` when dates should be assessed.
 
 ## Questions the workflow can address
 
 Within a species and lineage, ChronoClade can help an investigation examine:
 
-- whether isolates sampled months or years apart belong to the same local clade;
-- whether local isolates are split into separate parts of the tree;
-- whether public genomes change the interpretation of those groups;
-- whether the sampling dates support an evolutionary rate and dated tree; and
-- how much uncertainty surrounds inferred ancestral dates.
+- which public profiles are closest to the query samples, and how much profile
+  coverage supports that comparison;
+- which descriptive genomic groups occur in the available profiles;
+- whether a group recurs across years (persistence) and, separately, whether
+  observations cluster in a particular time-and-place cell (concentration);
+- whether corrected genomic evidence changes the interpretation; and
+- whether the sampling dates support an evolutionary rate and dated tree.
 
-These are population-level questions. The workflow does not reconstruct direct
-transmission or count importation events.
+These are population-level questions. Profile proximity, groups and location
+models do not establish direct transmission or count importation events.
 
-## Analysis outline
+## Stages
 
 ```text
-assemblies and sample dates
+fast (default): public typing profiles + metadata
+  coverage, country/region summaries, PCoA, exploratory NJ, groups,
+  persistence across years, time/place concentration, profile neighbours
           |
           v
-whole-genome alignment and maximum-likelihood tree
+full: selected context assemblies + all focal assemblies
+  recombination-corrected tree, SNP neighbours, country/network evidence
           |
           v
-ClonalFrameML recombination correction
-          |
-          +---- clonal SNP distances and local/context topology
-          |
-          v
-root-to-tip regression
-          |
-          v
-date-randomisation test
-          |
-          +---- no temporal signal: stop time scaling
-          |
-          v
-TreeTime dated phylogeny with node-date intervals
+finish: temporal tests and gated time tree
+  only when dates and temporal evidence support assessment
 ```
+
+The `fast` and `full` stages run without a clock. Profile-stage root-to-tip
+plots, when available, are exploratory and do not gate or estimate dates. The
+location network shows modelled, potentially root-dependent state changes; it
+is not evidence of transmission.
 
 [Install ChronoClade](installation.md){ .md-button .md-button--primary }
 [Follow the ST239 example](worked-example.md){ .md-button }
+[Read the staged workflow guide](staged-workflow.md)
 
 ## Current scope
 
-ChronoClade accepts assembled bacterial genomes. It analyses each
-species/lineage combination independently and can use public context from
-Pathogenwatch for *K. pneumoniae* with the `klebsiella` scheme. Other context
-organisms and schemes return an explicit unsupported-provider error. The main
-analysis accepts local genomes for any validated species/lineage combination.
-The current implementation uses SKA2, IQ-TREE, ClonalFrameML and TreeTime in a
-Pixi environment.
+Profile availability and public metadata depend on the configured provider and
+account access. The fast report preserves the full catalogue and analysis
+subset denominators and reports missing profiles explicitly. `full` and
+`finish` require accessible assemblies for the focal samples and selected
+context. `finish` is the only public run mode that assesses temporal signal;
+it writes a dated tree only when the temporal gate passes. See the
+[staged-workflow guide](staged-workflow.md) for current inputs and limitations.
 
-The software is an early working release. Its temporal estimates have been
-checked against a published *Staphylococcus aureus* ST239 dataset. Context
-selection and public-health interpretation still require review by an analyst
-who knows the sampling frame and local epidemiology.
+The software is an early working release. Context selection and
+public-health interpretation still require review by an analyst who knows the
+sampling frame and local epidemiology.
