@@ -183,3 +183,21 @@ def test_real_frozen_st147_public_country_and_coverage_hand_counts():
         if summary['cohort'] == 'focal_survey':
             assert summary['total_units'] == summary['assigned_units'] == 3
             assert summary['unresolved_units'] == 0
+
+
+def test_real_frozen_st147_selected_country_tables_match_published_exports():
+    import gzip
+    import csv
+    import io
+    base = Path(__file__).resolve().parents[1] / 'validation/st147_pathogenwatch'
+    frozen = json.loads(gzip.decompress((base / 'frozen_catalogue.json.gz').read_bytes()))
+    result = geography_tables(frozen['rows'], focal_rows=frozen['focal_rows'],
+                              selected_source_ids=frozen['selected_source_ids'], scope=frozen['scope'])
+    published = list(csv.DictReader(io.StringIO(gzip.decompress((base / 'country_composition.csv.gz').read_bytes()).decode())))
+    assert len(published) == len(result['rows'])
+    for expected, actual in zip(published, result['rows']):
+        assert expected == {key: str(value) for key, value in actual.items()}
+    for depth in (5, 6, 7):
+        summary = next(s for s in result['summaries'] if s['cohort'] == 'selected_context' and s['depth'] == depth)
+        assert summary['total_units'] == 4
+    assert set(frozen['selected_source_ids']).isdisjoint({r['source_genome_id'] for r in frozen['focal_rows']})

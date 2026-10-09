@@ -112,3 +112,41 @@ Regenerate all figures offline using `scripts/st147_pilot.py --stage figures
 validation/st147_pathogenwatch/offline_figures`. Its payload hash is checked before
 rendering. `test_real_frozen_st147_public_country_and_coverage_hand_counts` verifies
 the measured denominators, country subset, assignment coverage and focal overlap.
+
+## Completed bounded preparation
+
+The final live preparation used seed **7**, candidate pool **8**, maximum context
+**4**, one nearest candidate per focal, and two threads. All eight candidate
+assemblies validated and had SKA comparisons; four were selected. The retained
+public focal samples matched their imported cgLIN assignments at depths 5–7, and
+were excluded from candidate selection through their accession aliases.
+
+The selected context IDs/reasons are:
+
+| Source genome ID | Country | Selection reason |
+|---|---|---|
+| aBbUpWyNcgnBayYVXLFaX4 | Italy | nearest to all three focal samples |
+| oSavMhBThwcTN6GSL6Rg9q | Italy | balanced background, 2019 |
+| 5ifnG8SSwbwRCiwbs5Wahp | Portugal | balanced background, 2009 |
+| 9Cg5tSRuj3WekAkohxtNF8 | Nigeria | balanced background, 2016 |
+
+The final ledger materialised **45,436,661 bytes** across eight candidate assemblies:
+seven cache hits and one fresh download (two requests, aggregate recorded per-record
+time 3.554 seconds). This is not a cold-cache transfer benchmark. Focal acquisition
+materialised **17,713,980 bytes**, with six requests and aggregate recorded
+per-record time 12.551 seconds. Source-ID mapping, expected provider checksums and
+local SHA-256s are retained in the run ledger/manifest.
+
+Audited downstream losses after accession deduplication/focal exclusions were 74
+QC-fail/unknown units, 272 undated/invalid units, zero explicit epidemiological
+filter losses, 5,364 units outside the bounded pool, zero download/SKA-comparison
+failures, and four excluded by the final selection limit. These denominators refer
+to selection stages, distinct from the full-public geography denominator.
+
+`frozen_catalogue.json.gz` now includes the four selected source IDs/reasons and
+selection seed. Committed `country_composition.csv.gz`, `.tsv.gz` and
+`country_composition_matrix.csv.gz` are the final full-public, selected-context and
+focal figure source tables. The real-freeze test compares every exported row against
+offline regeneration, in addition to the hand-counted subset. The compact fixture's
+internal payload SHA-256 is
+`9fff151f4d91916ed05169b50b9ecdb3268a53c28142043e2519d0a53d54e3dc`.
