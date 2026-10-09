@@ -318,6 +318,7 @@ def generate_context_geography(catalogue_rows: Iterable[Mapping[str, Any]], outp
                     fragments.append('<p>No resolved comparable cgLIN groups at this depth.</p>')
                 continue
             # Fixed page size retains singletons without making labels unreadable.
+            panel.sort(key=lambda r: (-r['denominator'], r['prefix_key'], r['group_label'], r['country']))
             labels = list(dict.fromkeys((r['prefix_key'], r['group_label']) for r in panel))
             for page in range(0, len(labels), 24):
                 page_labels = set(labels[page:page + 24])
