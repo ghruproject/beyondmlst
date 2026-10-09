@@ -31,17 +31,10 @@ co-assignment is descriptive support for those candidate groups. If no valid
 bootstrap replicates are available, support is unknown, not evidence against a
 group. A singleton has no within-group pair support to estimate.
 
-Genetic group stability under locus resampling, observation across collection
-years and concentration in time/place are reported separately. The
-**Recurrence and persistence in sampled genomes (REP-inspired)** section draws
-on [CDC's REP terminology](https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html)
-without assigning epidemiological classifications. Reoccurring, emerging and
-persisting status are not assessed: genome sampling alone cannot establish
-outbreaks separated by quiet surveillance periods, increasing illness or its
-potential, or consistent illness over time. No official CDC REP designation is
-assigned to Klebsiella or any other analysed group.
+Genetic group stability under locus resampling and concentration in time/place
+are reported separately.
 
-The collection-year summary lists the observed years in the group; gaps do not
+The machine-readable collection-year summary lists the observed years in the group; gaps do not
 demonstrate uninterrupted presence. Concentration summarizes year/location
 cells among records with both date and place metadata; it does not test for an
 outbreak or establish transmission. Both summaries describe the sample

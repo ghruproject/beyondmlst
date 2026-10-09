@@ -54,21 +54,8 @@ genomic results.
 
 ## Read the profile report
 
-The report uses **Recurrence and persistence in sampled genomes (REP-inspired)**
-to connect descriptive observations with [CDC's Reoccurring, Emerging, and
-Persisting (REP) framework](https://www.cdc.gov/foodborne-outbreaks/php/rep-strains/index.html).
-CDC's framework concerns patterns of illness in enteric bacterial strains.
-ChronoClade does not assign official CDC REP designations, including to
-Klebsiella.
-
-| REP term | Epidemiological meaning | Status in the genome analysis |
-| --- | --- | --- |
-| Reoccurring | Repeated acute outbreaks separated by periods of little or no illness | Not assessed: collection-year observations do not establish outbreaks or quiet surveillance periods |
-| Emerging | A previously novel or rare strain increasingly causes illness or has that potential | Not assessed: selected genome counts provide no surveillance denominators, illness trend or evidence of increasing illness potential |
-| Persisting | Illness continues consistently over a long period | Not assessed: sampled presence across years does not establish consistent illness or uninterrupted circulation |
-
 Three questions remain separate. **Genetic group stability** describes
-locus-bootstrap co-assignment. **Observation across collection years** lists
+locus-bootstrap co-assignment. The machine-readable **collection-year summary** lists
 the years represented by a group. **Concentration in time and place** reports
 the observed year/location cells and their share among records with both kinds
 of metadata. The latter two describe sampled records. Gaps do not establish
