@@ -55,6 +55,8 @@ def test_ensemble_comparison_keeps_unsupported_and_absent_runs(tmp_path, native_
     report = (tmp_path / "comparison/report.html").read_text()
     assert "shared anchor genomes" in report and "· years" not in report
     assert "Selected samples" not in report
+    assert "<h2>Ensemble assessment</h2>" in report
+    assert '<div class="verdict not_supported">' not in report
 
 
 def test_time_rejects_fabricated_gate_in_rehashed_manifest(tmp_path, native_stubs):

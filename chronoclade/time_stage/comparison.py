@@ -179,16 +179,20 @@ def compare_time_runs(ensemble_manifest, run_manifests, *, output, cluster_snp_c
     }
     write_json(output / "comparison.json", result)
 
+    def display(value):
+        if value is None:
+            return "Unavailable"
+        if isinstance(value, bool):
+            return "Yes" if value else "No"
+        if isinstance(value, float):
+            return format(value, ".6g")
+        return str(value)
+
     def table(columns, items):
         heads = "".join("<th>" + escape(label) + "</th>" for _, label in columns)
         body = "".join(
             "<tr>"
-            + "".join(
-                "<td>"
-                + escape(str(item.get(key) if item.get(key) is not None else "Unavailable"))
-                + "</td>"
-                for key, _ in columns
-            )
+            + "".join("<td>" + escape(display(item.get(key))) + "</td>" for key, _ in columns)
             + "</tr>"
             for item in items
         )

@@ -84,7 +84,9 @@ def write_report(
     sections.extend(
         [
             (
-                "Temporal assessment",
+                "Ensemble assessment"
+                if assessment["code"] == "sensitivity"
+                else "Temporal assessment",
                 f"<p><strong>{escape(assessment['code'])}</strong>: {escape(assessment['reason'])}</p><details><summary>Saved assessment</summary><pre>{escape(json.dumps(assessment, indent=2))}</pre></details>"
                 + extra,
             ),
@@ -105,10 +107,12 @@ def write_report(
         if supported
         else "Temporal signal not supported"
     )
+    verdict_class = "supported" if supported else "not_supported"
     if assessment["code"] == "sensitivity":
         verdict_title = "Selection sensitivity assessment"
+        verdict_class = ""
     verdict = (
-        f'<div class="verdict {"supported" if supported else "not_supported"}">'
+        f'<div class="verdict {verdict_class}">'
         f"<strong>{escape(verdict_title)}</strong><p>{escape(assessment['reason'])}</p></div>"
     )
     body = "".join(
