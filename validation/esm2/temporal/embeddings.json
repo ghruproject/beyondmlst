@@ -1,0 +1,214 @@
+{
+  "actual_device": "mps",
+  "artifacts": {
+    "embeddings": {
+      "dtype": "float32",
+      "path": "embeddings.b952baa1033a9c57cc45.npz",
+      "sha256": "d8de30bf7d257407ecbf842f305bd57e2e90de0a7ec48e428e27a8b566819493",
+      "shape": [
+        6,
+        320
+      ]
+    }
+  },
+  "counts": {
+    "excluded_records": 0,
+    "input_records": 20,
+    "retained_records": 20,
+    "unique_proteins": 6
+  },
+  "device_fallback_reason": null,
+  "exclusions": [],
+  "experimental": true,
+  "input": {
+    "format": "protein-fasta",
+    "path": "proteins.fasta",
+    "records": 20,
+    "sha256": "caecceba68b032ae53c7f20febb2bba4ebf4617a5687b5838d0a4ab3ab7cc6fb"
+  },
+  "mapping": [
+    {
+      "header": "SIM_01__hfq_S",
+      "length": 102,
+      "protein_id": "913cbfb76b794c50785cd612666a94f595945212b428ad836da7b0c5f3baad4b",
+      "record_id": "SIM_01__hfq_S"
+    },
+    {
+      "header": "SIM_01__KP1_2532_S",
+      "length": 111,
+      "protein_id": "cc63b13604aa0325e64f469ef8be14594ba01def8626c9971d8044c11c9e583b",
+      "record_id": "SIM_01__KP1_2532_S"
+    },
+    {
+      "header": "SIM_01__mtr_S",
+      "length": 117,
+      "protein_id": "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+      "record_id": "SIM_01__mtr_S"
+    },
+    {
+      "header": "SIM_01__KP1_4861_S",
+      "length": 128,
+      "protein_id": "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+      "record_id": "SIM_01__KP1_4861_S"
+    },
+    {
+      "header": "SIM_02__hfq_S",
+      "length": 102,
+      "protein_id": "913cbfb76b794c50785cd612666a94f595945212b428ad836da7b0c5f3baad4b",
+      "record_id": "SIM_02__hfq_S"
+    },
+    {
+      "header": "SIM_02__KP1_2532_S",
+      "length": 111,
+      "protein_id": "cc63b13604aa0325e64f469ef8be14594ba01def8626c9971d8044c11c9e583b",
+      "record_id": "SIM_02__KP1_2532_S"
+    },
+    {
+      "header": "SIM_02__mtr_S",
+      "length": 117,
+      "protein_id": "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+      "record_id": "SIM_02__mtr_S"
+    },
+    {
+      "header": "SIM_02__KP1_4861_S",
+      "length": 128,
+      "protein_id": "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+      "record_id": "SIM_02__KP1_4861_S"
+    },
+    {
+      "header": "SIM_03__hfq_S",
+      "length": 102,
+      "protein_id": "6bb5860a13b57d09a8d1df21314df057b6f690ef9f3eb4e746d54ef7a5f2bd93",
+      "record_id": "SIM_03__hfq_S"
+    },
+    {
+      "header": "SIM_03__KP1_2532_S",
+      "length": 111,
+      "protein_id": "cc63b13604aa0325e64f469ef8be14594ba01def8626c9971d8044c11c9e583b",
+      "record_id": "SIM_03__KP1_2532_S"
+    },
+    {
+      "header": "SIM_03__mtr_S",
+      "length": 117,
+      "protein_id": "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+      "record_id": "SIM_03__mtr_S"
+    },
+    {
+      "header": "SIM_03__KP1_4861_S",
+      "length": 128,
+      "protein_id": "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+      "record_id": "SIM_03__KP1_4861_S"
+    },
+    {
+      "header": "SIM_04__hfq_S",
+      "length": 102,
+      "protein_id": "6bb5860a13b57d09a8d1df21314df057b6f690ef9f3eb4e746d54ef7a5f2bd93",
+      "record_id": "SIM_04__hfq_S"
+    },
+    {
+      "header": "SIM_04__KP1_2532_S",
+      "length": 111,
+      "protein_id": "f1799ae9ab05a06c590e040627d2713cbc2211ca40b234c276ae69d91a5b938e",
+      "record_id": "SIM_04__KP1_2532_S"
+    },
+    {
+      "header": "SIM_04__mtr_S",
+      "length": 117,
+      "protein_id": "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+      "record_id": "SIM_04__mtr_S"
+    },
+    {
+      "header": "SIM_04__KP1_4861_S",
+      "length": 128,
+      "protein_id": "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+      "record_id": "SIM_04__KP1_4861_S"
+    },
+    {
+      "header": "SIM_05__hfq_S",
+      "length": 102,
+      "protein_id": "913cbfb76b794c50785cd612666a94f595945212b428ad836da7b0c5f3baad4b",
+      "record_id": "SIM_05__hfq_S"
+    },
+    {
+      "header": "SIM_05__KP1_2532_S",
+      "length": 111,
+      "protein_id": "f1799ae9ab05a06c590e040627d2713cbc2211ca40b234c276ae69d91a5b938e",
+      "record_id": "SIM_05__KP1_2532_S"
+    },
+    {
+      "header": "SIM_05__mtr_S",
+      "length": 117,
+      "protein_id": "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+      "record_id": "SIM_05__mtr_S"
+    },
+    {
+      "header": "SIM_05__KP1_4861_S",
+      "length": 128,
+      "protein_id": "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+      "record_id": "SIM_05__KP1_4861_S"
+    }
+  ],
+  "parameters": {
+    "invalid_policy": "error",
+    "max_length": 1022,
+    "protein_id_method": "sha256-normalised-amino-acids",
+    "requested_device": "mps",
+    "requested_model": "8M",
+    "sequence_normalisation": "uppercase",
+    "token_budget": 4096,
+    "truncation": false
+  },
+  "protein_ids": [
+    "913cbfb76b794c50785cd612666a94f595945212b428ad836da7b0c5f3baad4b",
+    "cc63b13604aa0325e64f469ef8be14594ba01def8626c9971d8044c11c9e583b",
+    "0c1a6152703bf9c2bf9f19611fb7dbe5134e907fef6aa7243818b328404c7652",
+    "e8fecb8c8d7631857f0c7af0113081853319e3080c5a0b9cc0c19cfb90d40962",
+    "6bb5860a13b57d09a8d1df21314df057b6f690ef9f3eb4e746d54ef7a5f2bd93",
+    "f1799ae9ab05a06c590e040627d2713cbc2211ca40b234c276ae69d91a5b938e"
+  ],
+  "provenance": {
+    "actual_device": "mps",
+    "checkpoint_source": "explicit-local",
+    "cpu_threads": 6,
+    "device_name": "arm64",
+    "dimension": 320,
+    "fair_esm": "2.0.0",
+    "model": "esm2_t6_8M_UR50D",
+    "model_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "pooling": "residue-mean-excluding-bos-eos-pad-v1",
+    "precision": "float32",
+    "python": "3.11.14",
+    "representation_layer": 6,
+    "token_budget": 4096,
+    "torch": "2.14.1"
+  },
+  "runtime": {
+    "accelerator_memory": {
+      "allocated_bytes": 30153216,
+      "driver_allocated_bytes": 99287040
+    },
+    "batches": 1,
+    "cache_hits": 0,
+    "elapsed_seconds": 2.3827977078035474,
+    "embedded_proteins": 6,
+    "inference_seconds": 0.8039803327992558,
+    "invalid_cache_entries": 0,
+    "model_load_seconds": 1.4842305425554514,
+    "padded_tokens": 780,
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "python": "3.11.14",
+    "residues_embedded": 671
+  },
+  "schema": "chronoclade.esm2.protein-embeddings",
+  "schema_version": 1,
+  "scope": "unique-protein-embeddings",
+  "sequence_lengths": {
+    "maximum": 128,
+    "mean": 111.83333333333333,
+    "median": 111.0,
+    "minimum": 102
+  },
+  "software_version": "0.1.0",
+  "status": "complete"
+}

@@ -21,6 +21,7 @@ from chronoclade.sample_labels import sample_labels
 from chronoclade.metadata_dates import date_interval as _date_interval
 from chronoclade.context_refinement import _allele, _lineage, _loci, _profile
 from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
+from chronoclade.temporal_diagnostics import date_regression
 
 
 MAX_RECORDS = 1500
@@ -665,27 +666,30 @@ def analyse_profiles(
                 cohort["warnings"].append(
                     "NJ contains negative branches; retained and flagged, not biologically interpreted."
                 )
-            dates, lengths = [], []
-            points = []
-            for row in rows:
-                date = _date_interval(row)
-                if date:
-                    length = tree.distance(row["sample_id"])
-                    points.append({"sample_id": row["sample_id"], **date, "root_to_tip": length})
-                    dates.append((date["year_min"] + date["year_max"]) / 2)
-                    lengths.append(length)
-            slope = correlation = None
-            if len(dates) >= 3 and np.ptp(dates) > 0 and np.ptp(lengths) > 0:
-                slope = float(np.polyfit(dates, lengths, 1)[0])
-                correlation = float(np.corrcoef(dates, lengths)[0, 1])
+            diagnostic_tips = {tip.name: tip for tip in tree.get_terminals()}
+            diagnostic = date_regression(
+                [{"sample_id": row["sample_id"],
+                  "collection_date": row.get("collection_date") or row.get("collection_year"),
+                  "date_start": row.get("date_start"), "date_end": row.get("date_end"),
+                  "date_precision": row.get("date_precision"),
+                  "country": row.get("country"),
+                  "label": summary["sample_labels"].get(row["sample_id"], row["sample_id"]),
+                  "role": "input" if row.get("origin") in {"local", "query", "focal", "input"}
+                  else "context", "root_to_tip": float(tree.distance(diagnostic_tips[row["sample_id"]]))}
+                 for row in rows],
+                distance_field="root_to_tip", distance_units="cgMLST mismatch fraction",
+                label="Existing profile NJ root-to-tip",
+            )
+            points = diagnostic["points"]
             summary["root_to_tip"].append(
                 {
                     "cohort_id": cohort_id,
                     "root": names[0],
-                    "points": points,
-                    "midpoint_date_slope": slope,
-                    "midpoint_date_pearson_r": correlation,
-                    "interpretation": "Exploratory, arbitrary-root NJ diagnostic using date interval midpoints; not a temporal-signal gate.",
+                    **diagnostic,
+                    "midpoint_date_slope": diagnostic["slope"],
+                    "midpoint_date_pearson_r": diagnostic["pearson_r"],
+                    "interpretation": "Exploratory, arbitrary-root NJ diagnostic. "
+                    + diagnostic["interpretation"],
                 }
             )
             fig, ax = plt.subplots(figsize=(7, 5))

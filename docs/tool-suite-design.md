@@ -432,6 +432,39 @@ Keep the module experimental until the relevant within-lineage performance is
 demonstrated. Model inference and structure prediction are distinct; this
 module needs embeddings, not ESMFold structure prediction.
 
+### Descriptive collection-date comparison
+
+The implemented optional report accepts a prepared dataset, validated saved
+protein embeddings and explicit sample–locus–record mappings. It preserves the
+established full-report stylesheet. Automatic allele acquisition/translation,
+genome clustering and selection remain outside this implementation.
+
+Keep two named panels and their scientific units distinct. The conventional
+cgMLST panel shows rooted NJ root-to-tip distance in mismatch fractions on a
+fixed common callable-locus denominator; its descriptive slope is mismatch
+fraction/year. The protein panel shows mean per-locus cosine distance to a fixed
+real reference sample on a frozen callable protein panel; its slope is mean
+locus cosine distance/year. Use the same real reference as the cgMLST tip root
+where that reference belongs to the cohort. Reference and locus-panel selection
+are independent of dates. Compatible cgMLST cohorts are plotted separately and
+unavailable cohorts retain their status rather than borrowing another tree.
+
+Share location colours and distinguish input/context samples by marker shape and
+outline. Show collection-date interval bars, midpoint fitted lines and residuals.
+Retain undated finite distances separately and export every sample row, missing
+locus and date exclusion. Require three distinct date midpoints for a fit;
+constant distances retain slope zero and explicitly undefined correlation/R².
+Record prepared/mapped/eligible/dated counts, root/reference selection, callable
+loci, model/checkpoint/runtime provenance, and scheme/database versions. Provide
+CSV/JSON evidence and SVG/PNG figures beside the offline HTML report.
+
+The comparison is exploratory and has no formal temporal-signal gate,
+confidence intervals, p-values or embedding-based ancestry/TMRCA. Date bars
+describe collection precision. Synonymous DNA changes producing identical
+proteins are invisible to embeddings; a protein distance/date slope is not a
+substitution rate. Formal temporal testing and dating remain the conventional
+assembly-based tree/time route.
+
 ### Laptop benchmark and SLURM execution
 
 Implement the optional embedding engine separately from its performance study.
