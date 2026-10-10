@@ -80,12 +80,15 @@ def test_fast_uses_assembly_selection_and_retains_full_pool_evidence(tmp_path):
     )
     selection = analysis["shared_selection"]
     assert selection["selected_context_ids"][:2] == ["c", "a"]
-    assert len(selection["selected_context_ids"]) == 3
+    assert len(selection["selected_context_ids"]) == 5
+    assert selection["budget_overrun"] == 2
     assert selection["selected_sample_ids"] == ["q"] + selection["selected_context_ids"]
     assert analysis["tree_display_selection"]["displayed_sample_ids"] == sorted(selection["selected_sample_ids"])
-    assert analysis["cohorts"][0]["tree_display_limit"] == 4
+    assert analysis["cohorts"][0]["tree_display_limit"] == 6
     assert selection["available_context_ids"] == ["a", "b", "c", "d", "e"]
-    assert selection["decisions"][0] == {"sample_id": "c", "reason": "user_requested"}
+    assert selection["decisions"][0]["sample_id"] == "c"
+    assert selection["decisions"][0]["reason"] == "user_requested"
+    assert selection["decisions"][0]["mandatory"]
     assert analysis["context_selections"] == [dict(species="Klebsiella pneumoniae", lineage="ST39", **selection)]
     assert json.loads((tmp_path / "context_selection.json").read_text()) == selection
     assert json.loads((tmp_path / "profile_provenance.json").read_text())["shared_selection"] == selection

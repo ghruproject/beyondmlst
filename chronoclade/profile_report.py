@@ -885,6 +885,7 @@ def write_profile_report(
     directory: Path,
     stage: str = "fast",
     provenance: dict | None = None,
+    report_label: str = "Fast profile report",
 ) -> Path:
     """Write an offline HTML report, with the profile summary before relatives."""
 
@@ -954,7 +955,7 @@ def write_profile_report(
         "are additional records selected from the source database to provide context."
     )
     hero_scope = (
-        f"{query_count} input genomes · {public_context_count} public comparisons · Fast profile report"
+        f"{query_count} input genomes · {public_context_count} public comparisons · {report_label}"
         if query_count is not None and public_context_count is not None else
         f"{focal} genomes · Profile comparison"
     )

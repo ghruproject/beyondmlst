@@ -41,8 +41,11 @@ nav:
       - Installation: installation.md
       - Input data: input-data.md
       - Running an analysis: running.md
+      - Independent preparation: prepare.md
+      - Independent cgMLST: cgmlst.md
       - Profile-first stages: staged-workflow.md
       - Optional ESM2 embeddings: esm2.md
+      - ESM2 DNA catalogue inputs: esm2-sequence-input.md
   - Worked example: worked-example.md
   - Pathogenwatch context:
       - Frozen metadata: pathogenwatch.md

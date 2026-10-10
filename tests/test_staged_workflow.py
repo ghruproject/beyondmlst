@@ -45,10 +45,8 @@ def test_selection_fair_neighbours_then_metadata_and_diversity(tmp_path):
     selected, audit = select_assembly_context(queries, contexts, analysis, size=6, seed=11)
     assert len(selected) == 6
     assert [r["sample_id"] for r in selected[:2]] == ["c1", "c4"]
-    assert any(
-        r["selection_reason"] == "genetic_group_time_region_representative" for r in selected
-    )
-    assert any(r["selection_reason"] == "cgmlst_diversity_representative" for r in selected)
+    assert {r["sample_id"] for r in selected}.issuperset({"c1", "c2", "c3", "c4", "c5"})
+    assert len(audit["required_nearest_context_ids"]) == 5
     assert audit["queries_without_selected_comparable_neighbour"] == []
     reversed_selection, reversed_audit = select_assembly_context(
         list(reversed(queries)), list(reversed(contexts)), analysis, size=6, seed=11
@@ -66,8 +64,9 @@ def test_pins_aliases_budget_and_background_without_profiles(tmp_path):
     assert [r["sample_id"] for r in selected] == ["a", "b"]
     assert all(r["selection_reason"] == "user_requested" for r in selected)
     assert audit["queries_without_selected_comparable_neighbour"] == ["q"]
-    with pytest.raises(WorkflowError, match="exceed"):
-        select_assembly_context([], contexts, {}, size=1, include=["a", "b"])
+    pinned, pinned_audit = select_assembly_context([], contexts, {}, size=1, include=["a", "b"])
+    assert [row["sample_id"] for row in pinned] == ["a", "b"]
+    assert pinned_audit["budget_overrun"] == 1
     with pytest.raises(WorkflowError, match="uniquely"):
         select_assembly_context([], contexts, {}, include=["missing"])
     assert select_assembly_context([], contexts, {}, size=0)[0] == []
