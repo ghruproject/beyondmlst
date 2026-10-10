@@ -27,6 +27,11 @@ def test_unsupported_time_needs_no_native_tools_or_tree_rebuild(
     )
     result = run_time(tmp_path / "tree/tree.json", output=tmp_path / "time")
     assert result["dating_status"] == "unsupported" and result["dated_tree"] is None
+    report = (tmp_path / "time" / result["report"]["path"]).read_text()
+    assert "<h1>Dating assessment</h1>" in report
+    assert "dated tree unavailable" in report and "· years" not in report
+    assert report.index("Dating unsupported") < report.index("Selected samples")
+    assert "Biological tree and location history" not in report
     assert run_time(tmp_path / "tree/tree.json", output=tmp_path / "time") == result
     assert native_stubs == ["corrected"]
     assert json.loads((tmp_path / "tree/tree.json").read_text()) == tree
@@ -47,6 +52,9 @@ def test_ensemble_comparison_keeps_unsupported_and_absent_runs(tmp_path, native_
     assert comparison["sensitivity"]["rate"]["assessable_runs"] == 0
     assert "not confidence intervals" in comparison["interpretation"]
     assert comparison["target_pair_agreement"] == []
+    report = (tmp_path / "comparison/report.html").read_text()
+    assert "shared anchor genomes" in report and "· years" not in report
+    assert "Selected samples" not in report
 
 
 def test_time_rejects_fabricated_gate_in_rehashed_manifest(tmp_path, native_stubs):

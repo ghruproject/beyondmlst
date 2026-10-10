@@ -73,7 +73,7 @@ def run_time(tree_manifest, *, output, force=False, allow_unsupported=False):
             "dating_status": "unsupported",
             "dated_tree": None,
             "dating_override": bool(allow_unsupported and not assessment["supported"]),
-            "branch_units": "years",
+            "branch_units": None,
             "clock_confidence": None,
         }
         figures = []
@@ -132,6 +132,7 @@ def run_time(tree_manifest, *, output, force=False, allow_unsupported=False):
             write_timetree_figures(job, confidence)
             result.update(
                 dating_status="dated",
+                branch_units="years",
                 dated_tree=reference(output, files.time_tree),
                 clock_confidence=confidence,
                 root_policy="saved tree root retained",
@@ -151,7 +152,7 @@ def run_time(tree_manifest, *, output, force=False, allow_unsupported=False):
             output,
             write_report(
                 job / "report.html",
-                title="Time-scaled phylogeny",
+                title="Time-scaled phylogeny" if result["dated_tree"] else "Dating assessment",
                 result=result,
                 rows=rows,
                 network=network,

@@ -234,6 +234,7 @@ def compare_time_runs(ensemble_manifest, run_manifests, *, output, cluster_snp_c
     write_report(
         output / "report.html",
         title="Selection sensitivity",
+        overview=f"{len(anchors)} shared anchor genomes · {len(runs)} requested selections",
         result={
             "selected_sample_ids": anchors,
             "temporal_assessment": {

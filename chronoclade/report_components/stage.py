@@ -9,7 +9,9 @@ from chronoclade.report_components.styles import report_styles
 from chronoclade.location_network.widget import interactive_network_html, widget_assets
 
 
-def write_report(path, *, title, result, rows=(), network=None, figures=(), extra=""):
+def write_report(
+    path, *, title, result, rows=(), network=None, figures=(), extra="", overview=None
+):
     path = Path(path)
     counts = "".join(
         f"<h3>{escape(field.title())}</h3><p>"
@@ -71,22 +73,49 @@ def write_report(path, *, title, result, rows=(), network=None, figures=(), extr
             network, "selected-tree-network"
         )
         assets = widget_assets()
-    sections = [
-        ("Selected samples", counts + '<div class="table-scroll">' + table + "</div>"),
-        ("Biological tree and location history", plots + network_html),
-        (
-            "Temporal assessment",
-            f"<p><strong>{escape(assessment['code'])}</strong>: {escape(assessment['reason'])}</p><details><summary>Saved assessment</summary><pre>{escape(json.dumps(assessment, indent=2))}</pre></details>"
-            + extra,
-        ),
-        ("Downloads", "<ul>" + downloads + "</ul>"),
-    ]
+    sections = []
+    if rows:
+        sections.append(
+            ("Selected samples", counts + '<div class="table-scroll">' + table + "</div>")
+        )
+    if plots or network_html:
+        sections.append(("Biological tree and location history", plots + network_html))
+    sections.extend(
+        [
+            (
+                "Temporal assessment",
+                f"<p><strong>{escape(assessment['code'])}</strong>: {escape(assessment['reason'])}</p><details><summary>Saved assessment</summary><pre>{escape(json.dumps(assessment, indent=2))}</pre></details>"
+                + extra,
+            ),
+            ("Downloads", "<ul>" + downloads + "</ul>"),
+        ]
+    )
+    if overview is None:
+        overview = f"{len(result['selected_sample_ids'])} exact selected genomes"
+        if result.get("branch_units"):
+            overview += " · " + result["branch_units"]
+        elif result.get("dating_status") == "unsupported":
+            overview += " · dated tree unavailable"
+    supported = assessment.get("supported", False)
+    verdict_title = (
+        "Dating unsupported"
+        if result.get("dating_status") == "unsupported"
+        else "Temporal signal supported"
+        if supported
+        else "Temporal signal not supported"
+    )
+    if assessment["code"] == "sensitivity":
+        verdict_title = "Selection sensitivity assessment"
+    verdict = (
+        f'<div class="verdict {"supported" if supported else "not_supported"}">'
+        f"<strong>{escape(verdict_title)}</strong><p>{escape(assessment['reason'])}</p></div>"
+    )
     body = "".join(
         f'<section class="stage"><div class="stage-index"><span>{index}</span></div><div class="stage-body"><h2>{escape(label)}</h2>{content}</div></section>'
         for index, (label, content) in enumerate(sections, 1)
     )
     path.write_text(
-        f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)}</title><style>{report_styles()}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow:auto}}</style></head><body><main class="shell"><header class="identity"><div class="identity-mark">CHRONOCLADE</div><div class="identity-copy"><h1>{escape(title)}</h1><p>{len(result["selected_sample_ids"])} exact selected genomes · {escape(result.get("branch_units", "years"))}</p></div></header>{body}</main>{assets}</body></html>',
+        f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{escape(title)}</title><style>{report_styles()}pre{{white-space:pre-wrap;overflow-wrap:anywhere;max-height:500px;overflow:auto}}</style></head><body><main class="shell"><header class="identity"><div class="identity-mark">CHRONOCLADE</div><div class="identity-copy"><h1>{escape(title)}</h1><p>{escape(overview)}</p>{verdict}</div></header>{body}</main>{assets}</body></html>',
         encoding="utf-8",
     )
     return path
