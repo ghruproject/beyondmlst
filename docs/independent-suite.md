@@ -42,7 +42,7 @@ locus catalogue.
 
 The partition index links each disjoint block report and its selections. Trees
 and ordination use the complete comparable profile block. Ordination views switch
-between dataset, country and date colours without changing coordinates; marker
+between dataset, country, host, genetic-group and date colours without changing coordinates; marker
 shape distinguishes input from public comparison genomes in every view.
 
 Local groups use an explicit complete-linkage distance threshold, with threshold

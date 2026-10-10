@@ -48,6 +48,10 @@ def esm2_command(
     genome_analysis: Annotated[bool, typer.Option(help="Run the complete genome exploration/selection stage")] = False,
     lin_level: Annotated[int, typer.Option(min=5, max=7)] = 5,
     hiercc_level: Annotated[str | None, typer.Option()] = None,
+    fetch_context: Annotated[bool, typer.Option(help="Retrieve matching public profiles before genome exploration")] = False,
+    public_typing: Annotated[Path | None, typer.Option(help="Public profile export")] = None,
+    cglin_export: Annotated[Path | None, typer.Option(help="Compatible lineage export")] = None,
+    catalogues: Annotated[Path | None, typer.Option(help="Explicit canonical locus catalogues")] = None,
     selection_size: Annotated[int, typer.Option(min=0)] = 50,
     selection_runs: Annotated[int, typer.Option(min=1)] = 5,
     nearest_per_input: Annotated[int, typer.Option(min=1)] = 3,
@@ -67,6 +71,7 @@ def esm2_command(
 ) -> None:
     """Explore a prepared genome dataset, or extract optional protein embeddings."""
     from chronoclade.esm2 import EmbeddingError, run_embeddings
+    from chronoclade.errors import WorkflowError
 
     console = Console()
     try:
@@ -79,8 +84,17 @@ def esm2_command(
                 dataset, fasta = fasta, None
             if dataset is None or fasta is not None:
                 raise ValueError("Genome exploration requires a prepared dataset.json")
+            source = dataset.expanduser()
+            if fetch_context:
+                from chronoclade.profile_context_provider import discover_profile_context
+                prepared = discover_profile_context(
+                    source, output.expanduser().parent / (output.name + "_context"),
+                    lin_level=lin_level, hiercc_level=hiercc_level,
+                    public_typing=public_typing, cglin_export=cglin_export, catalogues=catalogues,
+                )
+                source = prepared.dataset_manifest
             result = run_esm2(
-                dataset.expanduser(), output.expanduser(),
+                source, output.expanduser(),
                 catalogue_manifest=allele_catalogue.expanduser() if allele_catalogue else None,
                 embeddings_manifest=embeddings_manifest.expanduser() if embeddings_manifest else None,
                 mapping_csv=sample_loci.expanduser() if sample_loci else None,
@@ -98,6 +112,8 @@ def esm2_command(
             console.print(f"Genome analysis manifest: {result.manifest_path}")
             console.print(f"Genome exploration report: {result.report_path}")
             return
+        if fetch_context or public_typing or cglin_export or catalogues:
+            raise ValueError("Public context options require prepared-genome exploration")
         if (fasta is None) == (embeddings_manifest is None):
             raise ValueError("Supply a protein FASTA or --embeddings-manifest, choosing one")
         if (dataset is None) != (sample_loci is None):
@@ -133,6 +149,6 @@ def esm2_command(
                 panel_loci=panel_loci,
             )
             console.print(f"Temporal comparison report: {report.report_path}")
-    except (EmbeddingError, OSError, ValueError) as error:
+    except (EmbeddingError, OSError, ValueError, WorkflowError) as error:
         console.print(f"Error: {error}", style="bold red", markup=False)
         raise typer.Exit(code=2) from error

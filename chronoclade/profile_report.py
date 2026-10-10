@@ -1050,7 +1050,7 @@ def write_profile_report(
         f'{legacy_geography}'
         f'{country_figures}'
         f'<p class="muted">{escape(figure_scope)}</p></div></section>',
-        f'<section class="stage" id="nearest"><div class="stage-body"><h2>Closest relatives</h2><p>These rankings use the shared cgMLST loci in the analysed profiles.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
+        f'<section class="stage" id="nearest"><div class="stage-body"><h2>Closest relatives</h2><p>Nearest relatives are ranked by actual allele differences among profiles with sufficient shared-locus coverage; all ties are retained. The normalized distance and compared-locus counts are shown alongside that ranking.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
         '<section class="stage" id="figures"><div class="stage-body"><h2>Genetic relationships</h2><div class="figures">'
         + pcoa_figures
         + tree_figures

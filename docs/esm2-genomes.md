@@ -41,7 +41,7 @@ when supplying the dataset as an option instead of positionally.
 The route uses the same shared, explicit disjoint lineage partition policy as
 cgMLST: `--lin-level 5`, `6` or `7`, or a scheme-specific `--hiercc-level HC10`.
 Every matching context record already present in the frozen bundle is considered;
-the command does not claim fresh or globally complete public retrieval. Unresolved
+`--fetch-context` uses the same complete accessible profile-context provider as cgMLST before embedding analysis. This retrieves compatible profiles and metadata without context assemblies; it does not claim globally complete surveillance. Supplied `--public-typing`, `--cglin-export` and `--catalogues` are also supported. Unresolved
 inputs and unmatched contexts remain in `partitions.json` and the index.
 Each resolved block requires one compatible profile matrix and catalogue scope.
 
@@ -55,7 +55,7 @@ variable protein loci and all exclusions remain inspectable.
 
 Ordination uses `sqrt(2 × mean locus cosine distance)`: the Euclidean chord
 geometry of locus-preserving unit protein vectors. Axis labels identify protein
-chord units. Country, date, role and group views use the same shared offline
+chord units. Country, host, date, role and group views use the same shared offline
 ordination viewer as cgMLST. All eligible genomes retain their identities.
 `--neighbour-count` retains every tie at its requested boundary. Groups are
 connected components at `--group-threshold` in embedding-distance units. The
