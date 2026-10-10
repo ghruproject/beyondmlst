@@ -1,6 +1,7 @@
 """Collection-date intervals for analysis and shared tree presentations."""
 
 import calendar
+from collections.abc import Mapping
 import datetime as dt
 import re
 from datetime import date
@@ -120,4 +121,80 @@ def normalize_dates(detail: dict, metadata: dict, search: dict) -> dict:
         "date_precision": precision,
         "date_raw": raw,
         "dated_cohort_eligible": precision in {"day", "month", "year", "interval"},
+    }
+
+
+def _decimal_year(day: date) -> float:
+    return day.year + (day - date(day.year, 1, 1)).days / (
+        366 if calendar.isleap(day.year) else 365
+    )
+
+
+def _bounds(value: str) -> tuple[date, date, str]:
+    if re.fullmatch(r"\d{4}", value):
+        year = int(value)
+        return date(year, 1, 1), date(year, 12, 31), "year"
+    if re.fullmatch(r"\d{4}-\d{2}", value):
+        year, month = map(int, value.split("-"))
+        return date(year, month, 1), date(year, month, calendar.monthrange(year, month)[1]), "month"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        day = date.fromisoformat(value)
+        return day, day, "day"
+    raise ValueError("unsupported collection date")
+
+
+def sample_date_interval(sample: Mapping) -> dict:
+    """Read canonical bounds first, preserving month/year/interval uncertainty.
+
+    Intervals entirely after today are excluded. A current month/year interval
+    retains its full bounds rather than silently acquiring day precision.
+    """
+    result = dict.fromkeys(("start", "end", "precision", "year_min", "year_max",
+                          "date_lower", "date_upper", "midpoint_year", "year"))
+    precision = sample.get("date_precision")
+    raw = str(sample.get("collection_date") or sample.get("collection_year") or "").strip()
+    if precision in {"missing", "invalid"}:
+        return {**result, "precision": precision, "status": precision,
+                "reason": f"{precision}_collection_date"}
+    try:
+        if sample.get("date_start") or sample.get("date_end"):
+            start, end = (date.fromisoformat(sample[key]) for key in ("date_start", "date_end"))
+            if precision is None:
+                precision = "day" if start == end else "interval"
+            if precision not in {"day", "month", "year", "interval"}:
+                raise ValueError("invalid date precision")
+            if precision == "day" and start != end:
+                raise ValueError("day precision has differing bounds")
+            if precision == "month" and (
+                start.day != 1 or (start.year, start.month) != (end.year, end.month)
+                or end.day != calendar.monthrange(end.year, end.month)[1]
+            ):
+                raise ValueError("month precision does not cover a full month")
+            if precision == "year" and (
+                start != date(start.year, 1, 1) or end != date(start.year, 12, 31)
+            ):
+                raise ValueError("year precision does not cover a full year")
+        elif raw.casefold() in _MISSING:
+            return {**result, "precision": "missing", "status": "missing",
+                    "reason": "missing_collection_date"}
+        elif "/" in raw:
+            first, last = raw.split("/")
+            start, _, _ = _bounds(first.strip())
+            _, end, _ = _bounds(last.strip())
+            precision = "interval"
+        else:
+            start, end, precision = _bounds(raw)
+        if start > end:
+            raise ValueError("date interval is reversed")
+    except (ValueError, TypeError, KeyError, OverflowError):
+        return {**result, "precision": "invalid", "status": "invalid",
+                "reason": "invalid_collection_date"}
+    lower, upper = _decimal_year(start), _decimal_year(end)
+    future = start > date.today()
+    return {
+        "status": "future" if future else "valid",
+        "reason": "future_collection_date" if future else None,
+        "start": start.isoformat(), "end": end.isoformat(), "precision": precision,
+        "year_min": lower, "year_max": upper, "date_lower": lower, "date_upper": upper,
+        "midpoint_year": (lower + upper) / 2, "year": start.year,
     }

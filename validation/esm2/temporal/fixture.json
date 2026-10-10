@@ -1,0 +1,98 @@
+{
+  "records": [
+    {
+      "sample_id": "SIM_01",
+      "label": "SIMULATED genome 1",
+      "role": "context",
+      "species": "Klebsiella pneumoniae",
+      "collection_date": "2017",
+      "country": "Denmark",
+      "mlst_st": "39"
+    },
+    {
+      "sample_id": "SIM_02",
+      "label": "SIMULATED genome 2",
+      "role": "context",
+      "species": "Klebsiella pneumoniae",
+      "collection_date": "2019-05",
+      "country": "Germany",
+      "mlst_st": "39"
+    },
+    {
+      "sample_id": "SIM_03",
+      "label": "SIMULATED genome 3",
+      "role": "input",
+      "species": "Klebsiella pneumoniae",
+      "collection_date": "2021-03-14",
+      "country": "Greece",
+      "mlst_st": "39"
+    },
+    {
+      "sample_id": "SIM_04",
+      "label": "SIMULATED genome 4",
+      "role": "input",
+      "species": "Klebsiella pneumoniae",
+      "collection_date": "2023",
+      "country": "Greece",
+      "mlst_st": "39"
+    },
+    {
+      "sample_id": "SIM_05",
+      "label": "SIMULATED genome 5",
+      "role": "context",
+      "species": "Klebsiella pneumoniae",
+      "collection_date": "",
+      "country": "Denmark",
+      "mlst_st": "39"
+    }
+  ],
+  "calls": {
+    "SIM_01": {
+      "hfq_S": 1,
+      "KP1_2532_S": 1,
+      "mtr_S": 1,
+      "KP1_4861_S": 1
+    },
+    "SIM_02": {
+      "hfq_S": 2,
+      "KP1_2532_S": 1,
+      "mtr_S": 1,
+      "KP1_4861_S": 1
+    },
+    "SIM_03": {
+      "hfq_S": 3,
+      "KP1_2532_S": 1,
+      "mtr_S": 1,
+      "KP1_4861_S": 1
+    },
+    "SIM_04": {
+      "hfq_S": 3,
+      "KP1_2532_S": 2,
+      "mtr_S": 1,
+      "KP1_4861_S": 1
+    },
+    "SIM_05": {
+      "hfq_S": 1,
+      "KP1_2532_S": 2,
+      "mtr_S": 1,
+      "KP1_4861_S": 1
+    }
+  },
+  "catalogue": {
+    "scheme_id": "synthetic-four-locus-validation",
+    "scheme_version": "1",
+    "loci": [
+      "hfq_S",
+      "KP1_2532_S",
+      "mtr_S",
+      "KP1_4861_S"
+    ],
+    "source": "public allele1 proteins plus labelled synthetic substitutions",
+    "complete": false
+  },
+  "parameters": {
+    "validation_fixture": true,
+    "description": "Synthetic sample metadata, allele identifiers and substitutions; reference proteins from public frozen Pasteur allele1 records. No clinical inference."
+  },
+  "source_manifest": "validation/esm2/fixture-manifest.json"
+}

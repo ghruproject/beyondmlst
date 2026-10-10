@@ -1,12 +1,12 @@
 # Experimental ESM2 protein embeddings
 
-The optional ESM2 module currently provides a **protein embedding foundation**.
-It consumes a protein FASTA, embeds each unique amino-acid sequence once, and
-saves vectors with a complete source-record mapping. It does not yet consume the
-prepared dataset contract, translate DNA alleles, preserve a structured genome
-and locus matrix, calculate genome distances, select representatives or produce
-the exploration report described in the [tool suite design](tool-suite-design.md).
-Those remain separate implementation and validation work.
+The optional ESM2 module embeds each unique amino-acid sequence in a supplied
+protein FASTA once and saves vectors with a complete source-record mapping.
+An optional prepared-dataset and sample–locus mapping route adds a descriptive
+date-distance report alongside a conventional cgMLST NJ baseline. It can reuse
+saved embeddings without loading the model. Automatic DNA allele acquisition and
+translation, genome clustering and representative selection remain separate work
+in the [tool suite design](tool-suite-design.md).
 
 The output is experimental. Protein embedding distances have different units
 from allele or SNP differences. Runtime benchmarks do not demonstrate neighbour
@@ -129,6 +129,76 @@ result = run_embeddings(
 print(result.manifest_path)
 print(result.vectors_path)
 ```
+
+## Prepared-dataset date-distance report
+
+Supply the prepared `dataset.json` and a CSV with exactly named
+`sample_id,locus,record_id` columns. Each row links a stable prepared sample ID and
+a locus in its compatible cgMLST catalogue to a source record in the embedding
+manifest. Record IDs identify the supplied FASTA proteins; they are not guessed
+from headers. Mapping identities, scheme compatibility, vector checksums and
+model provenance are validated before reporting. Eligible mapped samples must belong
+to one species; mixed-species comparisons fail rather than crossing species with
+a single embedding reference.
+
+To create embeddings and the report together:
+
+```bash
+.venv-esm2/bin/chronoclade esm2 proteins.faa \
+  --dataset prepared/dataset.json --sample-loci sample-loci.csv \
+  --out esm2-temporal --model 8M --device cpu \
+  --checkpoint /path/to/esm2_t6_8M_UR50D.pt
+```
+
+To analyse existing vectors without importing PyTorch or fair-esm:
+
+```bash
+chronoclade esm2 --embeddings-manifest esm2-8m/embeddings.json \
+  --dataset prepared/dataset.json --sample-loci sample-loci.csv \
+  --out esm2-temporal --reference-sample YOUR_STABLE_SAMPLE_ID \
+  --panel-locus locus_A --panel-locus locus_B
+```
+
+The reference is the requested real sample or the lexicographically first
+eligible stable sample ID. It is chosen independently of collection dates. The
+protein panel is explicit with repeated `--panel-locus` options, or uses the
+mapped-locus intersection. A sample must have a valid mapped protein at every
+panel locus to receive a distance; missing embeddings are never zero vectors.
+The numerical artifact records panel IDs, missing loci, exclusions and per-locus
+distances. An incomplete or empty panel fails clearly.
+
+`index.html` uses the existing offline ChronoClade full-report stylesheet. It has
+two named measurements with shared location colours and input/context markers:
+
+- **cgMLST rooted NJ distance versus collection date:** conventional categorical
+  mismatch fractions on one fixed set of loci callable in every profile in each
+  compatible cohort. The NJ tree is rooted at the same real reference sample;
+  incompatible cohorts remain separate. Negative NJ branches are retained and
+  counted. Slope units are **cgMLST mismatch fraction/year**.
+- **Protein distance to reference versus collection date:** the arithmetic mean
+  of per-locus cosine distances to the fixed reference on the frozen protein
+  panel. Slope units are **mean locus cosine distance/year**.
+
+Both views use unweighted ordinary least squares with collection-date interval
+midpoints, retaining day, month, year and interval bounds as horizontal bars.
+Bars describe date precision, not statistical confidence intervals. Each figure
+includes residuals in its own distance units. Finite distances without eligible
+dates remain in an undated panel; all sample rows and exclusions stay in the CSV
+and JSON. Fewer than three distinct date midpoints leaves the fit unavailable.
+Constant distances have slope zero and undefined correlation/R², shown explicitly.
+
+The report records prepared, mapped, panel-eligible and dated sample counts, the
+reference/root, callable loci, scheme/database versions and actual model and
+runtime provenance. Downloads include SVG/PNG figures, per-panel CSV files,
+`temporal_points.csv` and complete `temporal_diagnostics.json` evidence.
+`temporal_analysis.json` fingerprints the inputs, parameters and completed report.
+
+These diagnostics are exploratory, with no formal clock test, confidence
+intervals or p-values. Shared ancestry and sampling structure can produce date
+association. Protein embeddings cannot distinguish synonymous DNA changes that
+produce identical proteins. Neither the protein distance nor its fitted slope is
+a substitution rate, and no ancestry or TMRCA is inferred from embeddings.
+Supported dating remains the separate assembly-based tree/time route.
 
 ## Separate runtime benchmark
 
