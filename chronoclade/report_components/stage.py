@@ -69,7 +69,8 @@ def write_report(
     network_html = ""
     assets = ""
     if network is not None:
-        network_html = "<h3>Corrected-tree location history</h3>" + interactive_network_html(
+        basis = "Dated-tree" if result.get("dating_status") == "dated" else "Corrected-tree"
+        network_html = f"<h3>{basis} location history</h3>" + interactive_network_html(
             network, "selected-tree-network"
         )
         assets = widget_assets()

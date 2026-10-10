@@ -107,6 +107,8 @@ def test_native_treetime_dating_saved_tree_without_phylogeny_rebuild(
     assert native_stubs == ["corrected"]
     report = tmp_path / "time" / result["report"]["path"]
     assert "data-cc-network-library" in report.read_text()
+    assert "<h3>Dated-tree location history</h3>" in report.read_text()
+    assert 'src="timetree/timetree.svg"' not in report.read_text()
 
 
 def test_comparison_retains_failed_job_reason(tmp_path, native_stubs):

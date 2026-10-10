@@ -139,7 +139,6 @@ def run_time(tree_manifest, *, output, force=False, allow_unsupported=False):
             )
             figures = [
                 ("dated_country_tree.svg", "Dated-tree location history; years"),
-                ("timetree/timetree.svg", "Dated biological tree; years"),
                 (
                     "timetree_with_confidence.svg",
                     "TreeTime node-date uncertainty; 90% max-posterior regions",
