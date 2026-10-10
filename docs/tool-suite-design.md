@@ -44,7 +44,8 @@ supporting operations, rather than additional analysis stages.
 Each command consumes saved evidence from its predecessor. Tree does not rerun
 cgMLST or select new genomes. Time does not rebuild the SNP tree. Each command
 has independent parameters, dependency checks, fingerprints and resumable jobs.
-The same commands work locally and under a configured SLURM executor.
+The same commands can be saved as local or SLURM job scripts. ChronoClade does
+not submit those scripts, and execution on a real SLURM cluster remains untested.
 
 ### Package and dependency boundaries
 
