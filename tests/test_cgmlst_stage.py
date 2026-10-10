@@ -168,3 +168,12 @@ def test_unknown_lineage_namespace_is_not_a_shared_partition(tmp_path):
     blocks, audit = partition_records(rows)
     assert blocks == []
     assert len(audit["unresolved_inputs"]) == 2
+
+
+def test_distinct_mlst_namespaces_do_not_share_a_st_block(tmp_path):
+    dataset, _ = fixture_dataset(tmp_path)
+    rows = profile_records(dataset)
+    rows[1]["mlst_scheme"] = "another-scheme"
+    blocks, audit = partition_records(rows)
+    assert "c1" in audit["unmatched_context_ids"]
+    assert all(row["sample_id"] != "c1" for row in blocks[0]["records"])

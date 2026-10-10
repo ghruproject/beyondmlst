@@ -94,6 +94,7 @@ def _group_key(row, level, hiercc_level):
         version,
         row.get(kind + "_database_version"),
         row.get(kind + "_database_sha256"),
+        row.get("mlst_scheme"),
         prefix,
     )
 
@@ -130,6 +131,7 @@ def partition_records(records, *, lin_level=5, hiercc_level=None):
                 "block_id": f"{key[2]}_{digest}",
                 "species": rows[0]["species"].replace("_", " "),
                 "mlst_st": key[1],
+                "mlst_scheme": key[7],
                 "kind": key[2],
                 "scheme": key[3],
                 "scheme_version": key[4],
@@ -153,6 +155,7 @@ def partition_records(records, *, lin_level=5, hiercc_level=None):
                         "level": level,
                         "species": key[0],
                         "mlst_st": key[1],
+                        "mlst_scheme": key[7],
                         "scheme": key[3],
                         "scheme_version": key[4],
                         "prefix": list(key[-1]),
