@@ -168,6 +168,22 @@ def load_tree_result(path):
         raise WorkflowError(
             "Selected metadata does not preserve exact ordered selected identifiers"
         )
+    from chronoclade.datasets import load_dataset
+
+    dataset = load_dataset(
+        _resolve(base, result["source"]["dataset"], "source.dataset", external=True)
+    )
+    original_rows = {row["sample_id"]: dict(row) for row in dataset.samples}
+    if metadata != [original_rows[ident] for ident in ids]:
+        raise WorkflowError("Selected metadata differs from the checksum-bound prepared dataset")
+    dated, undated = result.get("dated_sample_ids"), result.get("undated_sample_ids")
+    if (
+        not isinstance(dated, list)
+        or not isinstance(undated, list)
+        or set(dated) & set(undated)
+        or sorted(dated + undated) != sorted(ids)
+    ):
+        raise WorkflowError("Saved date eligibility must partition exact selected identifiers")
     rooted = Phylo.read(_resolve(base, result["rooted_tree"], "rooted_tree"), "newick")
     tips = [tip.name for tip in rooted.get_terminals()]
     if len(tips) != len(ids) or set(tips) != set(ids):
