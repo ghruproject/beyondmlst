@@ -758,6 +758,10 @@ def _context_funnel(provenance: dict[str, Any]) -> str:
     rows = []
     profile_context = _mapping(provenance.get("profile_context"))
     for pool in _records(profile_context.get("pools")):
+        public_search = _mapping(pool.get("public_search"))
+        if public_search.get("raw_record_count") is not None:
+            rows.append({"stage": "Public same-ST catalogue records before accession deduplication",
+                         "count": public_search["raw_record_count"]})
         for key, label in (("discovered", "Accessible same-ST candidates"),
                            ("requested", "Matching lineage candidates"),
                            ("retrieved", "Matching profiles retrieved")):

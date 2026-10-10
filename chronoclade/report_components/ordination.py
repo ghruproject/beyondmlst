@@ -60,15 +60,16 @@ def write_ordination_views(output, prefix, coordinates, records, *,
             lower, upper = (float(years[finite].min()), float(years[finite].max())) if finite.any() else (0, 1)
             norm = plt.Normalize(lower, upper if upper > lower else lower + 1)
             for role, marker in markers.items():
+                zorder = 3 if role == "input" else 2
                 selected = np.array([r == role for r in roles])
                 known, missing = selected & finite, selected & ~finite
                 if known.any():
                     scatter = ax.scatter(*coordinates[known].T, c=years[known], cmap="viridis",
                                          norm=norm, marker=marker, alpha=.8, s=35,
-                                         edgecolors="#222", linewidths=.3)
+                                         edgecolors="#222", linewidths=.3, zorder=zorder)
                 if missing.any():
                     ax.scatter(*coordinates[missing].T, c="#999", marker=marker, s=35,
-                               edgecolors="#222", linewidths=.3)
+                               edgecolors="#222", linewidths=.3, zorder=zorder)
             if finite.any():
                 fig.colorbar(scatter, ax=ax, label="Collection year (interval midpoint)")
             handles = [Line2D([], [], color="#999", marker="o", linestyle="None", label="Date unknown")]
@@ -83,11 +84,12 @@ def write_ordination_views(output, prefix, coordinates, records, *,
                        for value in shown]
             # One scatter per role avoids quadratic scans and thousands of artists.
             for role, marker in markers.items():
+                zorder = 3 if role == "input" else 2
                 selected = [i for i, observed in enumerate(roles) if observed == role]
                 if selected:
                     ax.scatter(*coordinates[selected].T,
                                c=[colours[values[i]] for i in selected], marker=marker,
-                               alpha=.8, s=35, edgecolors="#222", linewidths=.3)
+                               alpha=.8, s=35, edgecolors="#222", linewidths=.3, zorder=zorder)
             if len(unique) > len(shown):
                 ax.text(0, -.15,
                         f"Legend shows {len(shown)} of {len(unique)} categories by frequency; all genomes are plotted. "
