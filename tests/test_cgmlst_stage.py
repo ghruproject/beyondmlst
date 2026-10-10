@@ -173,7 +173,18 @@ def test_unknown_lineage_namespace_is_not_a_shared_partition(tmp_path):
 def test_distinct_mlst_namespaces_do_not_share_a_st_block(tmp_path):
     dataset, _ = fixture_dataset(tmp_path)
     rows = profile_records(dataset)
+    rows[0]["mlst_scheme"] = "primary-scheme"
     rows[1]["mlst_scheme"] = "another-scheme"
     blocks, audit = partition_records(rows)
     assert "c1" in audit["unmatched_context_ids"]
     assert all(row["sample_id"] != "c1" for row in blocks[0]["records"])
+
+
+def test_missing_mlst_metadata_can_compare_with_one_explicit_namespace(tmp_path):
+    dataset, _ = fixture_dataset(tmp_path)
+    rows = profile_records(dataset)
+    rows[1]["mlst_scheme"] = "primary-scheme"
+    blocks, audit = partition_records(rows)
+    assert {r["sample_id"] for r in blocks[0]["records"]} == {"q", "c1", "c2"}
+    assert next(r for r in blocks[0]["records"] if r["sample_id"] == "q")["mlst_scheme"] is None
+    assert audit["ambiguous_mlst_namespace_ids"] == []

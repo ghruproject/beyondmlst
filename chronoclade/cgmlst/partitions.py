@@ -60,6 +60,8 @@ def profile_records(dataset: PreparedDataset) -> list[dict]:
 
 
 def _group_key(row, level, hiercc_level):
+    if row.get("_ambiguous_mlst_namespace"):
+        return None
     kind = "hiercc" if hiercc_level else "cglin"
     if row.get(kind + "_status") in {
         "failed",
@@ -94,7 +96,7 @@ def _group_key(row, level, hiercc_level):
         version,
         row.get(kind + "_database_version"),
         row.get(kind + "_database_sha256"),
-        row.get("mlst_scheme"),
+        row.get("_comparison_mlst_scheme", row.get("mlst_scheme")),
         prefix,
     )
 
@@ -107,6 +109,28 @@ def partition_records(records, *, lin_level=5, hiercc_level=None):
         not hiercc_level.startswith("HC") or not hiercc_level[2:].isdigit()
     ):
         raise ValueError("HierCC level must be an explicit HC code, such as HC10")
+    # Missing scheme metadata is not a new scheme. Use the only declared comparison
+    # namespace when unambiguous, while retaining the sample's actual null metadata.
+    known = {}
+    for row in records:
+        species = " ".join((row.get("species") or "").replace("_", " ").casefold().split())
+        scope = (species, str(row.get("mlst_st") or ""))
+        if row.get("mlst_scheme"):
+            known.setdefault(scope, set()).add(row["mlst_scheme"])
+    prepared = []
+    for row in records:
+        species = " ".join((row.get("species") or "").replace("_", " ").casefold().split())
+        choices = known.get((species, str(row.get("mlst_st") or "")), set())
+        scheme = row.get("mlst_scheme")
+        comparison = scheme or (next(iter(choices)) if len(choices) == 1 else None)
+        prepared.append(
+            dict(
+                row,
+                _comparison_mlst_scheme=comparison,
+                _ambiguous_mlst_namespace=not scheme and len(choices) > 1,
+            )
+        )
+    records = prepared
     groups, unresolved = {}, []
     for row in records:
         if row["role"] != "input":
@@ -166,6 +190,10 @@ def partition_records(records, *, lin_level=5, hiercc_level=None):
     used = {row["sample_id"] for block in blocks for row in block["records"]}
     return blocks, {
         "policy": "explicit-lineage-depth",
+        "mlst_namespace_policy": "Declared schemes remain separate; missing scheme metadata is admitted only when at most one declared scheme exists for the species/ST. Original metadata is retained.",
+        "ambiguous_mlst_namespace_ids": sorted(
+            row["sample_id"] for row in records if row.get("_ambiguous_mlst_namespace")
+        ),
         "lin_level": lin_level,
         "hiercc_level": hiercc_level,
         "unresolved_inputs": unresolved,

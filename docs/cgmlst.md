@@ -4,7 +4,10 @@
 cgLIN depth (5 by default; 6 or 7 are options), includes every matching context
 record already in that bundle, and writes one existing-style report per block.
 Species, supplied MLST ST and lineage scheme/version/database scope separate
-blocks. It does not automatically narrow to a deeper prefix.
+blocks. Declared MLST schemes remain separate. A missing MLST scheme can enter
+the sole declared comparison namespace for its species/ST while its metadata
+remains unknown; multiple declared schemes make that missing namespace ambiguous
+and excluded. It does not automatically narrow to a deeper prefix.
 
 ```bash
 chronoclade prepare frozen-records.json --catalogues locus-catalogues.json --out prepared
