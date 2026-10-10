@@ -6,7 +6,7 @@ import pytest
 from typer.testing import CliRunner
 
 from chronoclade.cli import app
-from chronoclade.cgmlst.partitions import partition_records, profile_records
+from chronoclade.context_partitions import partition_records, profile_records
 from chronoclade.cgmlst.workflow import run_cgmlst
 from chronoclade.datasets import LocusCatalogue, from_profile_records, write_dataset
 from chronoclade.selection_manifest import load_selection_manifest

@@ -22,6 +22,7 @@ from chronoclade.metadata_dates import date_interval as _date_interval
 from chronoclade.context_refinement import _allele, _lineage, _loci, _profile
 from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
 from chronoclade.temporal_diagnostics import date_regression
+from chronoclade.profile_groups import complete_linkage_groups as _clusters, group_sensitivity
 
 
 MAX_RECORDS = 1500
@@ -116,26 +117,6 @@ def _pair(left, right, overlap):
     }, None
 
 
-def _clusters(matrix, threshold):
-    """Deterministic complete linkage: all members satisfy the distance threshold."""
-    groups = [(i,) for i in range(len(matrix))]
-    linkage = matrix.copy()
-    np.fill_diagonal(linkage, np.inf)
-    while len(groups) > 1:
-        position = int(np.argmin(linkage))
-        i, j = np.unravel_index(position, linkage.shape)
-        if linkage[i, j] > threshold:
-            break
-        if i > j:
-            i, j = j, i
-        groups[i] = tuple(sorted(groups[i] + groups[j]))
-        groups.pop(j)
-        linkage[i, :] = np.maximum(linkage[i, :], linkage[j, :])
-        linkage[:, i] = linkage[i, :]
-        linkage = np.delete(np.delete(linkage, j, axis=0), j, axis=1)
-        np.fill_diagonal(linkage, np.inf)
-    return sorted(groups)
-
 
 def _csv(path, rows, fields):
     with path.open("w", newline="") as handle:
@@ -217,18 +198,10 @@ def _plots(output, cohort_id, coords, rows, network, display_ids=None):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    paths = {}
-    fig, ax = plt.subplots(figsize=(7, 5))
-    for origin in sorted({str(r.get("origin", "unknown")) for r in rows}):
-        indexes = [i for i, r in enumerate(rows) if str(r.get("origin", "unknown")) == origin]
-        ax.scatter(coords[indexes, 0], coords[indexes, 1], label=origin, alpha=0.75)
-    ax.set(xlabel="PCoA axis 1", ylabel="PCoA axis 2", title="cgMLST distance ordination")
-    ax.legend()
-    fig.tight_layout()
-    path = output / f"{cohort_id}_pcoa.svg"
-    fig.savefig(path)
-    plt.close(fig)
-    paths["pcoa_figure"] = str(path)
+    from chronoclade.report_components.ordination import write_ordination_views
+    paths = write_ordination_views(output, cohort_id, coords, rows,
+                                   title="cgMLST distance ordination",
+                                   axis_labels=("PCoA axis 1", "PCoA axis 2"))
     counts = Counter(str(r.get("country") or "Unknown") for r in rows)
     fig, ax = plt.subplots(figsize=(7, max(3, len(counts) * 0.3)))
     keys = sorted(counts, key=lambda key: (-counts[key], key))
@@ -511,6 +484,7 @@ def analyse_profiles(
                 "Non-Euclidean distances: negative PCoA eigenvalues; scatterplot is an approximation."
             )
         groups = _clusters(matrix, distance_threshold)
+        cohort["group_sensitivity"] = group_sensitivity(matrix, selected_threshold=distance_threshold)
         if any(r.get("cgmlst_locus_universe_complete") is False for r in rows):
             cohort["warnings"].append(
                 "Coverage denominator is the union of observed export loci; full canonical scheme coverage is unknown."

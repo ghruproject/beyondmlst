@@ -7,12 +7,6 @@ version = "0.1.0"
 
 [dependencies]
 python = "3.11.*"
-clonalframeml = ">=1.20,<1.21"
-iqtree = ">=2.4,<4"
-ska2 = ">=0.5.1,<0.6"
-treetime = ">=0.12.1,<0.13"
-phipack = ">=1.1,<1.2"
-blast = ">=2.16,<3"
 
 [pypi-dependencies]
 chronoclade = { path = ".", editable = true }
@@ -25,10 +19,24 @@ format = "ruff format ."
 docs = "python scripts/build_docs.py"
 docs-serve = "mkdocs serve"
 
+[feature.tree.dependencies]
+clonalframeml = ">=1.20,<1.21"
+iqtree = ">=2.4,<4"
+ska2 = ">=0.5.1,<0.6"
+phipack = ">=1.1,<1.2"
+blast = ">=2.16,<3"
+
+[feature.time.dependencies]
+treetime = ">=0.12.1,<0.13"
+
 [feature.dev.pypi-dependencies]
 pytest = ">=8,<9"
 ruff = ">=0.12,<0.13"
 mkdocs-material = ">=9.6,<10"
 
 [environments]
-default = { features = ["dev"], solve-group = "default" }
+default = { features = ["dev", "tree", "time"], solve-group = "default" }
+prepare = { features = [], solve-group = "profiles" }
+cgmlst = { features = [], solve-group = "profiles" }
+tree = { features = ["tree", "time"], solve-group = "default" }
+time = { features = ["time"], solve-group = "default" }

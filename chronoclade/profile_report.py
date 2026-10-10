@@ -981,12 +981,23 @@ def write_profile_report(
     geography_rows = _records(geography) or _records(data.get("country_breakdown"))
     nearest = data.get("nearest_neighbours", data.get("nearest_relative"))
     groups = data.get("genetic_groups")
+    sensitivity_rows = [dict(cohort_id=cohort.get("cohort_id"), **row)
+                        for cohort in data.get("cohorts", [])
+                        for row in cohort.get("group_sensitivity", {}).get("thresholds", [])]
+    sensitivity_table = _table(sensitivity_rows,
+        [("cohort_id", "Comparison cohort"), ("distance_fraction", "Distance cutoff"),
+         ("group_count", "Groups"), ("singletons", "Single genomes"),
+         ("largest_group", "Largest group"), ("selected", "Selected cutoff")],
+        empty="Threshold sensitivity is unavailable.") if sensitivity_rows else ""
     concentration = data.get("time_place_concentration")
     root_tip = data.get("root_to_tip")
     root_tip_text = "Allele-distance root-to-tip is exploratory and does not pass the final clock gate."
     if isinstance(root_tip, dict):
         root_tip_text += " " + _text(root_tip.get("interpretation", root_tip.get("summary", "")), "")
-    pcoa_figures = _cohort_figures(data.get("cohorts"), directory, "pcoa_figure", "Profile PCoA")
+    from chronoclade.report_components.ordination import ordination_viewer
+    pcoa_figures = ordination_viewer(data.get("cohorts"), directory)
+    if not pcoa_figures:
+        pcoa_figures = _cohort_figures(data.get("cohorts"), directory, "pcoa_figure", "Profile PCoA")
     if not pcoa_figures:
         pcoa_figures = _asset(directory, paths, ("pcoa", "pcoa_svg", "pcoa_png"), "Profile PCoA")
     tree_figures = _cohort_figures(data.get("cohorts"), directory, "tree_figure", "Neighbour-joining tree")
@@ -1014,7 +1025,7 @@ def write_profile_report(
         f'{_adaptive_context_summary(prov)}'
         f'{_shared_tree_selection_summary(data)}'
         '<p>Start with the countries and closest relatives below. The comparison uses differences in shared core genes (cgMLST). Genetic relationships and concentration in time and place are reported separately.</p></div></section>',
-        f'<section class="stage" id="geography"><div class="stage-body"><h2>Where were the samples collected?</h2>'
+        f'<section class="stage" id="geography"><div class="stage-body"><h2>Collection locations</h2>'
         f'{_adaptive_context_metadata(prov)}'
         f'<h3>Your input genomes</h3><p>The samples you supplied for investigation.</p>{_geography_table(input_geography, label="Your input genomes", include_origin=True)}'
         f'<h3>Public comparison genomes</h3><p>{escape(comparison_scope)}</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
@@ -1022,14 +1033,14 @@ def write_profile_report(
         f'{legacy_geography}'
         f'{country_figures}'
         f'<p class="muted">{escape(figure_scope)}</p></div></section>',
-        f'<section class="stage" id="nearest"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2><p>These rankings use the shared cgMLST loci in the analysed profiles.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
-        '<section class="stage" id="figures"><div class="stage-body"><h2>How are the genomes related?</h2><div class="figures">'
+        f'<section class="stage" id="nearest"><div class="stage-body"><h2>Closest relatives</h2><p>These rankings use the shared cgMLST loci in the analysed profiles.</p>{_available_neighbours(nearest, directory, paths, public_context_count=public_context_count)}</div></section>',
+        '<section class="stage" id="figures"><div class="stage-body"><h2>Genetic relationships</h2><div class="figures">'
         + pcoa_figures
         + tree_figures
         + "</div><p class=\"muted\">The neighbour-joining tree is a profile-distance view. Branches do not represent time or prove transmission.</p></div></section>",
         f'<section class="stage" id="network"><div class="stage-body"><h2>Country connections</h2><p>Country reconstruction depends on the rooted tree and supplied metadata. This network describes the selected LIN context pool. It uses all usable profiles, before tree-display subsampling. Input subgroups can have different context breadth, so the network does not describe the distribution of the complete ST.</p>{_location_network(data.get("location_network"), directory, data.get("cohorts"))}</div></section>',
-        f'<section class="stage" id="groups"><div class="stage-body"><h2>How do the genomes group genetically?</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
-        '<p class="muted">Genetic group stability describes how consistently genomes group when loci are resampled.</p>'
+        f'<section class="stage" id="groups"><div class="stage-body"><h2>Genetic groups</h2><p>{escape(_text(_mapping(groups).get("interpretation", "Groups are descriptive summaries of the reported profile distances.")))}</p>'
+        f'<p class="muted">Groups use the explicit distance cutoff. Threshold sensitivity and locus resampling describe grouping consistency; thresholds are not biologically validated.</p>{sensitivity_table}'
         '<details class="evidence-files"><summary>Inspect genetic groups and bootstrap results</summary>'
         f'{_group_cards(groups, kind="general", bootstrap_requested=data.get("bootstrap_replicates"))}</details></div></section>',
         f'<section class="stage" id="concentration"><div class="stage-body"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. These observations do not establish an outbreak.</p>{_group_cards(concentration, kind="concentration")}</div></section>',
@@ -1244,8 +1255,8 @@ def write_corrected_report(report: dict, *, directory: Path) -> Path:
 <h1><i>{escape(species.replace("_", " "))}</i><span>{escape(lineage)}</span></h1><p>{escape(_text(count))} genomes · Recombination-adjusted analysis</p>{stage_link}</div></header>
 <nav class="contents" aria-label="Report topics"><a href="#summary">Overview</a><a href="#countries">Countries</a><a href="#relationships">Closest relatives</a><a href="#network">Country network</a><a href="#interpretation">Interpretation</a><a href="#dating">Dating</a><a href="#outputs">Methods &amp; files</a></nav>
 <section class="stage" id="summary"><div class="stage-body"><h2>Your results at a glance</h2>{_metric_cards(context_values)}<p class="muted">Country composition and corrected-tree counts use the records available to this analysis. Public-catalogue totals, where reported, have a separate denominator.</p></div></section>
-<section class="stage" id="countries"><div class="stage-body"><h2>Where were the samples collected?</h2>{selection}{geography}<p class="muted">Recorded locations describe submitted metadata. They do not establish where infection was acquired or population prevalence.</p></div></section>
-<section class="stage" id="relationships"><div class="stage-body"><h2>Which analysed genomes are closest relatives?</h2>{neighbours}</div></section>
+<section class="stage" id="countries"><div class="stage-body"><h2>Collection locations</h2>{selection}{geography}<p class="muted">Recorded locations describe submitted metadata. They do not establish where infection was acquired or population prevalence.</p></div></section>
+<section class="stage" id="relationships"><div class="stage-body"><h2>Closest relatives</h2>{neighbours}</div></section>
 <section class="stage" id="recombination"><div class="stage-body"><h2>Recombination evidence</h2>{recombination}</div></section>
 <section class="stage" id="interpretation"><div class="stage-body"><h2>Genomic interpretation</h2>{public_summary}{public_evidence}</div></section>
 <section class="stage" id="network"><div class="stage-body"><h2>What location changes does the tree suggest?</h2>{network}<p class="muted">Location changes depend on the rooted tree and supplied sample metadata. They include reconstruction uncertainty and are not proof of transmission or acquisition direction.</p></div></section>

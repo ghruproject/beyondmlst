@@ -92,7 +92,7 @@ def _ids(manifest, field):
 def _partition_block(path, dataset_id, dataset_hash, block_id, pool=None):
     partition = _read(path)
     if (
-        partition.get("schema") != "chronoclade.cgmlst.partitions"
+        partition.get("schema") not in {"chronoclade.cgmlst.partitions", "chronoclade.esm2.partitions"}
         or partition.get("schema_version") != 1
         or partition.get("dataset_id") != dataset_id
         or partition.get("dataset_sha256") != dataset_hash

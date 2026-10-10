@@ -12,7 +12,7 @@ from chronoclade.profile_analysis import analyse_profiles
 from chronoclade.profile_report import write_profile_report
 from .report import write_partition_index
 from chronoclade.selection_manifest import write_selection_ensemble
-from .partitions import partition_records, profile_records
+from chronoclade.context_partitions import partition_records, profile_records
 
 
 @dataclass(frozen=True)

@@ -17,6 +17,10 @@ def cgmlst_command(
     include: Annotated[
         list[str] | None, typer.Option(help="Pin a context ID; repeat for several")
     ] = None,
+    fetch_context: Annotated[bool, typer.Option(help="Retrieve matching public profiles before analysis")] = False,
+    public_typing: Annotated[Path | None, typer.Option(help="Public profile export")] = None,
+    cglin_export: Annotated[Path | None, typer.Option(help="Compatible lineage export")] = None,
+    catalogues: Annotated[Path | None, typer.Option(help="Explicit canonical locus catalogues")] = None,
     seed: int = 42,
     bootstrap_replicates: Annotated[int, typer.Option(min=0, max=200)] = 30,
     min_overlap: Annotated[float, typer.Option(min=0, max=1)] = 0.9,
@@ -28,8 +32,17 @@ def cgmlst_command(
 
     console = Console()
     try:
+        source = dataset.expanduser()
+        if fetch_context:
+            from chronoclade.prepare_provider import discover_profile_context
+            prepared = discover_profile_context(
+                source, output.expanduser().parent / (output.name + "_context"),
+                lin_level=lin_level, hiercc_level=hiercc_level,
+                public_typing=public_typing, cglin_export=cglin_export, catalogues=catalogues,
+            )
+            source = prepared.dataset_manifest
         result = run_cgmlst(
-            dataset.expanduser(),
+            source,
             output.expanduser(),
             lin_level=lin_level,
             hiercc_level=hiercc_level,

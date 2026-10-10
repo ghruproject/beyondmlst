@@ -14,6 +14,9 @@ from chronoclade import __version__
 from chronoclade.esm2_cli import esm2_command
 from chronoclade.prepare_cli import prepare_command
 from chronoclade.cgmlst.cli import cgmlst_command
+from chronoclade.execution.cli import job_command
+from chronoclade.tree_stage.cli import register as register_tree
+from chronoclade.time_stage.cli import register as register_time
 
 
 app = typer.Typer(
@@ -27,6 +30,9 @@ console = Console()
 app.command("esm2")(esm2_command)
 app.command("prepare")(prepare_command)
 app.command("cgmlst")(cgmlst_command)
+app.command("job")(job_command)
+register_tree(app)
+register_time(app)
 
 
 def _fail(error: Exception) -> None:
