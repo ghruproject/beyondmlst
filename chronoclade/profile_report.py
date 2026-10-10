@@ -979,7 +979,10 @@ def write_profile_report(
     adaptive_selection = bool(_records(_mapping(prov.get("adaptive_context_selection")).get("datasets")))
     comparison_scope = (
         "All public genomes in the chosen LIN context groups, before tree subsampling."
-        if adaptive_selection else "Additional genomes selected for comparison."
+        if adaptive_selection else (
+            "Compatible public profiles in this lineage block, before assembly subsampling."
+            if data.get("partition") else "Additional genomes selected for comparison."
+        )
     )
     catalogue_heading = "Full public clonal-group pool" if adaptive_selection else "Frozen public catalogue"
     figure_scope = (
@@ -988,8 +991,13 @@ def write_profile_report(
         "The full public clonal-group pool has a separate denominator. Unknown countries and regions remain visible."
         if adaptive_selection else
         "Country figures show profile-available members of each complete-comparability cohort and combine query and public context records. "
-        "The tables above separately summarize resolved input metadata by origin, including rows without profiles, and the full frozen public catalogue. "
+        "The tables above separately summarize input and comparison metadata, including rows without profiles. "
         "These pools have different denominators. Unknown country and region values remain visible."
+    )
+    catalogue_geography = (
+        f'<h3>{escape(catalogue_heading)}</h3>'
+        + _geography_table(data.get("public_catalogue_geography"), label=catalogue_heading, include_origin=False)
+        if data.get("public_catalogue_geography") or adaptive_selection else ""
     )
     metadata_geography = _records(data.get("metadata_geography"))
     input_geography = [row for row in metadata_geography if row.get("origin") in {"local", "query", "focal"}]
@@ -1046,7 +1054,7 @@ def write_profile_report(
         f'{_adaptive_context_metadata(prov)}'
         f'<h3>Your input genomes</h3><p>The samples you supplied for investigation.</p>{_geography_table(input_geography, label="Your input genomes", include_origin=True)}'
         f'<h3>Public comparison genomes</h3><p>{escape(comparison_scope)}</p>{_geography_table(comparison_geography, label="Public comparison genomes", include_origin=True)}'
-        f'<h3>{escape(catalogue_heading)}</h3>{_geography_table(data.get("public_catalogue_geography"), label=catalogue_heading, include_origin=False)}'
+        f'{catalogue_geography}'
         f'{legacy_geography}'
         f'{country_figures}'
         f'<p class="muted">{escape(figure_scope)}</p></div></section>',
