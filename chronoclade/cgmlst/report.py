@@ -41,8 +41,8 @@ def write_partition_index(
         '<body><main class="shell"><header class="identity"><div class="identity-mark">CHRONOCLADE · cgMLST</div><div class="identity-copy">'
         '<h1>Profile analysis blocks</h1></div></header><section class="stage"><div class="stage-body"><h2>Prepared dataset</h2>'
         f"<p>{records_count} samples; {len(products)} disjoint blocks. Status: {status}.</p>"
-        "<p>Context counts describe matching genomes already in the frozen bundle. "
-        "This command does not retrieve fresh public context or assemblies.</p>"
+        "<p>Context counts describe compatible profiles in the prepared dataset, before assembly subsampling. "
+        "Public retrieval provenance is saved with that dataset. Context assemblies are acquired only by the tree stage.</p>"
         f"<p>LIN depth: {lin_level}; HierCC: {html.escape(hiercc_level or 'Not selected')}.</p>"
         "<table><thead><tr><th>Block</th><th>Input</th><th>Context</th><th>Outputs</th></tr></thead>"
         f"<tbody>{items}</tbody></table>{count_table}<h2>Unresolved inputs</h2><ul>{unresolved or '<li>None</li>'}</ul>"

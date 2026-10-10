@@ -1,0 +1,54 @@
+{"field":"species","sample_id":"q","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"q","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"q","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"q","source":"frozen_record","value":"2020"}
+{"field":"date_start","sample_id":"q","source":"frozen_record","value":"2020-01-01"}
+{"field":"date_end","sample_id":"q","source":"frozen_record","value":"2020-12-31"}
+{"field":"date_precision","sample_id":"q","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"q","source":"frozen_record","value":"United Kingdom"}
+{"field":"date_raw","sample_id":"q","source":"frozen_record","value":"2020"}
+{"field":"species","sample_id":"synonymous","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"synonymous","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"synonymous","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"synonymous","source":"frozen_record","value":"2021"}
+{"field":"date_start","sample_id":"synonymous","source":"frozen_record","value":"2021-01-01"}
+{"field":"date_end","sample_id":"synonymous","source":"frozen_record","value":"2021-12-31"}
+{"field":"date_precision","sample_id":"synonymous","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"synonymous","source":"frozen_record","value":"Greece"}
+{"field":"date_raw","sample_id":"synonymous","source":"frozen_record","value":"2021"}
+{"field":"species","sample_id":"variant-x","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"variant-x","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"variant-x","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"variant-x","source":"frozen_record","value":"2022"}
+{"field":"date_start","sample_id":"variant-x","source":"frozen_record","value":"2022-01-01"}
+{"field":"date_end","sample_id":"variant-x","source":"frozen_record","value":"2022-12-31"}
+{"field":"date_precision","sample_id":"variant-x","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"variant-x","source":"frozen_record","value":"United Kingdom"}
+{"field":"date_raw","sample_id":"variant-x","source":"frozen_record","value":"2022"}
+{"field":"species","sample_id":"variant-y","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"variant-y","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"variant-y","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"variant-y","source":"frozen_record","value":"2023"}
+{"field":"date_start","sample_id":"variant-y","source":"frozen_record","value":"2023-01-01"}
+{"field":"date_end","sample_id":"variant-y","source":"frozen_record","value":"2023-12-31"}
+{"field":"date_precision","sample_id":"variant-y","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"variant-y","source":"frozen_record","value":"Greece"}
+{"field":"date_raw","sample_id":"variant-y","source":"frozen_record","value":"2023"}
+{"field":"species","sample_id":"variant-both","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"variant-both","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"variant-both","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"variant-both","source":"frozen_record","value":"2024"}
+{"field":"date_start","sample_id":"variant-both","source":"frozen_record","value":"2024-01-01"}
+{"field":"date_end","sample_id":"variant-both","source":"frozen_record","value":"2024-12-31"}
+{"field":"date_precision","sample_id":"variant-both","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"variant-both","source":"frozen_record","value":"United Kingdom"}
+{"field":"date_raw","sample_id":"variant-both","source":"frozen_record","value":"2024"}
+{"field":"species","sample_id":"missing-context","source":"frozen_record","value":"Klebsiella pneumoniae"}
+{"field":"mlst_scheme","sample_id":"missing-context","source":"frozen_record","value":"controlled-fixture"}
+{"field":"mlst_st","sample_id":"missing-context","source":"frozen_record","value":"controlled-fixture"}
+{"field":"collection_date","sample_id":"missing-context","source":"frozen_record","value":"2025"}
+{"field":"date_start","sample_id":"missing-context","source":"frozen_record","value":"2025-01-01"}
+{"field":"date_end","sample_id":"missing-context","source":"frozen_record","value":"2025-12-31"}
+{"field":"date_precision","sample_id":"missing-context","source":"frozen_record","value":"year"}
+{"field":"country","sample_id":"missing-context","source":"frozen_record","value":"Greece"}
+{"field":"date_raw","sample_id":"missing-context","source":"frozen_record","value":"2025"}

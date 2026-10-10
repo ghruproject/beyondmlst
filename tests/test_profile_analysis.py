@@ -243,3 +243,11 @@ def test_shared_tree_display_preserves_full_pool_and_records_missing_profiles(tm
     country_figure = Path(result["location_network"][0]["country_tree_figure"]).read_text()
     assert "Showing 2 of 3 profiles" in country_figure
     assert "near | Germany" not in country_figure
+
+
+def test_nearest_raw_ties_with_different_callable_denominators(tmp_path):
+    rows = [record('q', origin='local'), record('a', [2,1,1,1]), record('b',[2,1,1,0])]
+    result = analyse_profiles(rows, output=tmp_path, min_overlap=.7, bootstrap_replicates=0)
+    assert {row['context_id'] for row in result['nearest_neighbours']} == {'a','b'}
+    assert {row['shared_called_loci'] for row in result['nearest_neighbours']} == {3,4}
+    assert all(row['allele_differences'] == 1 for row in result['nearest_neighbours'])

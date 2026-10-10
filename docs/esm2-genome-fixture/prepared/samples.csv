@@ -1,0 +1,7 @@
+sample_id,label,role,species,mlst_scheme,mlst_st,collection_date,date_start,date_end,date_precision,country,region,nuts2,host,isolation_source,assembly_reference,date_raw
+q,q,input,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2020,2020-01-01,2020-12-31,year,United Kingdom,,,,,,2020
+synonymous,synonymous,context,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2021,2021-01-01,2021-12-31,year,Greece,,,,,,2021
+variant-x,variant-x,context,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2022,2022-01-01,2022-12-31,year,United Kingdom,,,,,,2022
+variant-y,variant-y,context,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2023,2023-01-01,2023-12-31,year,Greece,,,,,,2023
+variant-both,variant-both,context,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2024,2024-01-01,2024-12-31,year,United Kingdom,,,,,,2024
+missing-context,missing-context,context,Klebsiella pneumoniae,controlled-fixture,controlled-fixture,2025,2025-01-01,2025-12-31,year,Greece,,,,,,2025

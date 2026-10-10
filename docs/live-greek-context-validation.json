@@ -1,0 +1,115 @@
+{
+  "schema": "chronoclade.live-context-validation",
+  "validated_on": "2026-10-10",
+  "source": {
+    "dataset_manifest": "tmp/independent-ensemble-greek/prepared/dataset.json",
+    "original_sample_count": 441,
+    "query_count": 10,
+    "query_ids": [
+      "SAMEA8263207",
+      "SAMEA8263533",
+      "SAMEA8262856",
+      "SAMEA9455354",
+      "SAMEA8263684",
+      "SAMEA8262849",
+      "SAMEA8262495",
+      "SAMEA8262454",
+      "SAMEA8263829",
+      "SAMEA9455447"
+    ],
+    "species": "Klebsiella pneumoniae",
+    "mlst_st": 39,
+    "query_subset_assembly_references": 0
+  },
+  "provider": {
+    "service": "Pathogenwatch public catalogue and advertised analysis exports",
+    "live_retrieval": true,
+    "raw_same_st_catalogue_records": 1483,
+    "accession_deduplicated_sample_units": 1082,
+    "matching_lineage_candidates": {
+      "cgLIN5": 594,
+      "cgLIN6": 439,
+      "cgLIN7": 205
+    },
+    "cgmlst_profiles_requested": 594,
+    "cgmlst_profiles_retrieved": 594,
+    "usable_context_profiles": 584,
+    "exclusions": {
+      "already_present_exact_identity": 10
+    },
+    "context_assemblies": "not_requested",
+    "exports": [
+      {
+        "name": "klebsiella-lincodes",
+        "job": "lincodes-3390273-2",
+        "status": "downloaded",
+        "requested_records": 1483
+      },
+      {
+        "name": "cgmlst",
+        "job": "cgmlst-573-2",
+        "status": "downloaded",
+        "requested_records": 594
+      }
+    ]
+  },
+  "cgmlst": {
+    "status": "complete",
+    "parameters": {
+      "lin_level": 5,
+      "replicates": 2,
+      "context_size": 30,
+      "nearest_per_query": 1,
+      "bootstrap_replicates": 0
+    },
+    "input_ids_retained": 10,
+    "unresolved_input_ids": [],
+    "context_profiles_in_partitions": 584,
+    "block_count": 4,
+    "backend": "dense",
+    "blocks": [
+      {
+        "prefix": [0, 0, 107, 0, 0],
+        "inputs": 7,
+        "contexts": 210,
+        "total": 217,
+        "selection_replicates": 2,
+        "report": "tmp/live-greek10-cgmlst/cglin_8408959c5a77/profile_report.html"
+      },
+      {
+        "prefix": [0, 0, 107, 0, 1],
+        "inputs": 1,
+        "contexts": 139,
+        "total": 140,
+        "selection_replicates": 2,
+        "report": "tmp/live-greek10-cgmlst/cglin_47e4431089d1/profile_report.html"
+      },
+      {
+        "prefix": [0, 0, 107, 0, 9],
+        "inputs": 1,
+        "contexts": 4,
+        "total": 5,
+        "selection_replicates": 2,
+        "report": "tmp/live-greek10-cgmlst/cglin_b59a19ce04f9/profile_report.html"
+      },
+      {
+        "prefix": [0, 0, 107, 1, 0],
+        "inputs": 1,
+        "contexts": 231,
+        "total": 232,
+        "selection_replicates": 2,
+        "report": "tmp/live-greek10-cgmlst/cglin_3222f3a2aef9/profile_report.html"
+      }
+    ],
+    "all_selection_ensembles_validated": true,
+    "report_checksums_verified": true
+  },
+  "artifacts": {
+    "query_subset": "tmp/live-greek10-query/dataset.json",
+    "context_dataset": "tmp/live-greek10-context/dataset.json",
+    "context_audit": "tmp/live-greek10-context/readiness.json",
+    "cgmlst_manifest": "tmp/live-greek10-cgmlst/cgmlst.json",
+    "partition_manifest": "tmp/live-greek10-cgmlst/partitions.json",
+    "partition_report": "tmp/live-greek10-cgmlst/index.html"
+  }
+}

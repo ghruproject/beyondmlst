@@ -1,0 +1,55 @@
+sample_id,field,source,value
+q,species,frozen_record,Klebsiella pneumoniae
+q,mlst_scheme,frozen_record,controlled-fixture
+q,mlst_st,frozen_record,controlled-fixture
+q,collection_date,frozen_record,2020
+q,date_start,frozen_record,2020-01-01
+q,date_end,frozen_record,2020-12-31
+q,date_precision,frozen_record,year
+q,country,frozen_record,United Kingdom
+q,date_raw,frozen_record,2020
+synonymous,species,frozen_record,Klebsiella pneumoniae
+synonymous,mlst_scheme,frozen_record,controlled-fixture
+synonymous,mlst_st,frozen_record,controlled-fixture
+synonymous,collection_date,frozen_record,2021
+synonymous,date_start,frozen_record,2021-01-01
+synonymous,date_end,frozen_record,2021-12-31
+synonymous,date_precision,frozen_record,year
+synonymous,country,frozen_record,Greece
+synonymous,date_raw,frozen_record,2021
+variant-x,species,frozen_record,Klebsiella pneumoniae
+variant-x,mlst_scheme,frozen_record,controlled-fixture
+variant-x,mlst_st,frozen_record,controlled-fixture
+variant-x,collection_date,frozen_record,2022
+variant-x,date_start,frozen_record,2022-01-01
+variant-x,date_end,frozen_record,2022-12-31
+variant-x,date_precision,frozen_record,year
+variant-x,country,frozen_record,United Kingdom
+variant-x,date_raw,frozen_record,2022
+variant-y,species,frozen_record,Klebsiella pneumoniae
+variant-y,mlst_scheme,frozen_record,controlled-fixture
+variant-y,mlst_st,frozen_record,controlled-fixture
+variant-y,collection_date,frozen_record,2023
+variant-y,date_start,frozen_record,2023-01-01
+variant-y,date_end,frozen_record,2023-12-31
+variant-y,date_precision,frozen_record,year
+variant-y,country,frozen_record,Greece
+variant-y,date_raw,frozen_record,2023
+variant-both,species,frozen_record,Klebsiella pneumoniae
+variant-both,mlst_scheme,frozen_record,controlled-fixture
+variant-both,mlst_st,frozen_record,controlled-fixture
+variant-both,collection_date,frozen_record,2024
+variant-both,date_start,frozen_record,2024-01-01
+variant-both,date_end,frozen_record,2024-12-31
+variant-both,date_precision,frozen_record,year
+variant-both,country,frozen_record,United Kingdom
+variant-both,date_raw,frozen_record,2024
+missing-context,species,frozen_record,Klebsiella pneumoniae
+missing-context,mlst_scheme,frozen_record,controlled-fixture
+missing-context,mlst_st,frozen_record,controlled-fixture
+missing-context,collection_date,frozen_record,2025
+missing-context,date_start,frozen_record,2025-01-01
+missing-context,date_end,frozen_record,2025-12-31
+missing-context,date_precision,frozen_record,year
+missing-context,country,frozen_record,Greece
+missing-context,date_raw,frozen_record,2025

@@ -21,7 +21,8 @@ from chronoclade.sample_labels import sample_labels
 from chronoclade.metadata_dates import date_interval as _date_interval
 from chronoclade.context_refinement import _allele, _lineage, _loci, _profile
 from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
-from chronoclade.temporal_diagnostics import date_regression
+from chronoclade.temporal_diagnostics import date_regression, allele_unit_diagnostic
+from chronoclade.profile_groups import complete_linkage_groups as _clusters, group_sensitivity
 
 
 MAX_RECORDS = 1500
@@ -116,26 +117,6 @@ def _pair(left, right, overlap):
     }, None
 
 
-def _clusters(matrix, threshold):
-    """Deterministic complete linkage: all members satisfy the distance threshold."""
-    groups = [(i,) for i in range(len(matrix))]
-    linkage = matrix.copy()
-    np.fill_diagonal(linkage, np.inf)
-    while len(groups) > 1:
-        position = int(np.argmin(linkage))
-        i, j = np.unravel_index(position, linkage.shape)
-        if linkage[i, j] > threshold:
-            break
-        if i > j:
-            i, j = j, i
-        groups[i] = tuple(sorted(groups[i] + groups[j]))
-        groups.pop(j)
-        linkage[i, :] = np.maximum(linkage[i, :], linkage[j, :])
-        linkage[:, i] = linkage[i, :]
-        linkage = np.delete(np.delete(linkage, j, axis=0), j, axis=1)
-        np.fill_diagonal(linkage, np.inf)
-    return sorted(groups)
-
 
 def _csv(path, rows, fields):
     with path.open("w", newline="") as handle:
@@ -212,34 +193,12 @@ def write_profile_network_figures(output, cohort_id, network, records=(), displa
 
 
 def _plots(output, cohort_id, coords, rows, network, display_ids=None):
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    paths = {}
-    fig, ax = plt.subplots(figsize=(7, 5))
-    for origin in sorted({str(r.get("origin", "unknown")) for r in rows}):
-        indexes = [i for i, r in enumerate(rows) if str(r.get("origin", "unknown")) == origin]
-        ax.scatter(coords[indexes, 0], coords[indexes, 1], label=origin, alpha=0.75)
-    ax.set(xlabel="PCoA axis 1", ylabel="PCoA axis 2", title="cgMLST distance ordination")
-    ax.legend()
-    fig.tight_layout()
-    path = output / f"{cohort_id}_pcoa.svg"
-    fig.savefig(path)
-    plt.close(fig)
-    paths["pcoa_figure"] = str(path)
-    counts = Counter(str(r.get("country") or "Unknown") for r in rows)
-    fig, ax = plt.subplots(figsize=(7, max(3, len(counts) * 0.3)))
-    keys = sorted(counts, key=lambda key: (-counts[key], key))
-    ax.barh(keys, [counts[key] for key in keys])
-    ax.invert_yaxis()
-    ax.set(xlabel="Genomes in analysed cohort", title="Available country metadata")
-    fig.tight_layout()
-    path = output / f"{cohort_id}_countries.svg"
-    fig.savefig(path)
-    plt.close(fig)
-    paths["country_figure"] = str(path)
+    from chronoclade.report_components.ordination import write_ordination_views
+    paths = write_ordination_views(output, cohort_id, coords, rows,
+                                   title="cgMLST distance ordination",
+                                   axis_labels=("PCoA axis 1", "PCoA axis 2"))
+    from chronoclade.report_components.geography import write_country_figure
+    paths["country_figure"] = write_country_figure(output, cohort_id, rows)
     paths["network_figure"] = write_profile_network_figures(
         output, cohort_id, network, rows, display_ids
     )
@@ -414,7 +373,7 @@ def analyse_profiles(
         if row.get("origin") not in {"local", "query", "focal"}:
             continue
         choices = [
-            (distances[i, j], j)
+            (_pair(row, other, min_overlap)[0]["allele_differences"], j)
             for j, other in enumerate(records)
             if other.get("origin") == "context" and np.isfinite(distances[i, j])
         ]
@@ -463,6 +422,7 @@ def analyse_profiles(
         "date_exclusions": date_exclusions,
         "cohorts": [],
         "nearest_neighbours": nearest,
+        "nearest_ranking": "raw allele differences among sufficiently jointly callable profiles; all raw-distance ties retained",
         "genetic_groups": [],
         "temporal_persistence": [],
         "time_place_concentration": [],
@@ -511,6 +471,7 @@ def analyse_profiles(
                 "Non-Euclidean distances: negative PCoA eigenvalues; scatterplot is an approximation."
             )
         groups = _clusters(matrix, distance_threshold)
+        cohort["group_sensitivity"] = group_sensitivity(matrix, selected_threshold=distance_threshold)
         if any(r.get("cgmlst_locus_universe_complete") is False for r in rows):
             cohort["warnings"].append(
                 "Coverage denominator is the union of observed export loci; full canonical scheme coverage is unknown."
@@ -680,6 +641,9 @@ def analyse_profiles(
                 distance_field="root_to_tip", distance_units="cgMLST mismatch fraction",
                 label="Existing profile NJ root-to-tip",
             )
+            diagnostic = allele_unit_diagnostic(
+                diagnostic, len(loci), catalogue_complete=not any(
+                    row.get("cgmlst_locus_universe_complete") is False for row in rows))
             points = diagnostic["points"]
             summary["root_to_tip"].append(
                 {
@@ -702,6 +666,11 @@ def analyse_profiles(
                     fmt="o",
                     alpha=0.65,
                 )
+            if diagnostic.get("slope") is not None and points:
+                years = np.array([min(point["year_min"] for point in points),
+                                  max(point["year_max"] for point in points)])
+                ax.plot(years, diagnostic["centered_intercept"] + diagnostic["slope"] *
+                        (years - diagnostic["reference_year"]), color="#333")
             if not points:
                 ax.text(
                     0.5,
@@ -712,7 +681,7 @@ def analyse_profiles(
                 )
             ax.set(
                 xlabel="Collection year (date interval shown)",
-                ylabel="NJ root-to-tip allele-distance fraction",
+                ylabel=diagnostic["distance_units"],
                 title="Exploratory date diagnostic; arbitrary tip root",
             )
             fig.tight_layout()

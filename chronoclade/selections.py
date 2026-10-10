@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from chronoclade.errors import WorkflowError
+from chronoclade.metadata_dates import sample_date_interval
 
 
 @dataclass(frozen=True)
@@ -30,11 +31,23 @@ class DistanceEvidence:
 
 
 def read_distance_evidence(analysis: dict) -> DistanceEvidence:
+    from chronoclade.matrix_distances import BinaryDistanceEvidence
     evidence = analysis.get("distance_evidence")
-    if isinstance(evidence, DistanceEvidence):
+    if isinstance(evidence, (DistanceEvidence, BinaryDistanceEvidence)):
         return evidence
+    if isinstance(evidence, dict) and evidence.get("schema") == "chronoclade.binary_distances":
+        binary_path = analysis.get("paths", {}).get("distance_evidence")
+        if not binary_path:
+            raise WorkflowError("Binary distance descriptor requires its manifest path")
+        matrix = BinaryDistanceEvidence(binary_path)
+        if matrix.descriptor != evidence:
+            raise WorkflowError("Binary distance descriptor disagrees with its manifest")
+        return matrix
     if evidence is not None:
-        raise WorkflowError("distance_evidence must be a DistanceEvidence adapter")
+        raise WorkflowError("distance_evidence must be a validated distance adapter")
+    binary = analysis.get("paths", {}).get("distance_evidence")
+    if binary:
+        return BinaryDistanceEvidence(binary)
     path = analysis.get("paths", {}).get("pairwise_distances")
     if path:
         if not Path(path).is_file():
@@ -53,6 +66,9 @@ def _number(value):
 
 
 def _distance_maps(evidence):
+    from chronoclade.matrix_distances import BinaryDistanceEvidence
+    if isinstance(evidence, BinaryDistanceEvidence):
+        return evidence.value_map(), evidence.value_map(raw=True)
     normalized, nearest = {}, {}
     raw_available = evidence.method == "cgmlst" and any(
         _number(row.get("allele_differences")) is not None for row in evidence.records
@@ -172,9 +188,12 @@ def _strata(by_id, analysis):
     }
     strata = defaultdict(list)
     for identifier, row in sorted(by_id.items()):
+        interval = sample_date_interval(row)
+        years = (interval["start"][:4], interval["end"][:4]) if interval["status"] == "valid" else None
+        date_bin = (years[0] if years[0] == years[1] else "..".join(years)) if years else "Unknown"
         cell = (
             groups.get(identifier, "unassigned"),
-            str(row.get("collection_date") or "")[:4] or "Unknown",
+            date_bin,
             str(row.get("nuts2") or row.get("region") or row.get("country") or "Unknown"),
             str(row.get("host") or "Unknown"),
         )
@@ -335,8 +354,11 @@ def select_context_ensemble(
             ],
             "strata_coverage": _coverage(strata, selected),
             "strata_coverage_scope": "context_pool; every input is retained separately",
+            "date_strata_policy": "validated canonical year or year range; missing/invalid/future dates are Unknown",
             "missing_metadata": {
-                field: [i for i in sorted(query_ids + selected) if not all_records[i].get(field)]
+                field: [i for i in sorted(query_ids + selected)
+                        if (sample_date_interval(all_records[i])["status"] != "valid"
+                            if field == "collection_date" else not all_records[i].get(field))]
                 for field in ("collection_date", "country", "host")
             },
             "queries_without_selected_comparable_neighbour": [

@@ -47,7 +47,12 @@ def _load_embeddings(path: Path):
         ):
             raise EmbeddingError("Invalid actual model, pooling or device provenance")
         descriptor = manifest["artifacts"]["embeddings"]
-        vectors_path = path.parent / descriptor["path"]
+        relative = Path(descriptor["path"])
+        if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+            raise EmbeddingError("Embedding vector path must be contained and relative")
+        vectors_path = (path.parent / relative).resolve()
+        if not vectors_path.is_relative_to(path.parent.resolve()):
+            raise EmbeddingError("Embedding vector path escapes its manifest directory")
         if file_sha256(vectors_path) != descriptor["sha256"]:
             raise EmbeddingError("Embedding vector artifact SHA256 mismatch")
         ids = manifest["protein_ids"]

@@ -1,0 +1,543 @@
+{
+  "artifact_root": "tmp/independent-ensemble-greek",
+  "common_anchor_count": 25,
+  "comparison": {
+    "dated_runs": 5,
+    "manifest": {
+      "path": "native37/final-review/comparison/comparison.json",
+      "sha256": "a3651a2ea470eae9d20fb0de41b41cd921a048b2f858bf043d9143212da96c5b"
+    },
+    "report": {
+      "path": "native37/final-review/comparison/report.html",
+      "sha256": "9b6454741dbb760a21a76a6ce4140d9fe22acfe806dc81fd175aa9173e5aa632"
+    },
+    "sensitivity": {
+      "common_anchor_mrca_date": {
+        "assessable_runs": 5,
+        "maximum": 2010.068919,
+        "minimum": 2009.87963,
+        "range": 0.18928900000014437
+      },
+      "rate": {
+        "assessable_runs": 5,
+        "maximum": 9.401e-07,
+        "minimum": 9.256e-07,
+        "range": 1.450000000000003e-08
+      },
+      "root_date": {
+        "assessable_runs": 5,
+        "maximum": 2010.068919,
+        "minimum": 2009.87963,
+        "range": 0.18928900000014437
+      }
+    },
+    "target_pair_agreement": [
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262849|SAMEA8263829"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262849|SAMEA9455447"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262856|SAMEA8262849"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262856|SAMEA8263684"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262856|SAMEA8263829"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262856|SAMEA9455354"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8262856|SAMEA9455447"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA8262849"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA8262856"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA8263684"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA8263829"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA9455354"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263207|SAMEA9455447"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263684|SAMEA8262849"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263684|SAMEA8263829"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263684|SAMEA9455447"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA8263829|SAMEA9455447"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA9455354|SAMEA8262849"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA9455354|SAMEA8263684"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA9455354|SAMEA8263829"
+      },
+      {
+        "assessable_runs": 5,
+        "co_clustered_runs": 0,
+        "target_pair": "SAMEA9455354|SAMEA9455447"
+      }
+    ]
+  },
+  "completed_at": "2026-10-10T13:27:45.844961+00:00",
+  "cross_run_shared_assembly_hashes_identical": true,
+  "dataset_sha256": "522e67954a2a0705a0d9b1d26b347868953e03f4979240037dd6ddc6a3536946",
+  "distinct_acquired_assemblies": 43,
+  "distinct_selections": 5,
+  "elapsed_seconds": 3132.186,
+  "ensemble_sha256": "e4c4612409980db0c4e77226c51f6034f0bc58e0340f712920a7e904ed570884",
+  "interpretation": "Five genuine alternatives differ in only one to four optional genomes (25 common mandatory anchors). These are modest context-selection sensitivity checks, not confidence intervals or evidence of broad convergence. Twenty permutations give a minimum empirical p-value of 1/21. Provider IDs and acquired SHA256 hashes are retained; unpublished provider checksums cannot be independently verified.",
+  "parameters": {
+    "allow_unsupported": false,
+    "randomisations": 20,
+    "seed": 42
+  },
+  "requested_runs": 5,
+  "resources": {
+    "concurrent_runs": 2,
+    "randomisation_workers_per_tree": 2,
+    "threads_per_tree": 2
+  },
+  "resume_check": {
+    "elapsed_seconds": 7.656,
+    "selection_id": "selection-001",
+    "unchanged_native_logs": true
+  },
+  "runs": [
+    {
+      "acquisition_counts": {
+        "downloaded": 30,
+        "ready": 7
+      },
+      "alignment_columns": 4770090,
+      "clock_confidence": {
+        "chi_squared": 3300.47,
+        "internal_nodes": 36,
+        "interval_level": "90% max-posterior region",
+        "maximum_internal_interval_width_years": 2.8279069999998683,
+        "median_internal_interval_width_years": 1.6094960000000356,
+        "method": "TreeTime maximum likelihood",
+        "r_squared": 0.63,
+        "rate": 9.401e-07,
+        "rate_std_dev": 8e-08,
+        "root_date": "2009-11-24",
+        "root_lower_bound": 2008.962643,
+        "root_node": "NODE_0000000",
+        "root_numeric_date": 2009.898134,
+        "root_upper_bound": 2011.220916
+      },
+      "context_count": 30,
+      "dating_status": "dated",
+      "elapsed_seconds": 1554.545,
+      "eligible_dates": 36,
+      "exact_membership_verified": true,
+      "input_count": 7,
+      "invocation": "CLI",
+      "reference_sample_id": "PW_mUYdv5p9E1CJUv4Q9a8AjJ",
+      "retained_clonal_sites": 4770090,
+      "review_time_report": {
+        "path": "native37/selection-001/final-review/time/report.html",
+        "sha256": "a8590295719a66cc88ea4f4ac754f48f29a44aa65097965391abe75d7811a0c1"
+      },
+      "review_tree_report": {
+        "path": "native37/selection-001/final-review/tree/report.html",
+        "sha256": "6dee5c7f8a342498f606a9cfc693704304a5ba3c6b35fa90146d3ab107c78393"
+      },
+      "sample_count": 37,
+      "selected_sample_ids_sha256": "ef5fc191576b318a5e971009bf0b695aa98e917a14c8a8b6189aa8debb970de8",
+      "selection_id": "selection-001",
+      "selection_sha256": "8d43b1efd9079856fc0949108374c86ba3b18940a5a4c53056e36b988b177a10",
+      "source_hashes_verified": true,
+      "status": "complete",
+      "temporal_code": "supported",
+      "temporal_reason": "The lineage has a positive estimated rate and its observed root-to-tip fit was stronger than expected after randomly permuting sampling dates.",
+      "temporal_screen": {
+        "cluster_count": 34,
+        "confounding": {
+          "correlation": 0.4942649500789707,
+          "inference": "Pairs share tips and ancestry; this descriptive value has no independent-pair p-value or gate threshold.",
+          "method": "descriptive Pearson correlation of pairwise patristic distances and absolute date-midpoint gaps",
+          "pairs": 630
+        },
+        "observed": {
+          "r_squared": 0.63,
+          "rate": 1.07e-06
+        },
+        "p_value_r_squared": 0.047619047619047616,
+        "requested_randomisations": 20,
+        "successful_randomisations": 20
+      },
+      "time_manifest": {
+        "path": "native37/selection-001/time/time.json",
+        "sha256": "81c17d06476c44492ca5e22c540986b812542e15c2ac82b5779ea86667f15bba"
+      },
+      "tree_manifest": {
+        "path": "native37/selection-001/tree/tree.json",
+        "sha256": "74d7ea56ee237df60eea8eaf17fd39c3892bc009a60a538bc989b02dcbe1d025"
+      },
+      "undated": 1
+    },
+    {
+      "acquisition_counts": {
+        "downloaded": 30,
+        "ready": 7
+      },
+      "alignment_columns": 4915016,
+      "clock_confidence": {
+        "chi_squared": 3970.37,
+        "internal_nodes": 36,
+        "interval_level": "90% max-posterior region",
+        "maximum_internal_interval_width_years": 2.5269690000000082,
+        "median_internal_interval_width_years": 1.55609800000002,
+        "method": "TreeTime maximum likelihood",
+        "r_squared": 0.59,
+        "rate": 9.367e-07,
+        "rate_std_dev": 8.05e-08,
+        "root_date": "2010-01-06",
+        "root_lower_bound": 2009.127257,
+        "root_node": "NODE_0000000",
+        "root_numeric_date": 2010.014475,
+        "root_upper_bound": 2011.25475
+      },
+      "context_count": 30,
+      "dating_status": "dated",
+      "elapsed_seconds": 1231.183,
+      "eligible_dates": 36,
+      "exact_membership_verified": true,
+      "input_count": 7,
+      "invocation": "Python stage APIs",
+      "reference_sample_id": "PW_mUYdv5p9E1CJUv4Q9a8AjJ",
+      "retained_clonal_sites": 4915016,
+      "review_time_report": {
+        "path": "native37/selection-002/final-review/time/report.html",
+        "sha256": "461de55e1f2ef1b71659dda38cc7c24b9bda866851217fdb77aa37c96810f91e"
+      },
+      "review_tree_report": {
+        "path": "native37/selection-002/final-review/tree/report.html",
+        "sha256": "be6aad4112e7e17db0697f54b59e3d0b904c776244b6b9b4a96490e82b5525dd"
+      },
+      "sample_count": 37,
+      "selected_sample_ids_sha256": "f18b324071c7fc192df7ab2fa5447c61276e30fd741dbaf29d2b185d6da1528f",
+      "selection_id": "selection-002",
+      "selection_sha256": "939e8ab12265c32d4aa48efe8c43c2827bb8060b3bca25cd5d001394879a934c",
+      "source_hashes_verified": true,
+      "status": "complete",
+      "temporal_code": "supported",
+      "temporal_reason": "The lineage has a positive estimated rate and its observed root-to-tip fit was stronger than expected after randomly permuting sampling dates.",
+      "temporal_screen": {
+        "cluster_count": 35,
+        "confounding": {
+          "correlation": 0.4833863905227065,
+          "inference": "Pairs share tips and ancestry; this descriptive value has no independent-pair p-value or gate threshold.",
+          "method": "descriptive Pearson correlation of pairwise patristic distances and absolute date-midpoint gaps",
+          "pairs": 630
+        },
+        "observed": {
+          "r_squared": 0.59,
+          "rate": 1.058e-06
+        },
+        "p_value_r_squared": 0.047619047619047616,
+        "requested_randomisations": 20,
+        "successful_randomisations": 20
+      },
+      "time_manifest": {
+        "path": "native37/selection-002/time/time.json",
+        "sha256": "2afc6b3b7224c0d1af3d85c7f627e88df7c6fde22637a4afc7704b0f83aeba89"
+      },
+      "tree_manifest": {
+        "path": "native37/selection-002/tree/tree.json",
+        "sha256": "a125c8f6d13253d5a157eb5e0ee1d13a75071b3719871c1cc6601832c1300e12"
+      },
+      "undated": 1
+    },
+    {
+      "acquisition_counts": {
+        "downloaded": 30,
+        "ready": 7
+      },
+      "alignment_columns": 4763078,
+      "clock_confidence": {
+        "chi_squared": 3479.57,
+        "internal_nodes": 36,
+        "interval_level": "90% max-posterior region",
+        "maximum_internal_interval_width_years": 2.8427019999999175,
+        "median_internal_interval_width_years": 1.625754999999799,
+        "method": "TreeTime maximum likelihood",
+        "r_squared": 0.59,
+        "rate": 9.275e-07,
+        "rate_std_dev": 8.25e-08,
+        "root_date": "2009-11-18",
+        "root_lower_bound": 2008.934541,
+        "root_node": "NODE_0000000",
+        "root_numeric_date": 2009.87963,
+        "root_upper_bound": 2011.203745
+      },
+      "context_count": 30,
+      "dating_status": "dated",
+      "elapsed_seconds": 896.669,
+      "eligible_dates": 36,
+      "exact_membership_verified": true,
+      "input_count": 7,
+      "invocation": "Python stage APIs",
+      "reference_sample_id": "PW_mUYdv5p9E1CJUv4Q9a8AjJ",
+      "retained_clonal_sites": 4763078,
+      "review_time_report": {
+        "path": "native37/selection-003/final-review/time/report.html",
+        "sha256": "6111a86e71c4453dd5f252ef5a365c7cf60abcb18788917d426cc68f80c48113"
+      },
+      "review_tree_report": {
+        "path": "native37/selection-003/final-review/tree/report.html",
+        "sha256": "3d40be77a5bd9fe477db9417a8dd32e7f17cc18f6d6075656adb9be5e1270007"
+      },
+      "sample_count": 37,
+      "selected_sample_ids_sha256": "4a6b025fa7a1f787497acf1417b2fe6b923ba5c57b1ded28250488b2125a56f0",
+      "selection_id": "selection-003",
+      "selection_sha256": "8c88ebb5d0dbfc2fff1dac2e3dcfdbd765d0f9d13ff3b9914cd784fa66babb34",
+      "source_hashes_verified": true,
+      "status": "complete",
+      "temporal_code": "supported",
+      "temporal_reason": "The lineage has a positive estimated rate and its observed root-to-tip fit was stronger than expected after randomly permuting sampling dates.",
+      "temporal_screen": {
+        "cluster_count": 35,
+        "confounding": {
+          "correlation": 0.4909306878779178,
+          "inference": "Pairs share tips and ancestry; this descriptive value has no independent-pair p-value or gate threshold.",
+          "method": "descriptive Pearson correlation of pairwise patristic distances and absolute date-midpoint gaps",
+          "pairs": 630
+        },
+        "observed": {
+          "r_squared": 0.59,
+          "rate": 1.052e-06
+        },
+        "p_value_r_squared": 0.047619047619047616,
+        "requested_randomisations": 20,
+        "successful_randomisations": 20
+      },
+      "time_manifest": {
+        "path": "native37/selection-003/time/time.json",
+        "sha256": "f801613ad91df9101979e0820d9c46e3e0442290c29a9f0712158660253ae5b1"
+      },
+      "tree_manifest": {
+        "path": "native37/selection-003/tree/tree.json",
+        "sha256": "f6684b85d289980e0d53edd9b4d026f755e1a1befb90338920bedd10e867f6a2"
+      },
+      "undated": 1
+    },
+    {
+      "acquisition_counts": {
+        "downloaded": 30,
+        "ready": 7
+      },
+      "alignment_columns": 4900707,
+      "clock_confidence": {
+        "chi_squared": 3591.65,
+        "internal_nodes": 36,
+        "interval_level": "90% max-posterior region",
+        "maximum_internal_interval_width_years": 2.5550439999999526,
+        "median_internal_interval_width_years": 1.5302010000000337,
+        "method": "TreeTime maximum likelihood",
+        "r_squared": 0.59,
+        "rate": 9.256e-07,
+        "rate_std_dev": 8.03e-08,
+        "root_date": "2010-01-11",
+        "root_lower_bound": 2009.119739,
+        "root_node": "NODE_0000000",
+        "root_numeric_date": 2010.028409,
+        "root_upper_bound": 2011.281436
+      },
+      "context_count": 30,
+      "dating_status": "dated",
+      "elapsed_seconds": 1051.913,
+      "eligible_dates": 36,
+      "exact_membership_verified": true,
+      "input_count": 7,
+      "invocation": "Python stage APIs",
+      "reference_sample_id": "PW_mUYdv5p9E1CJUv4Q9a8AjJ",
+      "retained_clonal_sites": 4900707,
+      "review_time_report": {
+        "path": "native37/selection-004/final-review/time/report.html",
+        "sha256": "26f1c8be0c313812188f344a3cffe0dd1c2905691e834591b618fac51669d963"
+      },
+      "review_tree_report": {
+        "path": "native37/selection-004/final-review/tree/report.html",
+        "sha256": "2ed182d8d18213ab7d2f24936a6d95dc269c98260d51704bb02361f110c8a533"
+      },
+      "sample_count": 37,
+      "selected_sample_ids_sha256": "05fad1ca7b658abcda054038e7bd5c29e67dc840746a97e5fe769b968a3d0a40",
+      "selection_id": "selection-004",
+      "selection_sha256": "6566bedc98f75849587bff2f0a89de2ce010c83ef8308afd0460702532f0067a",
+      "source_hashes_verified": true,
+      "status": "complete",
+      "temporal_code": "supported",
+      "temporal_reason": "The lineage has a positive estimated rate and its observed root-to-tip fit was stronger than expected after randomly permuting sampling dates.",
+      "temporal_screen": {
+        "cluster_count": 35,
+        "confounding": {
+          "correlation": 0.4793783235657661,
+          "inference": "Pairs share tips and ancestry; this descriptive value has no independent-pair p-value or gate threshold.",
+          "method": "descriptive Pearson correlation of pairwise patristic distances and absolute date-midpoint gaps",
+          "pairs": 630
+        },
+        "observed": {
+          "r_squared": 0.59,
+          "rate": 1.048e-06
+        },
+        "p_value_r_squared": 0.047619047619047616,
+        "requested_randomisations": 20,
+        "successful_randomisations": 20
+      },
+      "time_manifest": {
+        "path": "native37/selection-004/time/time.json",
+        "sha256": "3155a1e5f6751e69a62631d68240452f89610f787db838491b2535062f0ba729"
+      },
+      "tree_manifest": {
+        "path": "native37/selection-004/tree/tree.json",
+        "sha256": "8055251e7d62cc08ad2f79a7392e24cf532c562acec811571b8cce6028731957"
+      },
+      "undated": 1
+    },
+    {
+      "acquisition_counts": {
+        "downloaded": 30,
+        "ready": 7
+      },
+      "alignment_columns": 4900707,
+      "clock_confidence": {
+        "chi_squared": 3626.85,
+        "internal_nodes": 36,
+        "interval_level": "90% max-posterior region",
+        "maximum_internal_interval_width_years": 2.5494999999998527,
+        "median_internal_interval_width_years": 1.4943009999999504,
+        "method": "TreeTime maximum likelihood",
+        "r_squared": 0.59,
+        "rate": 9.326e-07,
+        "rate_std_dev": 8.05e-08,
+        "root_date": "2010-01-26",
+        "root_lower_bound": 2009.174263,
+        "root_node": "NODE_0000000",
+        "root_numeric_date": 2010.068919,
+        "root_upper_bound": 2011.315102
+      },
+      "context_count": 30,
+      "dating_status": "dated",
+      "elapsed_seconds": 878.424,
+      "eligible_dates": 36,
+      "exact_membership_verified": true,
+      "input_count": 7,
+      "invocation": "Python stage APIs",
+      "reference_sample_id": "PW_mUYdv5p9E1CJUv4Q9a8AjJ",
+      "retained_clonal_sites": 4900707,
+      "review_time_report": {
+        "path": "native37/selection-005/final-review/time/report.html",
+        "sha256": "52d3fb159d112327ed4607c0261bb2a5545d72111c37ab0893d2054e88209cda"
+      },
+      "review_tree_report": {
+        "path": "native37/selection-005/final-review/tree/report.html",
+        "sha256": "4818a4dc63d16f6314b1e7b4923bbf49ca97a728711042fa9487b9f63b2176f6"
+      },
+      "sample_count": 37,
+      "selected_sample_ids_sha256": "17029ab7293a5682011f56fbbbcddf696efeac584d80cbe5a62fc2ab3691d78b",
+      "selection_id": "selection-005",
+      "selection_sha256": "485c6b46b52483c174cafb59291e6a455653db51c7f05371efd623c1f45adc47",
+      "source_hashes_verified": true,
+      "status": "complete",
+      "temporal_code": "supported",
+      "temporal_reason": "The lineage has a positive estimated rate and its observed root-to-tip fit was stronger than expected after randomly permuting sampling dates.",
+      "temporal_screen": {
+        "cluster_count": 35,
+        "confounding": {
+          "correlation": 0.47815952557126135,
+          "inference": "Pairs share tips and ancestry; this descriptive value has no independent-pair p-value or gate threshold.",
+          "method": "descriptive Pearson correlation of pairwise patristic distances and absolute date-midpoint gaps",
+          "pairs": 630
+        },
+        "observed": {
+          "r_squared": 0.59,
+          "rate": 1.051e-06
+        },
+        "p_value_r_squared": 0.047619047619047616,
+        "requested_randomisations": 20,
+        "successful_randomisations": 20
+      },
+      "time_manifest": {
+        "path": "native37/selection-005/time/time.json",
+        "sha256": "4c7d9ddeb3c1c42435b9e9492cc91a614d855eb464b61b9fe432e55ca7d8a1fb"
+      },
+      "tree_manifest": {
+        "path": "native37/selection-005/tree/tree.json",
+        "sha256": "01784d72181eb4a7c598debbecea57059c4a60c9661b6eb44bced1e0a35a8a8f"
+      },
+      "undated": 1
+    }
+  ],
+  "selection_ensemble": {
+    "path": "cgmlst/cglin_8408959c5a77/ensemble_validation/ensemble.json",
+    "sha256": "e4c4612409980db0c4e77226c51f6034f0bc58e0340f712920a7e904ed570884"
+  },
+  "selection_overlap_jaccard": {
+    "maximum": 0.9473684210526315,
+    "minimum": 0.8048780487804879
+  },
+  "started_at": "2026-10-10T12:35:33.658715+00:00",
+  "status": "complete"
+}

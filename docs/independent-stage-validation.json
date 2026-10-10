@@ -1,0 +1,32 @@
+{
+  "schema": "chronoclade.independent_stage_integration_validation",
+  "date": "2026-10-10",
+  "synthetic": true,
+  "scope": "prepared dataset to cgmlst manifest, full report, binary evidence and validated selections; no native assembly or dating run",
+  "profile_count": 1501,
+  "locus_count": 20,
+  "input_count": 1,
+  "context_count": 1500,
+  "backend": "scale",
+  "bootstrap_replicates": 0,
+  "nj_tip_count": 1501,
+  "ordination_rows": 1501,
+  "comparable_pairs": 1125750,
+  "requested_selections": 2,
+  "selected_counts": [
+    89,
+    89
+  ],
+  "nearest_ties_retained": [
+    88,
+    88
+  ],
+  "mandatory_budget_overrun_explanation": "88 identical nearest contexts exceed the requested budget of10; all remain mandatory and selections are duplicate",
+  "checks": [
+    "stage manifest complete",
+    "backend handoff above1500",
+    "full cohort IDs retained",
+    "selection/source loaders validate binary arrays and checksums",
+    "browser metadata-toggle and full-tree expansion verified"
+  ]
+}

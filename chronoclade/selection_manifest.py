@@ -92,7 +92,7 @@ def _ids(manifest, field):
 def _partition_block(path, dataset_id, dataset_hash, block_id, pool=None):
     partition = _read(path)
     if (
-        partition.get("schema") != "chronoclade.cgmlst.partitions"
+        partition.get("schema") not in {"chronoclade.cgmlst.partitions", "chronoclade.esm2.partitions"}
         or partition.get("schema_version") != 1
         or partition.get("dataset_id") != dataset_id
         or partition.get("dataset_sha256") != dataset_hash
@@ -152,23 +152,26 @@ def _sources(manifest, base):
     if not isinstance(source.get("distance_definition"), str) or not source["distance_definition"]:
         raise WorkflowError("source.distance_definition is required")
     distance_data = _read(evidence)
-    if (
-        distance_data.get("method") != source["method"]
-        or distance_data.get("distance_definition") != source["distance_definition"]
-        or not isinstance(distance_data.get("records"), list)
-    ):
-        raise WorkflowError(
-            "source.distance_evidence must preserve its method, definition and records"
-        )
+    if distance_data.get("method") != source["method"] or distance_data.get("distance_definition") != source["distance_definition"]:
+        raise WorkflowError("source.distance_evidence must preserve its method and definition")
     dataset_ids = set(dataset.sample_ids)
-    for row in distance_data["records"]:
-        if not isinstance(row, dict) or any(
-            not isinstance(row.get(field), str) or row[field] not in dataset_ids
-            for field in ("sample_id_1", "sample_id_2")
-        ):
-            raise WorkflowError(
-                "source.distance_evidence contains identifiers outside source.dataset"
-            )
+    if distance_data.get("schema") == "chronoclade.binary_distances":
+        from chronoclade.matrix_distances import BinaryDistanceEvidence
+        try:
+            matrix = BinaryDistanceEvidence(evidence)
+        except (ValueError, OSError, KeyError, TypeError, AttributeError) as error:
+            raise WorkflowError(f"Invalid binary selection distance evidence: {error}") from error
+        if not set(matrix.sample_ids).issubset(dataset_ids):
+            raise WorkflowError("Binary distance identifiers are outside source.dataset")
+    else:
+        if not isinstance(distance_data.get("records"), list):
+            raise WorkflowError("source.distance_evidence requires records or a binary matrix")
+        for row in distance_data["records"]:
+            if not isinstance(row, dict) or any(
+                not isinstance(row.get(field), str) or row[field] not in dataset_ids
+                for field in ("sample_id_1", "sample_id_2")
+            ):
+                raise WorkflowError("source.distance_evidence contains identifiers outside source.dataset")
     return dataset, evidence
 
 
@@ -331,11 +334,14 @@ def write_selection_ensemble(
     dataset = load_dataset(dataset_manifest)
     evidence = read_distance_evidence(analysis)
     dataset_ids = set(dataset.sample_ids)
-    if any(
-        row.get(field) not in dataset_ids
-        for row in evidence.records
-        for field in ("sample_id_1", "sample_id_2")
-    ):
+    from chronoclade.matrix_distances import BinaryDistanceEvidence
+    binary = isinstance(evidence, BinaryDistanceEvidence)
+    if binary:
+        invalid_ids = not set(evidence.sample_ids).issubset(dataset_ids)
+    else:
+        invalid_ids = any(row.get(field) not in dataset_ids for row in evidence.records
+                          for field in ("sample_id_1", "sample_id_2"))
+    if invalid_ids:
         raise WorkflowError("Distance evidence contains identifiers outside source.dataset")
     selections, ensemble = select_context_ensemble(
         queries,
@@ -370,14 +376,19 @@ def write_selection_ensemble(
     staging = Path(tempfile.mkdtemp(prefix=f".{output.name}.pending-", dir=output.parent))
     try:
         evidence_path = staging / "distance_evidence.json"
-        write_json(
-            evidence_path,
-            {
-                "method": evidence.method,
-                "distance_definition": evidence.distance_definition,
-                "records": list(evidence.records),
-            },
-        )
+        if binary:
+            descriptor = dict(evidence.descriptor)
+            copied_paths = {}
+            for kind, spec in evidence.paths.items():
+                filename = kind + ".npy"
+                shutil.copyfile(evidence.manifest_path.parent / spec["path"], staging / filename)
+                copied_paths[kind] = {"path": filename, "sha256": file_sha256(staging / filename)}
+            descriptor["paths"] = copied_paths
+            write_json(evidence_path, descriptor)
+        else:
+            write_json(evidence_path, {"method": evidence.method,
+                       "distance_definition": evidence.distance_definition,
+                       "records": list(evidence.records)})
         header = {
             "schema_version": SCHEMA_VERSION,
             "software": {"name": "chronoclade", "version": __version__},

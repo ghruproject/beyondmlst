@@ -1,7 +1,8 @@
 # Independent preparation
 
-`chronoclade prepare` imports frozen canonical profiles or validates and republishes
-an existing prepared dataset. It writes `dataset.json`, typed categorical allele
+`chronoclade prepare` resolves live query collections, accessions or assembly
+metadata, imports frozen canonical profiles, or validates and republishes an
+existing prepared dataset. It writes `dataset.json`, typed categorical allele
 matrices, inspection CSVs, complete imported lineage and metadata evidence,
 `readiness.json`, `report.html` and a checksummed `prepare.json` stage result.
 The complete output directory is published atomically; an existing output is never
@@ -13,13 +14,64 @@ chronoclade prepare prepared/dataset.json --input-kind dataset --out imported/
 chronoclade cgmlst prepared/dataset.json --out cgmlst/
 ```
 
-Preparation is entirely offline in this first independent implementation. It
-imports existing evidence without installing typing tools, querying reference
-databases, resolving collection/accession identities or discovering public context.
-Existing local assemblies explicitly linked by the input are copied into the
-bundle under content hashes. The saved samples table uses relative assembly paths,
-so moving the output does not break those references. Remote assembly URLs or
-accession identities remain external references; no assembly download occurs.
+Frozen profile and dataset imports are offline. Live preparation uses the same
+portable bundle contract, with exact query identity, provider response snapshots,
+metadata precedence/conflicts and per-sample retrieval/readiness evidence. It does
+not discover public context or download context assemblies. Linked local input
+assemblies are copied under content hashes and remain portable.
+
+## Live query preparation
+
+```console
+chronoclade prepare https://pathogen.watch/collections/jX5cwsoyJ1KDquMqssUzAD \
+  --input-kind collection --out prepared-collection/
+chronoclade prepare accessions.csv --input-kind accessions \
+  --species "Klebsiella pneumoniae" --metadata overrides.csv --out prepared-accessions/
+chronoclade prepare assemblies.csv --input-kind assemblies \
+  --typing-config ~/.local/share/chronoclade/typing/query_config.json --out prepared-assemblies/
+```
+
+Collection identifiers accept a short UUID or a full HTTPS Pathogenwatch collection
+URL, including its optional slug. Membership pages must reconcile exactly with the
+advertised count. An accession input is a unique one-ID-per-line list or CSV with
+`accession` or `source_genome_id`; CSV metadata is applied as an explicit override.
+Public accession search requires species, a complete bounded response and exactly
+one exact accession match. Ambiguous identities fail without choosing a neighbour.
+An assembly input is a CSV with `sample_id`, `assembly` and `species` (or
+`--species`). Assembly paths are relative to the CSV. Additional `--metadata`
+overrides join by exact ID and take precedence over provider values; differences
+remain in the conflicts table.
+
+Existing server-advertised cgMLST and cgLIN analysis exports are retrieved for the
+resolved input IDs. The configured Pathogenwatch key is read from the environment
+or the protected local configuration; it is never accepted as a command-line
+argument or written into snapshots. Public searches remain credential-free.
+`--query-typing`, `--public-typing` and `--cglin-export` accept validated frozen
+assignments. Query typing must match exact sample identity, species and any known
+input assembly SHA256. Missing profiles and lineages remain separate checks.
+
+`--typing-config` enables the pinned native upstream caller and assigner. A
+compatible existing profile missing its lineage goes directly to the assigner,
+without assembly acquisition. Other incomplete inputs acquire **input** assemblies
+and run native typing. A missing/unready configuration publishes an incomplete
+bundle with an explicit reference-database reason, rather than inventing calls.
+Typing-tool installation and database readiness are separate audit fields. Existing
+frozen typing does not require a Pasteur key. Fresh Klebsiella lineage assignment
+requires its configured Pasteur reference database; E. coli assignment requires
+its scheme-specific HierCC reference database.
+
+Live metadata enrichment uses exact linked ENA run/BioSample accessions. It fills
+missing country, collection date, host and isolation source only when returned
+records agree. Existing values retain precedence, source raw values and conflicts
+remain recorded, and unrelated identities are rejected. It never derives a region
+or date precision from an upload date. `--no-enrich-metadata` disables enrichment.
+Missing metadata and request failures preserve the sample.
+
+Provider cgMLST exports list observed loci only. Their automatically generated
+catalogue is explicitly incomplete; no full-universe call fraction is claimed.
+Supply `--catalogues` with a matching full scheme catalogue to assess completeness.
+Native callers provide the ordered full locus universe. Source responses and exports
+are copied into the checksummed bundle after credential checks.
 
 ## Frozen input contract
 
@@ -86,7 +138,7 @@ Missing profiles remain as samples, including all-null matrix rows when their
 scope matches a supplied catalogue. Credentials are rejected before source
 snapshots or outputs are published.
 
-## Readiness and remaining provider work
+## Readiness and public profile context
 
 Dataset publication has a separate completion status from typing readiness. The
 audit marks available profiles, absent loci, incomplete catalogue universes and
@@ -97,16 +149,43 @@ explicitly unassessed. A profile with missing lineage is incomplete. Missing
 metadata is counted and retained; it does not exclude valid samples or by itself
 make existing typing incomplete.
 
-The audit says typing tools and reference database availability were not checked
-because frozen imports do not need them. It never claims fresh typing was run or
-that an authenticated reference database is ready. `prepare.json` lists relative
-artifact paths, byte counts, hashes and exact sample IDs; input JSON and catalogue
-snapshots are included as raw source evidence. Raw source values may retain their
-original paths, while authoritative local assembly references are portable.
+Frozen-import audits say tools/databases were not checked because those imports
+do not need them. Live audits distinguish configured, unavailable and ready
+references, and whether native typing or assignment actually ran. Dataset
+publication completion does not imply typing completeness.
 
-Collection membership resolution, exact accession identity/metadata retrieval,
-input assembly acquisition for missing profiles, independent profile calling and
-lineage assignment, and exact linked ENA/BioSample metadata enrichment remain to
-be extracted behind query-only provider interfaces. The cumulative resolver mixes
-those responsibilities with public context discovery and partition policy; the
-independent prepare command deliberately does not wrap that runner.
+The cgMLST provider hook `discover_profile_context` consumes a prepared bundle and
+publishes a new prepared bundle for profile analysis. It searches the complete
+accessible public same-ST pool, records counts at LIN5/6/7, and applies the explicit
+chosen LIN level (default 5). E. coli requires an explicit HierCC level. Lineage
+scheme/version/database scope and profile scope must be compatible. The hook
+requests every matching profile, without a candidate limit or context assembly
+acquisition. It deduplicates source identity, preserving different samples with
+identical profiles; exact inputs are excluded. Unavailable or incompatible profiles
+remain audited exclusions.
+
+`readiness.json` and dataset parameters record discovered, requested, retrieved
+and usable counts separately, pagination evidence, export status, exclusions,
+source dataset SHA256 and the explicit policy. Input metadata, profile calls and
+lineage/crosswalk/retrieval evidence are preserved. Accessible public matches are
+reported; global completeness is never claimed. Raw provider snapshots are
+checksummed under `sources/provider/`.
+
+On 10 October 2026, live query-only preparation retrieved all 23 supplied
+*S. aureus* collection members and all 23 existing cgMLST profiles without assembly
+acquisition or context discovery. The observed locus catalogue remained incomplete
+and lineage readiness was explicitly unassessed for this species. This validates
+live membership/export acquisition, not Klebsiella native reference-database
+readiness. A live public Klebsiella ST147 search reconciled 7,807 accessible
+records across 79 pages; this verifies search pagination, not complete lineage or
+profile export retrieval. Local upstream MLST 8.0.0, plincer 7.0.0 and hclink 4.0.1 installations
+were discovered; their reference databases were unavailable, independently of
+those installed tools. A fixture with 120 matching public profiles verifies the
+unbounded explicit-level context path and exclusion of an unrelated prefix.
+
+Upstream tool contracts are documented by [Pathogenwatch MLST](https://github.com/pathogenwatch-oss/mlst),
+[plincer](https://github.com/pathogenwatch-oss/plincer) and
+[hclink](https://github.com/pathogenwatch-oss/hclink). Pathogenwatch service endpoint
+response shapes are frozen and validated by the adapter and its live checks;
+provider response compatibility remains explicit rather than assuming a database
+release from an analysis job name.

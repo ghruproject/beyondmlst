@@ -183,7 +183,7 @@ def test_fixed_loci_use_categories_and_a_shared_denominator():
     assert cohort["scheme_loci"] == 3
     assert set(cohort["sample_ids"]) == set(data.sample_ids)
     assert all(ident in cohort["tree_newick"] for ident in data.sample_ids)
-    assert cohort["diagnostic"]["slope_units"] == "cgMLST mismatch fraction per year"
+    assert cohort["diagnostic"]["slope_units"] == "allele-distance units on 2 fixed callable loci per year"
     assert (
         next(row for row in cohort["samples"] if row["sample_id"] == cohort["root"])["root_to_tip"]
         == 0
