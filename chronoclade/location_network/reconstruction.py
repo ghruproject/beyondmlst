@@ -36,6 +36,7 @@ def _roots(tree, rows, limit=5):
     if not candidates:
         return []
     inputs = [name for name in candidates if is_input_sample(by_id[name])]
+    positions = {name: index for index, name in enumerate(candidates)}
     selected = [inputs[0] if inputs else candidates[0]]
     while len(selected) < min(limit, len(candidates)):
         seen = {_country(by_id[name]) for name in selected} - {None}
@@ -52,7 +53,7 @@ def _roots(tree, rows, limit=5):
                 choices,
                 key=lambda name: (
                     min(tree.distance(name, root) for root in selected),
-                    -candidates.index(name),
+                    -positions[name],
                 ),
             )
         )

@@ -1,6 +1,7 @@
 """Shared offline ordination views; dataset markers stay distinct in every view."""
 from __future__ import annotations
 
+from collections import Counter
 from html import escape
 from pathlib import Path
 import re
@@ -47,6 +48,7 @@ def write_ordination_views(output, prefix, coordinates, records, *,
     categories = {
         "dataset": [names[role] for role in roles],
         "country": [str(row.get("country") or "Unknown country") for row in records],
+        "host": [str(row.get("host") or "Unknown host") for row in records],
     }
     if groups is not None:
         categories["group"] = [str(groups.get(ident, "Ungrouped")) for ident in ids]
@@ -75,18 +77,30 @@ def write_ordination_views(output, prefix, coordinates, records, *,
             unique = sorted(set(values))
             palette = plt.get_cmap("tab20", max(1, len(unique)))
             colours = {value: palette(i) for i, value in enumerate(unique)}
+            counts = Counter(values)
+            shown = sorted(unique, key=lambda value: (-counts[value], value))[:20]
             handles = [Line2D([], [], color=colours[value], marker="o", linestyle="None", label=value)
-                       for value in unique]
-            for value in unique:
-                for role, marker in markers.items():
-                    selected = [i for i in range(len(records)) if values[i] == value and roles[i] == role]
-                    if selected:
-                        ax.scatter(*coordinates[selected].T, c=[colours[value]], marker=marker,
-                                   alpha=.8, s=35, edgecolors="#222", linewidths=.3)
+                       for value in shown]
+            # One scatter per role avoids quadratic scans and thousands of artists.
+            for role, marker in markers.items():
+                selected = [i for i, observed in enumerate(roles) if observed == role]
+                if selected:
+                    ax.scatter(*coordinates[selected].T,
+                               c=[colours[values[i]] for i in selected], marker=marker,
+                               alpha=.8, s=35, edgecolors="#222", linewidths=.3)
+            if len(unique) > len(shown):
+                ax.text(0, -.15,
+                        f"Legend shows {len(shown)} of {len(unique)} categories by frequency; all genomes are plotted. "
+                        "Full labels are in the downloaded tables.",
+                        transform=ax.transAxes, fontsize=8, wrap=True)
         handles += [Line2D([], [], color="#222", marker=marker, linestyle="None", label=names[role])
                     for role, marker in markers.items() if role in roles]
-        ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1),
-                  fontsize=8, frameon=False)
+        if view == "date":
+            ax.legend(handles=handles, loc="lower left", bbox_to_anchor=(0, 1.01),
+                      ncol=3, fontsize=8, frameon=False)
+        else:
+            ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1),
+                      fontsize=8, frameon=False)
         ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], title=title)
         fig.tight_layout()
         filename = f"{prefix}_pcoa" + ("" if view == "dataset" else f"_{view}") + ".svg"

@@ -21,7 +21,7 @@ from chronoclade.sample_labels import sample_labels
 from chronoclade.metadata_dates import date_interval as _date_interval
 from chronoclade.context_refinement import _allele, _lineage, _loci, _profile
 from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
-from chronoclade.temporal_diagnostics import date_regression
+from chronoclade.temporal_diagnostics import date_regression, allele_unit_diagnostic
 from chronoclade.profile_groups import complete_linkage_groups as _clusters, group_sensitivity
 
 
@@ -193,26 +193,12 @@ def write_profile_network_figures(output, cohort_id, network, records=(), displa
 
 
 def _plots(output, cohort_id, coords, rows, network, display_ids=None):
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
     from chronoclade.report_components.ordination import write_ordination_views
     paths = write_ordination_views(output, cohort_id, coords, rows,
                                    title="cgMLST distance ordination",
                                    axis_labels=("PCoA axis 1", "PCoA axis 2"))
-    counts = Counter(str(r.get("country") or "Unknown") for r in rows)
-    fig, ax = plt.subplots(figsize=(7, max(3, len(counts) * 0.3)))
-    keys = sorted(counts, key=lambda key: (-counts[key], key))
-    ax.barh(keys, [counts[key] for key in keys])
-    ax.invert_yaxis()
-    ax.set(xlabel="Genomes in analysed cohort", title="Available country metadata")
-    fig.tight_layout()
-    path = output / f"{cohort_id}_countries.svg"
-    fig.savefig(path)
-    plt.close(fig)
-    paths["country_figure"] = str(path)
+    from chronoclade.report_components.geography import write_country_figure
+    paths["country_figure"] = write_country_figure(output, cohort_id, rows)
     paths["network_figure"] = write_profile_network_figures(
         output, cohort_id, network, rows, display_ids
     )
@@ -387,7 +373,7 @@ def analyse_profiles(
         if row.get("origin") not in {"local", "query", "focal"}:
             continue
         choices = [
-            (distances[i, j], j)
+            (_pair(row, other, min_overlap)[0]["allele_differences"], j)
             for j, other in enumerate(records)
             if other.get("origin") == "context" and np.isfinite(distances[i, j])
         ]
@@ -436,6 +422,7 @@ def analyse_profiles(
         "date_exclusions": date_exclusions,
         "cohorts": [],
         "nearest_neighbours": nearest,
+        "nearest_ranking": "raw allele differences among sufficiently jointly callable profiles; all raw-distance ties retained",
         "genetic_groups": [],
         "temporal_persistence": [],
         "time_place_concentration": [],
@@ -654,6 +641,9 @@ def analyse_profiles(
                 distance_field="root_to_tip", distance_units="cgMLST mismatch fraction",
                 label="Existing profile NJ root-to-tip",
             )
+            diagnostic = allele_unit_diagnostic(
+                diagnostic, len(loci), catalogue_complete=not any(
+                    row.get("cgmlst_locus_universe_complete") is False for row in rows))
             points = diagnostic["points"]
             summary["root_to_tip"].append(
                 {
@@ -676,6 +666,11 @@ def analyse_profiles(
                     fmt="o",
                     alpha=0.65,
                 )
+            if diagnostic.get("slope") is not None and points:
+                years = np.array([min(point["year_min"] for point in points),
+                                  max(point["year_max"] for point in points)])
+                ax.plot(years, diagnostic["centered_intercept"] + diagnostic["slope"] *
+                        (years - diagnostic["reference_year"]), color="#333")
             if not points:
                 ax.text(
                     0.5,
@@ -686,7 +681,7 @@ def analyse_profiles(
                 )
             ax.set(
                 xlabel="Collection year (date interval shown)",
-                ylabel="NJ root-to-tip allele-distance fraction",
+                ylabel=diagnostic["distance_units"],
                 title="Exploratory date diagnostic; arbitrary tip root",
             )
             fig.tight_layout()

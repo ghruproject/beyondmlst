@@ -22,7 +22,7 @@ def cgmlst_command(
     cglin_export: Annotated[Path | None, typer.Option(help="Compatible lineage export")] = None,
     catalogues: Annotated[Path | None, typer.Option(help="Explicit canonical locus catalogues")] = None,
     seed: int = 42,
-    bootstrap_replicates: Annotated[int, typer.Option(min=0, max=200)] = 30,
+    bootstrap_replicates: Annotated[int | None, typer.Option(min=0, max=200, help="Default: 30 for dense blocks, 0 for large blocks; recorded per block")] = None,
     min_overlap: Annotated[float, typer.Option(min=0, max=1)] = 0.9,
     distance_threshold: Annotated[float, typer.Option(min=0, max=1)] = 0.02,
 ):
@@ -34,7 +34,7 @@ def cgmlst_command(
     try:
         source = dataset.expanduser()
         if fetch_context:
-            from chronoclade.prepare_provider import discover_profile_context
+            from chronoclade.profile_context_provider import discover_profile_context
             prepared = discover_profile_context(
                 source, output.expanduser().parent / (output.name + "_context"),
                 lin_level=lin_level, hiercc_level=hiercc_level,

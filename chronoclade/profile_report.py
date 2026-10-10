@@ -134,6 +134,12 @@ def _cohort_figures(value: object, directory: Path, field: str, label: str) -> s
         if path is None:
             continue
         cohort = _text(row.get("cohort_id", "Cohort"))
+        if path.suffix.casefold() == ".html":
+            rel = escape(path.as_posix(), quote=True)
+            figures.append(f'<iframe src="{rel}" title="{escape(label, quote=True)}" '
+                           'style="width:100%;height:650px;border:0" loading="lazy"></iframe>'
+                           f'<p><a href="{rel}">{escape(cohort)} · Open complete tree</a></p>')
+            continue
         if path.suffix.casefold() not in {".svg", ".png", ".jpg", ".jpeg", ".webp"}:
             figures.append(
                 f'<p><a href="{escape(path.as_posix(), quote=True)}">{escape(cohort)} · {escape(label)} file</a></p>'
@@ -158,7 +164,7 @@ def _root_to_tip(value: object) -> str:
             "<tr>"
             f"<th scope=\"row\">{escape(_text(row.get('cohort_id')))}</th>"
             f"<td>{escape(_text(row.get('root')))}</td>"
-            f"<td>{escape(_number(row.get('midpoint_date_slope')))}</td>"
+            f"<td>{escape(_number(row.get('midpoint_date_slope')))}<br><small>{escape(_text(row.get('slope_units')))}</small></td>"
             f"<td>{escape(_number(row.get('midpoint_date_pearson_r')))}</td>"
             f"<td>{escape(_text(row.get('interpretation')))}</td></tr>"
         )
@@ -750,6 +756,17 @@ def _adaptive_context_metadata(provenance: dict[str, Any]) -> str:
 
 def _context_funnel(provenance: dict[str, Any]) -> str:
     rows = []
+    profile_context = _mapping(provenance.get("profile_context"))
+    for pool in _records(profile_context.get("pools")):
+        for key, label in (("discovered", "Accessible same-ST candidates"),
+                           ("requested", "Matching lineage candidates"),
+                           ("retrieved", "Matching profiles retrieved")):
+            if pool.get(key) is not None:
+                rows.append({"stage": label, "count": pool[key]})
+    for key, label in (("accessible_matches", "Accessible matching public genomes across requested blocks"),
+                       ("usable", "New compatible context profiles added to the prepared dataset")):
+        if profile_context.get(key) is not None:
+            rows.append({"stage": label, "count": profile_context[key]})
     catalogue = _mapping(provenance.get("catalogue_deduplication"))
     context = _mapping(provenance.get("context_deduplication"))
     if catalogue:
@@ -1044,7 +1061,7 @@ def write_profile_report(
         '<details class="evidence-files"><summary>Inspect genetic groups and bootstrap results</summary>'
         f'{_group_cards(groups, kind="general", bootstrap_requested=data.get("bootstrap_replicates"))}</details></div></section>',
         f'<section class="stage" id="concentration"><div class="stage-body"><h2>Concentration in time and place</h2><p>Groups concentrated in a particular time window and location are described here. These observations do not establish an outbreak.</p>{_group_cards(concentration, kind="concentration")}</div></section>',
-        f'<section class="stage" id="root-to-tip"><div class="stage-body"><h2>Exploratory root-to-tip screen</h2><p>{escape(root_tip_text.strip())}</p>{_root_to_tip(root_tip)}</div></section>',
+        f'<section class="stage" id="root-to-tip"><div class="stage-body"><h2>Exploratory root-to-tip screen</h2><p>{escape(root_tip_text.strip())}</p>{_root_to_tip(root_tip)}{_cohort_figures(data.get("cohorts"), directory, "root_to_tip_figure", "Collection date versus root-to-tip distance")}</div></section>',
         f'<section class="stage" id="coverage"><div class="stage-body"><h2>Coverage and exclusions</h2>{_provenance_notes(prov)}<h3>Query and context inputs</h3>{_input_coverage(prov)}'
         f'<h3>Public context selection</h3>{_context_funnel(prov)}'
         f'<h3>Profile analysis</h3>{_coverage(data)}</div></section>',

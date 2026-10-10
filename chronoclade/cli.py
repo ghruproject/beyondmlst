@@ -558,3 +558,15 @@ def run(
 
 if __name__ == "__main__":
     app()
+
+
+@app.command("setup-scale")
+def setup_scale(output: Annotated[Path | None, typer.Option("--out")] = None,
+                jobs: Annotated[int, typer.Option(min=1)] = 2):
+    """Install the pinned RapidNJ backend used for complete large profile trees."""
+    from chronoclade.cgmlst.scale_setup import install_rapidnj
+    try:
+        executable = install_rapidnj(output, jobs=jobs)
+    except (ValueError, OSError, RuntimeError) as error:
+        _fail(error)
+    console.print(f"RapidNJ backend: {executable}", markup=False)

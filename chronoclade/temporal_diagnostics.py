@@ -266,6 +266,7 @@ def cgmlst_root_to_tip(dataset: PreparedDataset, *, reference_sample_id=None) ->
                 distance_units=cohort["distance_units"],
                 label="cgMLST guide NJ root-to-tip",
             )
+            diagnostic = allele_unit_diagnostic(diagnostic, len(loci), fixed_callable=True)
             cohort.update(status="available", diagnostic=diagnostic)
     for ident in sorted(set(samples) - represented):
         if not any(item["sample_id"] == ident for item in exclusions):
@@ -283,3 +284,34 @@ def cgmlst_root_to_tip(dataset: PreparedDataset, *, reference_sample_id=None) ->
             "distances or substitutions per site. Negative NJ branches are retained. " + _NOTE
         ),
     }
+
+
+def allele_unit_diagnostic(diagnostic, locus_count, *, fixed_callable=False, catalogue_complete=True):
+    """Express a mismatch-fraction NJ regression in a declared allele-unit scale.
+
+    This is a linear change of units, not a mutation-rate estimate. With varying
+    callable denominators the units are scheme-equivalent, not literal observed
+    allele changes. The original fraction slope remains saved for comparison.
+    """
+    import copy
+    if type(locus_count) is not int or locus_count < 1:
+        raise ValueError("Allele-unit diagnostic requires a positive locus count")
+    result = copy.deepcopy(diagnostic)
+    units = (f"allele-distance units on {locus_count} fixed callable loci" if fixed_callable else
+             f"scheme-equivalent allele-distance units on {locus_count} "
+             + ("declared loci" if catalogue_complete else "observed export loci"))
+    result.update(fraction_slope=diagnostic.get("slope"), normalization_loci=locus_count,
+                  distance_units=units, slope_units=units + " per year")
+    for key in ("slope", "intercept", "centered_intercept"):
+        if result.get(key) is not None:
+            result[key] *= locus_count
+    for point in result.get("points", []):
+        for key in (result["distance_field"], "predicted", "residual"):
+            if point.get(key) is not None:
+                point[key] *= locus_count
+    result["interpretation"] += (
+        " Fractional NJ branch distances are multiplied by the recorded locus count. "
+        + ("Every profile uses the same callable panel." if fixed_callable else
+           "Pairwise callable denominators can differ; these standardized units are not literal allele-change counts.")
+    )
+    return result

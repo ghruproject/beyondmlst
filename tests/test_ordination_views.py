@@ -14,7 +14,7 @@ def test_shared_coordinates_metadata_views_keep_missing_dates(tmp_path):
         dict(sample_id='missing', role='context'),
     ]
     paths = write_ordination_views(tmp_path, 'cohort', np.array([[0, 0], [1, 2], [3, 2]]), records)
-    assert len(paths) == 4
+    assert len(paths) == 5
     assert all(Path(path).exists() for path in paths.values())
     html = Path(paths['pcoa_views_html']).read_text()
     assert 'Colour by' in html and 'Country' in html and 'Date' in html
@@ -29,3 +29,12 @@ def test_invalid_coordinates_and_names_rejected(tmp_path):
         write_ordination_views(tmp_path, 'safe', [[np.nan, 0]], [dict(sample_id='a')])
     with pytest.raises(ValueError, match='safe artifact'):
         write_ordination_views(tmp_path, '../bad', [[0, 0]], [dict(sample_id='a')])
+
+
+def test_many_categories_keep_all_points_and_bound_legend(tmp_path):
+    rows = [dict(sample_id=f's{i}', role='context') for i in range(25)]
+    paths = write_ordination_views(tmp_path, 'many', np.arange(50).reshape(25,2), rows,
+                                  groups={row['sample_id']:f'g{i}' for i,row in enumerate(rows)})
+    svg = Path(paths['pcoa_group_figure']).read_text()
+    assert 'Legend shows 20 of 25 categories' in svg
+    assert 'all genomes are plotted' in svg

@@ -30,11 +30,23 @@ class DistanceEvidence:
 
 
 def read_distance_evidence(analysis: dict) -> DistanceEvidence:
+    from chronoclade.matrix_distances import BinaryDistanceEvidence
     evidence = analysis.get("distance_evidence")
-    if isinstance(evidence, DistanceEvidence):
+    if isinstance(evidence, (DistanceEvidence, BinaryDistanceEvidence)):
         return evidence
+    if isinstance(evidence, dict) and evidence.get("schema") == "chronoclade.binary_distances":
+        binary_path = analysis.get("paths", {}).get("distance_evidence")
+        if not binary_path:
+            raise WorkflowError("Binary distance descriptor requires its manifest path")
+        matrix = BinaryDistanceEvidence(binary_path)
+        if matrix.descriptor != evidence:
+            raise WorkflowError("Binary distance descriptor disagrees with its manifest")
+        return matrix
     if evidence is not None:
-        raise WorkflowError("distance_evidence must be a DistanceEvidence adapter")
+        raise WorkflowError("distance_evidence must be a validated distance adapter")
+    binary = analysis.get("paths", {}).get("distance_evidence")
+    if binary:
+        return BinaryDistanceEvidence(binary)
     path = analysis.get("paths", {}).get("pairwise_distances")
     if path:
         if not Path(path).is_file():
@@ -53,6 +65,9 @@ def _number(value):
 
 
 def _distance_maps(evidence):
+    from chronoclade.matrix_distances import BinaryDistanceEvidence
+    if isinstance(evidence, BinaryDistanceEvidence):
+        return evidence.value_map(), evidence.value_map(raw=True)
     normalized, nearest = {}, {}
     raw_available = evidence.method == "cgmlst" and any(
         _number(row.get("allele_differences")) is not None for row in evidence.records

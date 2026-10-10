@@ -43,7 +43,7 @@ def run_cgmlst(
     nearest_per_query=3,
     include=None,
     seed=42,
-    bootstrap_replicates=30,
+    bootstrap_replicates=None,
     min_overlap=0.9,
     distance_threshold=0.02,
 ):
@@ -97,12 +97,20 @@ def run_cgmlst(
         rows = block["records"]
         queries = [row for row in rows if row["role"] == "input"]
         contexts = [row for row in rows if row["role"] == "context"]
-        analysis = analyse_profiles(
+        from chronoclade.profile_analysis import MAX_RECORDS
+        large = len(rows) > MAX_RECORDS
+        actual_bootstraps = (0 if large else 30) if bootstrap_replicates is None else bootstrap_replicates
+        if large:
+            from chronoclade.cgmlst.scale import analyse_profiles_scale
+            engine = analyse_profiles_scale
+        else:
+            engine = analyse_profiles
+        analysis = engine(
             rows,
             output=directory,
             seed=seed,
             min_overlap=min_overlap,
-            bootstrap_replicates=bootstrap_replicates,
+            bootstrap_replicates=actual_bootstraps,
             distance_threshold=distance_threshold,
             tree_limit=max(2, len(rows)),
         )
@@ -150,6 +158,8 @@ def run_cgmlst(
         )
         provenance = {
             "source_dataset": dataset.dataset_id,
+            "profile_context": dataset.parameters.get("profile_context"),
+            "bounded_public_context_count": len(contexts),
             "context_scope": audit["context_scope"],
             "coverage": {
                 label: {
@@ -182,6 +192,8 @@ def run_cgmlst(
                 + ".".join(map(str, block["prefix"])),
                 "input_count": len(queries),
                 "context_count": len(contexts),
+                "backend": "scale" if large else "dense",
+                "bootstrap_replicates": actual_bootstraps,
                 "report": report.relative_to(output).as_posix(),
                 "ensemble": ensemble_path.relative_to(output).as_posix(),
                 "report_sha256": file_sha256(report),

@@ -49,7 +49,9 @@ class JobSpec:
             raise ValueError("Job executable must be nonempty")
         if any(not isinstance(arg, str) or "\x00" in arg for arg in self.arguments):
             raise ValueError("Job arguments must be strings without NUL characters")
-        if any(any(word in arg.lower() for word in ("api-key", "api_key", "token", "password"))
+        credential_keys = {"api-key", "api_key", "token", "access-token", "access_token",
+                           "password", "authorization", "pathogenwatch_api_key"}
+        if any((arg.startswith("--") or "=" in arg) and arg.split("=", 1)[0].lstrip("-").lower() in credential_keys
                for arg in self.arguments):
             raise ValueError("Credentials must come from runtime configuration, not job arguments")
 

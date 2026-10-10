@@ -21,19 +21,27 @@ For E. coli with existing compatible HierCC assignments, supply an explicit leve
 chronoclade cgmlst prepared/dataset.json --out ecoli-cgmlst --hiercc-level HC10
 ```
 
-The command does not yet discover or retrieve fresh public context. Prepare the
-input and context records together using existing frozen exports. The partition
-index and `partitions.json` distinguish exact included IDs, unmatched context,
-unresolved inputs and counts available at LIN levels 5, 6 and 7. These counts are
-for the supplied bundle, not the complete public collection. Missing ST or lineage
-evidence is reported; a neighbour's label is never copied to an input genome.
+Use `--fetch-context` to discover the public same-ST candidate pool and retrieve
+compatible profiles and lineage metadata matching the requested LIN/HierCC block.
+Context assemblies are acquired only by the later tree stage. Supplied public
+profile/lineage exports are also supported. The partition index and `partitions.json`
+record exact included IDs, unmatched context, unresolved inputs and available
+LIN5/6/7 counts. Counts are scoped to the retrieved/prepared evidence; they do not
+imply complete worldwide surveillance. Missing ST or lineage evidence is reported;
+a neighbour's label is never copied to an input genome.
 
 Every comparable profile remains in the NJ/ordination analysis and downloadable
 tree. Selection does not prune this guide tree. The approved location network and
-existing per-block report presentation are reused. Ordination metadata toggles,
-large-tree interactive display, improved genetic-group calibration and the
-large-dataset backend remain planned work. The current 1,500-record per-block
-limit remains enforced; removing it would not make this a 10,000-genome engine.
+report presentation are reused. Ordination controls show dataset, country, host,
+date and genetic-group colours on the same coordinates. Genetic groups use
+explicit distance cuts with threshold sensitivity; they are exploratory genetic
+partitions rather than outbreak labels.
+
+Blocks above 1,500 records use [compiled distances and RapidNJ](cgmlst-scale.md),
+disk-backed checked distance evidence, leading-axis PCoA and a collapsible full
+NJ tree. Default bootstrap counts are 30 for dense blocks and zero for large blocks,
+recorded separately for each block. Large-block bootstrapping is not implemented;
+requesting it fails explicitly. A 10,000 × 629 synthetic full analysis was tested.
 
 ## Representative alternatives
 
@@ -57,15 +65,11 @@ partition manifest using relative paths and hashes. Move the common parent of
 these bundles together. The public loaders reject changed sources or members
 that do not belong to the exact source partition.
 
-These selection manifests are ready for the planned independent `tree` command;
-that command and independent `time`/ensemble comparison are not yet implemented.
-Between-selection variation will measure subsampling sensitivity, not a formal
-population confidence interval.
+These manifests feed the independent [tree](tree-stage.md) and [time](time-stage.md) commands directly. Ensemble comparison uses common input anchors and records missing or unsupported runs. Between-selection variation measures subsampling sensitivity, not a formal population confidence interval.
 
 ## Output ownership
 
 `cgmlst.json` is published after all requested blocks finish. It references each
 report and ensemble, the prepared dataset, partition evidence and exact analysis
 settings. Existing nonempty output directories are rejected. A failed stage does
-not publish a completed manifest. Automatic resume and shared local/SLURM job
-execution remain future work; use a new output directory for a revised run.
+not publish a completed manifest. Use a new output directory for a revised cgMLST run. The shared `job` command can execute the saved command locally or generate a SLURM script; it never submits automatically. Tree/time stages provide their own checked resume.

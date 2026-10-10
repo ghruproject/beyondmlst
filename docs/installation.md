@@ -24,6 +24,19 @@ The table should report paths for `ska`, `iqtree`, `ClonalFrameML` and
 `treetime`. Run ChronoClade through `pixi run` so these programs remain on the
 same executable path.
 
+## Separate command environments
+
+`pixi run -e prepare chronoclade prepare ...` and
+`pixi run -e cgmlst chronoclade cgmlst ...` avoid the native SNP-tree stack.
+Use `-e tree` and `-e time` for those stages. The default environment includes
+development and verification tools.
+
+On Linux, the cgMLST environment includes RapidNJ. On Apple Silicon, install the
+pinned macOS backend with `pixi run chronoclade setup-scale`; the installer records
+its revision, binary checksum and compiler. The upstream backend currently runs
+through Rosetta on arm64. ESM2 remains optional, with an isolated worker environment,
+explicit model acquisition and CPU/MPS support; see [ESM2](esm2.md).
+
 ## Updating an installation
 
 ```bash

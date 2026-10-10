@@ -1,24 +1,23 @@
 # ChronoClade tool suite redesign
 
-Design specification, 10 October 2026. This describes the requested replacement
-workflow; it does not claim that the five commands have been implemented.
+Design specification and implementation status, 10 October 2026.
 
-## Implementation status after the independent profile-stage change
+## Implementation status
 
-| Design component | Current evidence | Remaining work |
+| Component | Implemented | Validation or remaining boundary |
 | --- | --- | --- |
-| Shared dataset, metadata, location and report ownership | Implemented and tested | Provider/context separation and further report decomposition |
-| `prepare` | Independent frozen-profile import and validated bundle import; readiness report, portable local assemblies, atomic publication | Collection/accession resolution, fresh calling/assignment, exact INSDC enrichment and configured reference-data readiness |
-| `cgmlst` | Independent prepared-bundle analysis; explicit disjoint depth-5/6/7 or HierCC blocks, full frozen-profile trees and reports | Fresh complete context retrieval, PCoA controls, group calibration, scalable tree/ordination backends |
-| Selections | Mandatory input/pin/nearest ties, recorded overruns, reproducible alternatives, hashes, coverage and validated manifests | Independent downstream execution, shared-anchor tree/dating comparisons |
-| `esm2` | Optional native inference, benchmarks, descriptive date plots and offline validated DNA-catalogue mapping API | Automatic catalogue acquisition, genome-wide ordination/neighbours/clusters and selection integration/biological validation |
-| `tree` and `time` | Existing scientific engines remain in the cumulative runner | Independent runners/contracts/reports, temporal assessment separation and ensemble comparison |
-| Local/SLURM and scale | Existing native execution and optional embedding device support | Independent stage environments/jobs/resume; actual cluster and large-block benchmarks |
+| `prepare` | Saved bundles, assemblies, accessions and Pathogenwatch collection IDs/URLs; exact metadata enrichment; configured typing and reference readiness | A live 23-genome collection was retrieved. Pasteur/HierCC reference access remains external. |
+| `cgmlst` | Complete matching profile context, explicit LIN5/6/7 or HierCC partitions, full NJ/ordination, neighbours and group sensitivity | Synthetic 10,000 × 629 full-profile analysis was exercised; large blocks use compiled distances and RapidNJ. |
+| `esm2` | Genome-level matched-locus distances, ordination, neighbours, grouping, descriptive date diagnostics and shared selections | Real 8M/35M inference exercised on CPU/MPS with controlled sequence fixtures; natural within-lineage biological adequacy remains unvalidated. Allele catalogue acquisition requires supplied reference data. |
+| Selections | Mandatory inputs/pins/raw-distance nearest ties, portable checked binary or tabular evidence, reproducible alternatives, coverage/overlap | Alternative selections describe sensitivity, not population confidence intervals. |
+| `tree` | Exact selected-assembly acquisition, SNP and recombination-corrected trees, independent reports and clustered date assessment | Genuine native runs use SKA, IQ-TREE and ClonalFrameML. |
+| `time` | Independent saved-tree dating, evidence gates, own report and shared-anchor ensemble comparison | Missing/unsupported temporal evidence produces an explicit unsupported report. |
+| Shared reports | Approved report style and location network, metadata ordination controls, stage results and downloads | Embedding distances never become ancestral-state or mutation-rate evidence. |
+| Execution | Isolated command environments, checked local jobs and generated SLURM scripts; tree/time resume and invalidation | No live SLURM cluster was available to test submission. cgMLST owns a fresh output directory per revised run. |
 
-The frozen Greek worked example exercises ten input genomes and 431 previously
-retrieved context records. It is a test of independent prepared-data/profile
-commands, not proof of complete current public retrieval, a 10,000-genome run or
-independent tree/time execution.
+See the [independent suite](independent-suite.md), [large-block backend](cgmlst-scale.md),
+[tree stage](tree-stage.md), [time stage](time-stage.md) and
+[genome ESM2 analysis](esm2-genomes.md) for executable contracts and validation details.
 
 ## Public interface
 
@@ -65,8 +64,7 @@ that assessment is requested. Time needs its dating backend. esm2 alone requires
 the validated ESM2 inference backend, PyTorch and explicitly acquired weights.
 
 Python optional extras do not install arbitrary native executables; distinguish
-them from Pixi/managed tool environments. The current all-tools Pixi default
-must be separated into reproducible command environments. Model/GPU dependency
+them from Pixi/managed tool environments. The Pixi prepare, cgmlst, tree and time environments isolate the command dependencies; the default remains a development environment. Model/GPU dependency
 conflicts can be isolated in an esm2 worker environment using the same saved
 contracts. Pin model weights, extraction settings and runtime versions. No model
 download occurs during installation of the base package or CLI startup.
@@ -562,12 +560,11 @@ available selections. Alternative tree/time analyses have separate directories.
 
 ## Scale and implementation order
 
-The present 1,500-record guard, dense full eigendecomposition, pairwise CSV and
-Python NJ are not a tens-of-thousands implementation. Replace those limitations
-with blockwise compiled categorical distances, disk-backed condensed matrices,
-a compiled NJ backend such as RapidNJ, iterative leading-axis PCoA, and a
-collapsible/virtualized tree renderer. Store large distance evidence in binary
-form; export requested pair rows rather than always expanding every pair to CSV.
+The dense backend remains limited to 1,500 records. Larger blocks now use
+blockwise compiled categorical distances, disk-backed square matrices,
+RapidNJ, iterative leading-axis PCoA and a collapsible full-tip tree renderer.
+Large distance evidence is binary; requested pair rows can be exported without
+expanding every pair into CSV. See [resource benchmarks](cgmlst-scale.md).
 
 All-profile exact distance/tree work still has quadratic storage/work components.
 Any approximate ordination is labelled and still locates every genome. Benchmark

@@ -41,8 +41,13 @@ nav:
       - Installation: installation.md
       - Input data: input-data.md
       - Running an analysis: running.md
+      - Independent tool suite: independent-suite.md
       - Independent preparation: prepare.md
       - Independent cgMLST: cgmlst.md
+      - Large cgMLST blocks: cgmlst-scale.md
+      - Independent tree stage: tree-stage.md
+      - Independent time stage: time-stage.md
+      - Genome ESM2 analysis: esm2-genomes.md
       - Profile-first stages: staged-workflow.md
       - Optional ESM2 embeddings: esm2.md
       - ESM2 DNA catalogue inputs: esm2-sequence-input.md
