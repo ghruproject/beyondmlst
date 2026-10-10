@@ -6,19 +6,21 @@ public context. The API key is available separately for authenticated downloads.
 
 from __future__ import annotations
 
-import calendar
 import hashlib
 import json
 import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+
+from chronoclade.metadata_dates import normalize_dates
 
 
 class PathogenwatchError(RuntimeError):
@@ -350,81 +352,6 @@ def _metadata(detail: dict) -> dict[str, Any]:
     if not isinstance(metadata, dict):
         raise PathogenwatchError("Unsupported genome metadata shape")
     return metadata
-
-
-def _date_bounds(value: Any) -> tuple[str, str, str]:
-    text = str(value or "").strip()
-    if not text or text.casefold() in _MISSING:
-        return "", "", "missing"
-    try:
-        if re.fullmatch(r"\d{4}", text):
-            date(int(text), 1, 1)
-            return f"{text}-01-01", f"{text}-12-31", "year"
-        if re.fullmatch(r"\d{4}-\d{2}", text):
-            year, month = map(int, text.split("-"))
-            date(year, month, 1)
-            return f"{text}-01", f"{text}-{calendar.monthrange(year, month)[1]:02}", "month"
-        day = date.fromisoformat(text[:10])
-        return day.isoformat(), day.isoformat(), "day"
-    except ValueError:
-        return "", "", "invalid"
-
-
-def normalize_dates(detail: dict, metadata: dict, search: dict) -> dict:
-    raw = next(
-        (
-            metadata[k]
-            for k in ("Collection date", "collection_date", "Date", "date")
-            if metadata.get(k)
-        ),
-        "",
-    )
-    if isinstance(raw, (list, tuple)) and len(raw) == 2:
-        parts = list(raw)
-    elif isinstance(raw, str) and "/" in raw:
-        parts = raw.split("/", 1)
-    else:
-        parts = []
-    if parts:
-        start, _, first = _date_bounds(parts[0])
-        _, end, last = _date_bounds(parts[1])
-        precision = "interval" if start and end and start <= end else "invalid"
-    elif raw:
-        start, end, precision = _date_bounds(raw)
-    else:
-        start, _, first = _date_bounds(detail.get("startDate") or search.get("metadataDate"))
-        _, end, last = _date_bounds(
-            detail.get("endDate") or detail.get("startDate") or search.get("metadataDate")
-        )
-        if start and end:
-            # Bounds supplied by the service may encode year/month precision.
-            year = start[:4]
-            month = start[:7]
-            if start == f"{year}-01-01" and end == f"{year}-12-31":
-                raw, precision = year, "year"
-            elif (
-                start[:7] == end[:7]
-                and start.endswith("-01")
-                and end.endswith(f"-{calendar.monthrange(int(year), int(start[5:7]))[1]:02}")
-            ):
-                raw, precision = month, "month"
-            else:
-                raw, precision = (
-                    start if start == end else f"{start}/{end}",
-                    "day" if start == end else "interval",
-                )
-        else:
-            precision = "missing" if not start and not end else "invalid"
-    if precision == "invalid":
-        start, end = "", ""
-    return {
-        "collection_date": "/".join(str(p) for p in parts) if parts else str(raw or ""),
-        "date_start": start,
-        "date_end": end,
-        "date_precision": precision,
-        "date_raw": raw,
-        "dated_cohort_eligible": precision in {"day", "month", "year", "interval"},
-    }
 
 
 def normalize_record(

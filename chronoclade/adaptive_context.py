@@ -9,7 +9,8 @@ import json
 import re
 from typing import Iterable, Mapping
 
-from chronoclade.context_refinement import _compatible, _lineage, _scope, _text
+from chronoclade.context_refinement import _lineage, _text
+from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
 
 
 def _st(row: Mapping) -> str:

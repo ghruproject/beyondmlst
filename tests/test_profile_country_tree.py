@@ -2,7 +2,7 @@ from io import StringIO
 
 from Bio import Phylo
 
-from chronoclade.profile_country_tree import draw_country_tree
+from chronoclade.location_network.tree import draw_country_tree
 from chronoclade.profile_network import build_profile_network
 
 
@@ -19,7 +19,7 @@ def test_country_tree_uses_full_reconstruction_when_display_tips_hidden(tmp_path
     path = tmp_path / "country_tree.svg"
     draw_country_tree(network, rows, path, display_ids=["q", "u"], nearest_ids=["c"])
     svg = path.read_text()
-    assert "Showing 2 of 4 profiles" in svg
+    assert "Showing 2 of 4 genomes" in svg
     assert "q | Greece | 2019-01-01" in svg
     assert "u | Unknown | 2351 (excluded from date analysis)" in svg
     assert "c | Germany" not in svg

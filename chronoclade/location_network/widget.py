@@ -4,6 +4,7 @@ Only the presentation changes: displayed metrics are those of the representative
 history, and possible alternative edges never replace that history. vis-network
 9.1.13 is vendored from the official npm package under its upstream licences.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -14,7 +15,7 @@ import re
 from importlib.resources import files
 from uuid import uuid4
 
-from chronoclade.profile_network import country_palette
+from .colours import country_palette
 
 _METRICS = (
     ("in_degree", "Indegree centrality"),
@@ -44,12 +45,20 @@ def _payload(row, *, focus_inputs=False, include_possible=False):
     if not originals:
         # Older report fixtures contain endpoints but no explicit node table.
         countries = sorted({str(edge[key]) for edge in directed for key in ("source", "target")})
-        originals = [dict(country=country, count=0,
-                          is_input_country=country in row.get("input_countries", []))
-                     for country in countries]
+        originals = [
+            dict(
+                country=country, count=0, is_input_country=country in row.get("input_countries", [])
+            )
+            for country in countries
+        ]
     palette = country_palette(str(node["country"]) for node in originals)
-    palette.update({str(key): value for key, value in row.get("country_colors", {}).items()
-                    if isinstance(value, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", value)})
+    palette.update(
+        {
+            str(key): value
+            for key, value in row.get("country_colors", {}).items()
+            if isinstance(value, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", value)
+        }
+    )
     nodes = []
     for node in originals:
         country = str(node["country"])
@@ -57,9 +66,16 @@ def _payload(row, *, focus_inputs=False, include_possible=False):
         measures = {key: _number(values.get(key)) for key, _ in _METRICS}
         if measures["degree"] is None:
             measures["degree"] = (measures["in_degree"] or 0) + (measures["out_degree"] or 0)
-        nodes.append(dict(id=country, country=country, color=palette[country],
-                          input=bool(node.get("is_input_country")),
-                          count=_number(node.get("count", 0)), metrics=measures))
+        nodes.append(
+            dict(
+                id=country,
+                country=country,
+                color=palette[country],
+                input=bool(node.get("is_input_country")),
+                count=_number(node.get("count", 0)),
+                metrics=measures,
+            )
+        )
     countries = {node["id"] for node in nodes}
     inputs = {node["id"] for node in nodes if node["input"]}
     edges = []
@@ -74,9 +90,17 @@ def _payload(row, *, focus_inputs=False, include_possible=False):
             continue
         if focus_inputs and not ({source, target} & inputs):
             continue
-        edges.append(dict(id=f"edge-{len(edges)}", source=source, target=target,
-                          count=count, minimum=minimum, maximum=maximum,
-                          ambiguous=bool(item.get("count_ambiguous", minimum != maximum))))
+        edges.append(
+            dict(
+                id=f"edge-{len(edges)}",
+                source=source,
+                target=target,
+                count=count,
+                minimum=minimum,
+                maximum=maximum,
+                ambiguous=bool(item.get("count_ambiguous", minimum != maximum)),
+            )
+        )
     if focus_inputs:
         retained = inputs | {edge[key] for edge in edges for key in ("source", "target")}
         nodes = [node for node in nodes if node["id"] in retained]
@@ -87,16 +111,21 @@ def interactive_network_html(row, identifier, *, focus_inputs=False, include_pos
     """Return a replaceable widget host; include :func:`widget_assets` once per report."""
     # A random suffix prevents collisions when one cohort occurs in multiple scopes.
     token = hashlib.sha256(str(identifier).encode()).hexdigest()[:12] + "-" + uuid4().hex[:12]
-    payload = json.dumps(_payload(row, focus_inputs=focus_inputs, include_possible=include_possible),
-                         ensure_ascii=True, allow_nan=False, separators=(",", ":"))
+    payload = json.dumps(
+        _payload(row, focus_inputs=focus_inputs, include_possible=include_possible),
+        ensure_ascii=True,
+        allow_nan=False,
+        separators=(",", ":"),
+    )
     payload = payload.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
-    options = "".join(f'<option value="{key}">{html.escape(label)}</option>'
-                      for key, label in _METRICS)
-    return f'''<section class="cc-network-widget" data-cc-network data-widget="country-network">
+    options = "".join(
+        f'<option value="{key}">{html.escape(label)}</option>' for key, label in _METRICS
+    )
+    return f"""<section class="cc-network-widget" data-cc-network data-widget="country-network">
   <div class="cc-network-controls">
     <label for="cc-metric-{token}">Node size <select id="cc-metric-{token}" data-network-metric>{options}</select></label>
     <label for="cc-country-{token}">Highlight country <select id="cc-country-{token}" data-network-country><option value="">All countries</option></select></label>
-    <label><input type="checkbox" data-network-possible{' checked' if include_possible else ''}> Include alternative possible links</label>
+    <label><input type="checkbox" data-network-possible{" checked" if include_possible else ""}> Include alternative possible links</label>
     <div class="cc-network-buttons" aria-label="Network navigation">
       <button type="button" data-network-action="zoom-in" aria-label="Zoom in">+</button>
       <button type="button" data-network-action="zoom-out" aria-label="Zoom out">−</button>
@@ -111,7 +140,7 @@ def interactive_network_html(row, identifier, *, focus_inputs=False, include_pos
   <details class="cc-network-country-key"><summary>Country colour key</summary><div class="cc-network-countries" data-network-legend aria-label="Country colours"></div></details>
   <p class="cc-network-caveat">Arrows show country-state changes in one optimal history, not demonstrated transmission. Alternative links need not occur together. Metrics remain those of the representative history.</p>
   <script type="application/json" data-network-data>{payload}</script>
-</section>'''
+</section>"""
 
 
 _CSS = r"""
@@ -231,5 +260,12 @@ def widget_assets():
     library = files("chronoclade").joinpath("vendor", "vis-network.min.js").read_text()
     # Protect HTML script boundaries even if a future upstream bundle contains one.
     library = re.sub(r"</script", r"<\\/script", library, flags=re.IGNORECASE)
-    return ("<style>" + _CSS + "</style>\n<script data-cc-network-library>" + library
-            + "</script>\n<script>" + _INITIALIZER + "</script>")
+    return (
+        "<style>"
+        + _CSS
+        + "</style>\n<script data-cc-network-library>"
+        + library
+        + "</script>\n<script>"
+        + _INITIALIZER
+        + "</script>"
+    )

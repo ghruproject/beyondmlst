@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Iterable
 
 from chronoclade.coherence import screen_alignment
-from chronoclade.country_network import UNKNOWN, build_country_network
+from chronoclade.location_network.marginal import UNKNOWN, build_marginal_network as build_country_network
 from chronoclade.errors import WorkflowError
 from chronoclade.evidence import build_public_health_evidence
 from chronoclade.metadata import Sample, select_reference

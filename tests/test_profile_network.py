@@ -2,7 +2,8 @@ from io import StringIO
 
 from Bio import Phylo
 
-from chronoclade.profile_network import build_profile_network, draw_profile_network
+from chronoclade.profile_network import build_profile_network
+from chronoclade.location_network.static import draw_location_network as draw_profile_network
 
 
 def tree():
@@ -139,7 +140,7 @@ def _brute_force(t, countries, directed=False):
 
 
 def test_exact_ranges_match_all_optimal_tiny_histories():
-    from chronoclade.profile_network import _reconstruct
+    from chronoclade.location_network.reconstruction import _reconstruct
 
     cases = [('((a,b),(c,d));', dict(a='A', b='B', c='C', d='A')),
              ('(a,b,c,d);', dict(a='A', b='B', c='C', d=None)),
@@ -165,7 +166,7 @@ def test_exact_ranges_match_all_optimal_tiny_histories():
 
 
 def test_tied_histories_keep_possible_only_pairs_and_nonjoint_ranges():
-    from chronoclade.profile_network import _reconstruct
+    from chronoclade.location_network.reconstruction import _reconstruct
 
     t = Phylo.read(StringIO('(a,b,c);'), 'newick')
     counts, ranges, audit = _reconstruct(t, dict(a='A', b='B', c='C'), ['A', 'B', 'C'])
@@ -177,7 +178,8 @@ def test_tied_histories_keep_possible_only_pairs_and_nonjoint_ranges():
 
 def test_weighted_network_counts_are_coherent_and_palette_stable(tmp_path):
     import json
-    from chronoclade.profile_network import country_palette, _weighted_layout
+    from chronoclade.location_network.colours import country_palette
+    from chronoclade.location_network.static import _weighted_layout
 
     data = build_profile_network(tree(), records())
     assert sum(e['representative_count'] for e in data['edges']) == data['optimum_changes']
@@ -198,7 +200,7 @@ def test_weighted_network_counts_are_coherent_and_palette_stable(tmp_path):
 
 
 def test_repeated_changes_produce_weight_two_and_single_tip_zero():
-    from chronoclade.profile_network import _reconstruct
+    from chronoclade.location_network.reconstruction import _reconstruct
 
     t = Phylo.read(StringIO('((a,b),(c,d));'), 'newick')
     counts, ranges, audit = _reconstruct(t, dict(a='A', b='B', c='A', d='B'), ['A', 'B'])
@@ -213,7 +215,7 @@ def test_repeated_changes_produce_weight_two_and_single_tip_zero():
 
 def test_ordered_pair_ranges_match_bruteforce_and_same_coherent_audit():
     from collections import Counter
-    from chronoclade.profile_network import _reconstruct
+    from chronoclade.location_network.reconstruction import _reconstruct
 
     for newick, countries in [
         ('((a,b),(c,d));', dict(a='A', b='B', c='C', d='A')),
@@ -242,7 +244,7 @@ def test_ordered_pair_ranges_match_bruteforce_and_same_coherent_audit():
 
 def test_directed_count_ranges_depend_on_displayed_root():
     import copy
-    from chronoclade.profile_network import _reconstruct
+    from chronoclade.location_network.reconstruction import _reconstruct
 
     t = Phylo.read(StringIO('((a,b),(c,d));'), 'newick')
     countries = dict(a='A', b='A', c='B', d='B')
@@ -259,7 +261,7 @@ def test_directed_count_ranges_depend_on_displayed_root():
 
 
 def test_directed_network_metrics_and_renderer(tmp_path):
-    from chronoclade.profile_network import _network_metrics
+    from chronoclade.location_network.reconstruction import _network_metrics
 
     data = build_profile_network(tree(), records())
     assert sum(e['representative_count'] for e in data['directed_edges']) == data['optimum_changes']
@@ -282,7 +284,7 @@ def test_directed_network_metrics_and_renderer(tmp_path):
 
 
 def test_network_metrics_match_directed_unweighted_strainhub_definitions():
-    from chronoclade.profile_network import _network_metrics
+    from chronoclade.location_network.reconstruction import _network_metrics
 
     metrics = _network_metrics(['A', 'B', 'C', 'D', 'isolated'], [
         dict(source='C', target='A', representative_count=1),

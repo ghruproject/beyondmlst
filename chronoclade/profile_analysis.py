@@ -6,7 +6,6 @@ Separate complete-comparability cohorts prevent missing distances being imputed.
 
 from __future__ import annotations
 
-import calendar
 import copy
 import csv
 import datetime as dt
@@ -19,10 +18,18 @@ from Bio import Phylo
 from Bio.Phylo.TreeConstruction import DistanceMatrix, DistanceTreeConstructor
 
 from chronoclade.sample_labels import sample_labels
-from chronoclade.context_refinement import _allele, _compatible, _lineage, _loci, _profile, _scope
+from chronoclade.metadata_dates import date_interval as _date_interval
+from chronoclade.context_refinement import _allele, _lineage, _loci, _profile
+from chronoclade.typing_scopes import compatible_typing as _compatible, typing_scope as _scope
 
 
 MAX_RECORDS = 1500
+_CGMLST_COUNTRY_TREE = dict(
+    title="Country-coloured NJ tree · same reconstruction as the weighted network",
+    distance_label="Fraction of mismatching callable cgMLST loci; dashed branches have negative length",
+    sample_kind="profiles",
+    dating_note="This tree is not dated.",
+)
 
 
 def draw_profile_tree(tree, records, labels, path, nearest_ids=()):
@@ -79,44 +86,6 @@ def draw_profile_tree(tree, records, labels, path, nearest_ids=()):
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
-
-
-def _date_interval(row, *, allow_future=False):
-    value = str(row.get("collection_date") or row.get("collection_year") or "").strip()
-    try:
-        parts = value.split("-")
-        year = int(parts[0])
-        if len(parts) == 1:
-            start, end, precision = dt.date(year, 1, 1), dt.date(year, 12, 31), "year"
-        elif len(parts) == 2:
-            month = int(parts[1])
-            start = dt.date(year, month, 1)
-            end = dt.date(year, month, calendar.monthrange(year, month)[1])
-            precision = "month"
-        elif len(parts) == 3:
-            start = end = dt.date.fromisoformat(value)
-            precision = "day"
-        else:
-            return None
-
-        if not allow_future and start > dt.date.today():
-            return None
-
-        def decimal(day):
-            return day.year + (day - dt.date(day.year, 1, 1)).days / (
-                366 if calendar.isleap(day.year) else 365
-            )
-
-        return {
-            "start": start.isoformat(),
-            "end": end.isoformat(),
-            "precision": precision,
-            "year_min": decimal(start),
-            "year_max": decimal(end),
-            "year": year,
-        }
-    except (ValueError, TypeError, OverflowError):
-        return None
 
 
 def _pair(left, right, overlap):
@@ -190,25 +159,25 @@ def _location_network(tree, rows, nearest_neighbours=None):
 
 def write_profile_network_figures(output, cohort_id, network, records=(), display_ids=None):
     """Export alternate views for one report viewer, with a complete audit."""
-    from chronoclade.profile_network import draw_profile_network
-    from chronoclade.profile_country_tree import draw_country_tree
+    from chronoclade.location_network.static import draw_location_network
+    from chronoclade.location_network.tree import draw_country_tree
 
     output = Path(output)
     network.setdefault("id", "all")
     network.setdefault("label", "All inputs")
     for index, model in enumerate([network] + network.get("views", [])):
         stem = cohort_id + ("" if index == 0 else f"_subgroup_{index}")
-        model["network_figure"] = draw_profile_network(
+        model["network_figure"] = draw_location_network(
             model, output / f"{stem}_location_network.svg", focus_inputs=True
         )
-        model["full_network_figure"] = draw_profile_network(
+        model["full_network_figure"] = draw_location_network(
             model, output / f"{stem}_location_network_all.svg", focus_inputs=False
         )
-        model["possible_network_figure"] = draw_profile_network(
+        model["possible_network_figure"] = draw_location_network(
             model, output / f"{stem}_location_network_possible.svg", focus_inputs=False,
             include_possible=True,
         )
-        model["possible_input_network_figure"] = draw_profile_network(
+        model["possible_input_network_figure"] = draw_location_network(
             model, output / f"{stem}_location_network_input_possible.svg", focus_inputs=True,
             include_possible=True,
         )
@@ -217,7 +186,7 @@ def write_profile_network_figures(output, cohort_id, network, records=(), displa
         if records:
             model["country_tree_figure"] = draw_country_tree(
                 model, records, output / f"{stem}_country_tree.svg",
-                display_ids=display_ids, nearest_ids=nearest_ids,
+                display_ids=display_ids, nearest_ids=nearest_ids, **_CGMLST_COUNTRY_TREE,
             )
         model["transition_counts_path"] = _csv(
             output / f"{stem}_country_transition_counts.csv",
@@ -282,7 +251,7 @@ def set_tree_display_samples(analysis, records, selected_sample_ids):
     Pruning is presentation only. The saved full NJ tree and reconstructed country
     states remain the source of the complete-pool network and distance analyses.
     """
-    from chronoclade.profile_country_tree import draw_country_tree
+    from chronoclade.location_network.tree import draw_country_tree
 
     by_id = {row["sample_id"]: row for row in records}
     requested = set(selected_sample_ids)
@@ -327,7 +296,7 @@ def set_tree_display_samples(analysis, records, selected_sample_ids):
             if country_figure:
                 result = draw_country_tree(model, [by_id[ident] for ident in sorted(members)],
                                            Path(country_figure), display_ids=shown,
-                                           nearest_ids=nearest_ids)
+                                           nearest_ids=nearest_ids, **_CGMLST_COUNTRY_TREE)
                 if result is None:
                     Path(country_figure).unlink(missing_ok=True)
                     model.pop("country_tree_figure", None)

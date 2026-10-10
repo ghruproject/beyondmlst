@@ -48,10 +48,11 @@ def geography(rows):
 def run_fast_datasets(inputs, output, *, seed, bootstrap_replicates,
                       distance_threshold, tree_limit=80, context_size=50,
                       nearest_per_query=3, include_genomes=None):
-    from chronoclade.profile_analysis import analyse_profiles, _date_interval, set_tree_display_samples
+    from chronoclade.profile_analysis import analyse_profiles, set_tree_display_samples
+    from chronoclade.metadata_dates import date_interval as _date_interval
     from chronoclade.profile_report import write_profile_report, write_fast_group_index
     from chronoclade.report import write_supporting_bundle
-    from chronoclade.staged_workflow import select_assembly_context
+    from chronoclade.selections import select_assembly_context
 
     groups = defaultdict(list)
     for row in inputs["queries"]:

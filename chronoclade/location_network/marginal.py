@@ -259,7 +259,7 @@ def _figure(directory: Path, result: dict) -> None:
     plt.close(fig)
 
 
-def build_country_network(
+def build_marginal_network(
     directory: Path, *, temporal_supported: bool = False, confidence_threshold: float = 0.9
 ) -> dict:
     """Write a network and complete branch audit; missing/invalid inputs give unavailable output."""
@@ -456,7 +456,7 @@ def build_country_network(
     return result
 
 
-def country_network_report_html(directory: Path) -> str:
+def marginal_network_report_html(directory: Path) -> str:
     """A short report fragment with explicit reconstruction and uncertainty scope."""
     path = Path(directory) / "country_network.json"
     if not path.is_file():
