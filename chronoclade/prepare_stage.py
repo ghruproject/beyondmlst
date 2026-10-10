@@ -1,24 +1,21 @@
-"""Independent, offline preparation of frozen profiles and validated bundles.
-
-This stage publishes typed evidence and audits readiness. It does not call the
-legacy resolver, retrieve public context, or imply that missing typing was run.
-"""
+"""Independent preparation of frozen or live query-only typed datasets."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from html import escape
 import json
-from pathlib import Path
+import re
 import shutil
 import tempfile
+from dataclasses import dataclass, replace
+from html import escape
+from pathlib import Path
 
 from chronoclade import __version__
 from chronoclade.artifacts import file_sha256, write_json
 from chronoclade.datasets import (
+    SCHEMA_NAME,
     DatasetError,
     LocusCatalogue,
-    SCHEMA_NAME,
     from_profile_records,
     load_dataset,
     write_dataset,
@@ -248,7 +245,13 @@ def _readiness(dataset, manifest):
         )
         reasons = []
         if not any(evidence["called_loci"] for evidence in profile_rows):
-            reasons.append("cgMLST profile unavailable; no profile calling was performed")
+            reasons.append(
+                "cgMLST profile unavailable after configured profile calling"
+                if str(
+                    (dataset.parameters.get("prepare_operations") or {}).get("typing", "")
+                ).startswith("run")
+                else "cgMLST profile unavailable; no profile calling was performed"
+            )
         if any(not evidence["catalogue_complete"] for evidence in profile_rows):
             reasons.append("Locus catalogue is explicitly incomplete")
         if kind and not lineage_available:
@@ -298,7 +301,9 @@ def _readiness(dataset, manifest):
         if all(row["readiness"] == "ready" for row in samples)
         else "incomplete",
         "samples": samples,
-        "operations": {
+        "provider_context": dataset.parameters.get("profile_context"),
+        "operations": dataset.parameters.get("prepare_operations")
+        or {
             "typing": "not_run_frozen_import",
             "lineage_assignment": "not_run_frozen_import",
             "provider_retrieval": "not_run_offline",
@@ -314,6 +319,12 @@ def _report(audit):
         return escape(str(value), quote=True)
 
     ready = sum(row["readiness"] == "ready" for row in audit["samples"])
+    context_audit = audit.get("provider_context")
+    context_summary = (
+        f"Accessible public context matches: {context_audit['accessible_matches']}; compatible usable profiles: {context_audit['usable']}. Context assemblies were not requested."
+        if context_audit
+        else "Imported context rows are retained as supplied; this stage discovers no public context."
+    )
     rows = []
     for row in audit["samples"]:
         calls = (
@@ -351,13 +362,13 @@ def _report(audit):
         "<p>Frozen evidence is saved in a validated portable bundle. Missing profiles, "
         "lineage assignments and metadata remain visible.</p></div></header>"
         '<section class="stage"><div class="stage-body"><h2>Typing readiness</h2>'
-        "<p>Existing typing was imported. Profile calling, lineage assignment, provider "
-        "retrieval and reference database availability were not assessed or run.</p>"
+        f"<p>Provider retrieval: {text(audit['operations']['provider_retrieval'])}. "
+        f"Typing: {text(audit['operations']['typing'])}. "
+        f"Reference database: {text(audit['operations']['reference_database'])}.</p>"
         f'<div class="measure-strip"><div><span>Samples</span><b>{len(rows)}</b></div>'
         f"<div><span>Ready frozen typing</span><b>{ready}</b></div>"
         f"<div><span>Incomplete typing</span><b>{len(rows) - ready}</b></div></div>"
-        "<p>Missing metadata does not exclude a sample. Imported context rows are "
-        "retained as supplied; this stage discovers no public context.</p>"
+        f"<p>Missing metadata does not exclude a sample. {text(context_summary)}</p>"
         '<div class="table-scroll" tabindex="0" role="region" aria-label="Sample readiness">'
         "<table><thead><tr>"
         + "".join(
@@ -392,6 +403,14 @@ def run_prepare(
     catalogues: str | Path | None = None,
     input_kind: str = "auto",
     species: str | None = None,
+    metadata: str | Path | None = None,
+    typing_config: str | Path | None = None,
+    query_typing: str | Path | None = None,
+    public_typing: str | Path | None = None,
+    cglin_export: str | Path | None = None,
+    enrich_metadata: bool = True,
+    client=None,
+    _provider_sources: Path | None = None,
 ) -> PrepareResult:
     """Import frozen canonical JSON or an existing bundle into a new stage output.
 
@@ -399,14 +418,77 @@ def run_prepare(
     are missing. Existing outputs are immutable. Local assembly references are
     copied and checksummed, without provider acquisition or context selection.
     """
-    source, target = Path(input_path).expanduser().resolve(), Path(output).expanduser().absolute()
+    target = Path(output).expanduser().absolute()
     if target.exists():
         raise DatasetError(f"Preparation output already exists: {target}")
+    if (
+        input_kind == "auto"
+        and isinstance(input_path, str)
+        and ("://" in input_path or re.fullmatch(r"[1-9A-HJ-NP-Za-km-z]{20,22}", input_path))
+    ):
+        input_kind = "collection"
+    if input_kind in {"collection", "accessions", "assemblies"}:
+        from dataclasses import asdict
+
+        from chronoclade.pathogenwatch import PathogenwatchError
+        from chronoclade.prepare_provider import catalogues_for_records, resolve_queries
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(
+            prefix=".prepare-provider-", dir=target.parent
+        ) as temporary:
+            work = Path(temporary)
+            try:
+                rows, provenance, conflicts, ledger, provider, operations = resolve_queries(
+                    input_path,
+                    work,
+                    input_kind=input_kind,
+                    species=species,
+                    metadata=metadata,
+                    client=client,
+                    typing_config=typing_config,
+                    query_typing=query_typing,
+                    public_typing=public_typing,
+                    cglin_export=cglin_export,
+                    enrich_metadata=enrich_metadata,
+                )
+            except (PathogenwatchError, ValueError) as error:
+                raise DatasetError(str(error)) from None
+            explicit = _catalogues(Path(catalogues)) if catalogues else ()
+            values = catalogues_for_records(rows, explicit)
+            source = work / "live_profiles.json"
+            write_json(
+                source,
+                {
+                    "records": rows,
+                    "provenance": provenance,
+                    "conflicts": conflicts,
+                    "retrieval": ledger,
+                    "parameters": {"provider_prepare": provider, "prepare_operations": operations},
+                },
+            )
+            catalogue_file = work / "live_catalogues.json"
+            # Empty catalogue is valid when no profile could be obtained.
+            if not values:
+                # Publish sample-only evidence directly through the frozen adapter.
+                dataset = from_profile_records(
+                    rows,
+                    (),
+                    provenance=provenance,
+                    conflicts=conflicts,
+                    retrieval=ledger,
+                    parameters={"provider_prepare": provider, "prepare_operations": operations},
+                )
+                provisional = work / "sample_only"
+                manifest = write_dataset(dataset, provisional)
+                return run_prepare(manifest, target, input_kind="dataset", _provider_sources=work)
+            write_json(catalogue_file, [asdict(c) for c in values])
+            return run_prepare(source, target, catalogues=catalogue_file, _provider_sources=work)
     if input_kind not in {"auto", "profiles", "dataset"}:
         raise DatasetError(
-            "prepare supports profiles or dataset inputs; collection/accession resolution "
-            "and new assembly typing await a query-only provider stage"
+            "prepare requires profiles, dataset, collection, accessions or assemblies"
         )
+    source = Path(input_path).expanduser().resolve()
     if species is not None and (not isinstance(species, str) or not species.strip()):
         raise DatasetError("--species must be nonempty text")
     if source.is_dir():
@@ -461,6 +543,27 @@ def run_prepare(
             shutil.copyfile(catalogue_path, sources / "catalogues.json")
         if (assembly_staging / "assemblies").exists():
             shutil.move(str(assembly_staging / "assemblies"), bundle / "assemblies")
+        if _provider_sources:
+            provider_sources = sources / "provider"
+            provider_sources.mkdir()
+            for evidence in _provider_sources.rglob("*"):
+                if evidence.is_file() and evidence.suffix.lower() in {
+                    ".json",
+                    ".jsonl",
+                    ".npy",
+                    ".csv",
+                    ".bin",
+                    ".tsv",
+                }:
+                    if evidence.suffix.lower() == ".json":
+                        _json(evidence)  # Reject credentials before snapshot publication.
+                    if evidence.suffix.lower() == ".jsonl":
+                        for line in evidence.read_text().splitlines():
+                            check_json(json.loads(line), location=evidence.name)
+                    relative = evidence.relative_to(_provider_sources)
+                    destination = provider_sources / relative
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(evidence, destination)
         audit = _readiness(dataset, manifest)
         write_json(bundle / "readiness.json", audit)
         (bundle / "report.html").write_text(_report(audit), encoding="utf-8")

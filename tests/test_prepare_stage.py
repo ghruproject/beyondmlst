@@ -1,11 +1,11 @@
 """Independent prepare preserves portable evidence without running analysis/providers."""
 
-from dataclasses import asdict
 import json
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 import typer
@@ -385,11 +385,14 @@ def test_prepare_import_has_no_scientific_stage_or_provider_dependency():
         [
             sys.executable,
             "-c",
-            "import sys; import chronoclade.prepare_stage; "
-            "forbidden = {'torch', 'chronoclade.profile_inputs', 'chronoclade.workflow', "
-            "'chronoclade.profile_analysis', 'chronoclade.pathogenwatch'}; "
-            "assert not forbidden.intersection(sys.modules), forbidden.intersection(sys.modules)",
+            (
+                "import sys; import chronoclade.prepare_stage; "
+                "forbidden = {'torch', 'chronoclade.profile_inputs', 'chronoclade.workflow', "
+                "'chronoclade.profile_analysis', 'chronoclade.pathogenwatch'}; "
+                "assert not forbidden.intersection(sys.modules), forbidden.intersection(sys.modules)"
+            ),
         ],
+        check=False,
         capture_output=True,
         text=True,
     )
@@ -397,7 +400,7 @@ def test_prepare_import_has_no_scientific_stage_or_provider_dependency():
 
 
 @pytest.mark.parametrize("input_kind", ["collection", "accessions", "assemblies"])
-def test_unimplemented_provider_modes_fail_explicitly(frozen, tmp_path, input_kind):
+def test_live_modes_reject_wrong_input_contract(frozen, tmp_path, input_kind):
     source, _, _ = frozen
-    with pytest.raises(DatasetError, match="query-only provider"):
+    with pytest.raises(DatasetError, match="short UUID|Metadata has no samples|Assembly metadata"):
         run_prepare(source, tmp_path / "prepared", input_kind=input_kind)

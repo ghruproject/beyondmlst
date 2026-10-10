@@ -380,7 +380,7 @@ def type_query_assemblies(
                 )
             )
             continue
-        directory = output / sample.sample_id
+        directory = output / hashlib.sha256(sample.sample_id.encode()).hexdigest()[:24]
         directory.mkdir(exist_ok=True)
         opener = gzip.open if sample.assembly.suffix == ".gz" else open
         with opener(sample.assembly, "rb") as handle:
