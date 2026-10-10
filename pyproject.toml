@@ -21,6 +21,12 @@ dependencies = [
   "typer>=0.19,<1",
 ]
 
+[project.optional-dependencies]
+esm2 = [
+  "torch>=2.2,<3",
+  "fair-esm==2.0.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/ghruproject/chronoclade"
 Repository = "https://github.com/ghruproject/chronoclade"

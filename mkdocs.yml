@@ -42,6 +42,7 @@ nav:
       - Input data: input-data.md
       - Running an analysis: running.md
       - Profile-first stages: staged-workflow.md
+      - Optional ESM2 embeddings: esm2.md
   - Worked example: worked-example.md
   - Pathogenwatch context:
       - Frozen metadata: pathogenwatch.md
@@ -57,6 +58,7 @@ nav:
       - Output files: outputs.md
   - Development:
       - Design notes: DESIGN.md
+      - Tool suite redesign: tool-suite-design.md
       - Public-health questions: PUBLIC_HEALTH_QUESTIONS.md
       - Roadmap: ROADMAP.md
       - Code review: CODE_REVIEW.md

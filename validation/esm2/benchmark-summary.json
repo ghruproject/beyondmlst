@@ -1,0 +1,873 @@
+{
+  "schema": "chronoclade.esm2.real-runtime-benchmark",
+  "schema_version": 1,
+  "created_utc": "2026-10-10T07:42:49.046895+00:00",
+  "fixture": {
+    "file": "proteins.fasta",
+    "manifest_file": "fixture-manifest-selected.json",
+    "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+    "source": "Official Institut Pasteur BIGSdb public allele1 DNA records, translated NCBI bacterial code11 with CDS initiation as methionine; terminal stop removed",
+    "scheme_url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/schemes/18",
+    "scheme": "scgMLST629_S",
+    "translation_validation": {
+      "selected_cds_translations_verified": 32,
+      "method": "Biopython Seq.translate(table=11, cds=True)",
+      "alternative_starts_as_methionine": 4
+    },
+    "input_distribution": {
+      "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/proteins.fasta",
+      "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+      "records": 32,
+      "unique_sequences": 32,
+      "residues": 8910,
+      "length_min": 102,
+      "length_median": 255.5,
+      "length_mean": 278.4375,
+      "length_max": 748,
+      "lengths": [
+        102,
+        111,
+        117,
+        128,
+        150,
+        157,
+        158,
+        162,
+        165,
+        182,
+        194,
+        206,
+        222,
+        225,
+        239,
+        254,
+        257,
+        266,
+        274,
+        282,
+        300,
+        310,
+        317,
+        324,
+        334,
+        365,
+        421,
+        443,
+        466,
+        490,
+        541,
+        748
+      ],
+      "token_budget": 4096,
+      "batches": 4,
+      "padded_tokens": 11231
+    }
+  },
+  "environment": {
+    "python": "3.11.14",
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "cpu": "Apple M1 Pro",
+    "architecture": "arm64",
+    "logical_cpu_count": 8,
+    "physical_memory_bytes": 34359738368,
+    "versions": {
+      "torch": "2.14.1",
+      "fair-esm": "2.0.0",
+      "numpy": "2.4.6",
+      "psutil": "7.2.2"
+    },
+    "torch_cpu_threads": 4,
+    "interop_threads": 1,
+    "mps_available": true,
+    "mps_fallback_env": null
+  },
+  "display_hardware": {
+    "SPDisplaysDataType": [
+      {
+        "_name": "Apple M1 Pro",
+        "spdisplays_mtlgpufamilysupport": "spdisplays_metal3",
+        "spdisplays_ndrvs": [
+          {
+            "_name": "Color LCD",
+            "_spdisplays_display-product-id": "a04f",
+            "_spdisplays_display-serial-number": "fd626d62",
+            "_spdisplays_display-vendor-id": "610",
+            "_spdisplays_display-week": "0",
+            "_spdisplays_display-year": "0",
+            "_spdisplays_displayID": "1",
+            "_spdisplays_pixels": "3024 x 1964",
+            "_spdisplays_resolution": "1512 x 982 @ 120.00Hz",
+            "spdisplays_ambient_brightness": "spdisplays_yes",
+            "spdisplays_connection_type": "spdisplays_internal",
+            "spdisplays_display_type": "spdisplays_built-in-liquid-retina-xdr",
+            "spdisplays_main": "spdisplays_yes",
+            "spdisplays_mirror": "spdisplays_off",
+            "spdisplays_online": "spdisplays_yes",
+            "spdisplays_pixelresolution": "spdisplays_3024x1964Retina"
+          }
+        ],
+        "spdisplays_vendor": "sppci_vendor_Apple",
+        "sppci_bus": "spdisplays_builtin",
+        "sppci_cores": "14",
+        "sppci_device_type": "spdisplays_gpu",
+        "sppci_model": "Apple M1 Pro"
+      }
+    ]
+  },
+  "method": {
+    "cpu_threads": 4,
+    "interop_threads": 1,
+    "dtype": "float32",
+    "token_budget": 4096,
+    "batch_rule": "ascending length; padded (max_residue_length+2)*batch_count <=4096",
+    "pooling": "last layer mean over residue tokens, excludes BOS/EOS/padding",
+    "warmups": "one complete cohort before timing",
+    "timed_repeats": 3,
+    "processes": "fresh process per model/device; sequential runs; other local testing deferred",
+    "timed_scope": "token conversion, device transfer, inference, pooling and CPU copy",
+    "model_load": "checkpoint parse, model construction, eval mode and device transfer timed separately",
+    "memory": "20ms sampled RSS and MPS current/driver allocation; sampled peaks can miss brief spikes",
+    "unified_memory_note": "RSS and MPS driver allocation overlap; do not add them as total host usage"
+  },
+  "checkpoint_acquisition": [
+    {
+      "model": "8M",
+      "url": "https://dl.fbaipublicfiles.com/fair-esm/models/esm2_t6_8M_UR50D.pt",
+      "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t6_8M_UR50D.pt",
+      "cache_hit": false,
+      "download_or_cache_check_seconds": 47.35896325018257,
+      "bytes": 30099493,
+      "sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928"
+    },
+    {
+      "model": "35M",
+      "url": "https://dl.fbaipublicfiles.com/fair-esm/models/esm2_t12_35M_UR50D.pt",
+      "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t12_35M_UR50D.pt",
+      "cache_hit": false,
+      "download_or_cache_check_seconds": 157.15458450000733,
+      "bytes": 134095705,
+      "sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e"
+    }
+  ],
+  "measurements": [
+    {
+      "model": "8M",
+      "device": "cpu",
+      "model_load_seconds": 0.07802650053054094,
+      "warmup_full_cohort_count": 1,
+      "warmup_seconds": 1.4019489577040076,
+      "repeat_seconds": [
+        1.3950124168768525,
+        1.3740804577246308,
+        1.3955664159730077
+      ],
+      "median_seconds": 1.3950124168768525,
+      "min_seconds": 1.3740804577246308,
+      "proteins_per_second_median": 22.938863921829064,
+      "proteins_per_second_min": 22.929757863003008,
+      "residues_per_second_median": 6387.039923234281,
+      "sampled_peak_memory_load_warmup_timed": {
+        "rss_bytes": 1132363776
+      }
+    },
+    {
+      "model": "8M",
+      "device": "mps",
+      "model_load_seconds": 0.12871437519788742,
+      "warmup_full_cohort_count": 1,
+      "warmup_seconds": 0.965665209107101,
+      "repeat_seconds": [
+        0.5001189578324556,
+        0.5012503750622272,
+        0.509896207600832
+      ],
+      "median_seconds": 0.5012503750622272,
+      "min_seconds": 0.5001189578324556,
+      "proteins_per_second_median": 63.84035123370709,
+      "proteins_per_second_min": 62.757870176298574,
+      "residues_per_second_median": 17775.547796635317,
+      "sampled_peak_memory_load_warmup_timed": {
+        "mps_allocated_bytes": 224108544,
+        "mps_driver_allocated_bytes": 1227735040,
+        "rss_bytes": 410173440
+      }
+    },
+    {
+      "model": "35M",
+      "device": "cpu",
+      "model_load_seconds": 0.20322016719728708,
+      "warmup_full_cohort_count": 1,
+      "warmup_seconds": 3.3429563343524933,
+      "repeat_seconds": [
+        3.403591375797987,
+        3.3704444589093328,
+        3.3264808747917414
+      ],
+      "median_seconds": 3.3704444589093328,
+      "min_seconds": 3.3264808747917414,
+      "proteins_per_second_median": 9.49429678789459,
+      "proteins_per_second_min": 9.401833671204864,
+      "residues_per_second_median": 2643.5682618794003,
+      "sampled_peak_memory_load_warmup_timed": {
+        "rss_bytes": 1454063616
+      }
+    },
+    {
+      "model": "35M",
+      "device": "mps",
+      "model_load_seconds": 0.3153516249731183,
+      "warmup_full_cohort_count": 1,
+      "warmup_seconds": 1.6370389582589269,
+      "repeat_seconds": [
+        1.1260619154199958,
+        1.1372189577668905,
+        1.1380142085254192
+      ],
+      "median_seconds": 1.1372189577668905,
+      "min_seconds": 1.1260619154199958,
+      "proteins_per_second_median": 28.138820392896953,
+      "proteins_per_second_min": 28.119156826226245,
+      "residues_per_second_median": 7834.902803147246,
+      "sampled_peak_memory_load_warmup_timed": {
+        "mps_allocated_bytes": 342383616,
+        "mps_driver_allocated_bytes": 1376632832,
+        "rss_bytes": 622297088
+      }
+    }
+  ],
+  "raw_runs": [
+    {
+      "model": "8M",
+      "model_name": "esm2_t6_8M_UR50D",
+      "device": "cpu",
+      "checkpoint": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t6_8M_UR50D.pt",
+      "checkpoint_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+      "checkpoint_bytes": 30099493,
+      "environment": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "cpu": "Apple M1 Pro",
+        "architecture": "arm64",
+        "logical_cpu_count": 8,
+        "physical_memory_bytes": 34359738368,
+        "versions": {
+          "torch": "2.14.1",
+          "fair-esm": "2.0.0",
+          "numpy": "2.4.6",
+          "psutil": "7.2.2"
+        },
+        "torch_cpu_threads": 4,
+        "interop_threads": 1,
+        "mps_available": true,
+        "mps_fallback_env": null
+      },
+      "input": {
+        "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/proteins.fasta",
+        "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+        "records": 32,
+        "unique_sequences": 32,
+        "residues": 8910,
+        "length_min": 102,
+        "length_median": 255.5,
+        "length_mean": 278.4375,
+        "length_max": 748,
+        "lengths": [
+          102,
+          111,
+          117,
+          128,
+          150,
+          157,
+          158,
+          162,
+          165,
+          182,
+          194,
+          206,
+          222,
+          225,
+          239,
+          254,
+          257,
+          266,
+          274,
+          282,
+          300,
+          310,
+          317,
+          324,
+          334,
+          365,
+          421,
+          443,
+          466,
+          490,
+          541,
+          748
+        ],
+        "token_budget": 4096,
+        "batches": 4,
+        "padded_tokens": 11231
+      },
+      "timing": {
+        "model_load_seconds": 0.07802650053054094,
+        "warmup_full_cohort_count": 1,
+        "warmup_seconds": 1.4019489577040076,
+        "repeat_seconds": [
+          1.3950124168768525,
+          1.3740804577246308,
+          1.3955664159730077
+        ],
+        "median_seconds": 1.3950124168768525,
+        "min_seconds": 1.3740804577246308,
+        "proteins_per_second_median": 22.938863921829064,
+        "proteins_per_second_min": 22.929757863003008,
+        "residues_per_second_median": 6387.039923234281
+      },
+      "sampled_peak_memory": {
+        "load": {
+          "rss_bytes": 263995392
+        },
+        "warmup": {
+          "rss_bytes": 1110933504
+        },
+        "timed": {
+          "rss_bytes": 1132363776
+        },
+        "correctness": {
+          "rss_bytes": 1132363776
+        }
+      },
+      "memory_sample_interval_seconds": 0.02,
+      "correctness": {
+        "shape": [
+          32,
+          320
+        ],
+        "all_finite": true,
+        "repeat_max_abs_difference": 0.0,
+        "exact_duplicate_max_abs_difference": 0.0,
+        "synthetic_single_substitution_l2_difference": 0.1871119737625122,
+        "variant_is_runtime_sanity_check_only": true
+      },
+      "scope": "Float32 standalone fair-esm, last-layer residue-only mean pooling; no biological ranking-quality or cluster benchmark."
+    },
+    {
+      "model": "8M",
+      "model_name": "esm2_t6_8M_UR50D",
+      "device": "mps",
+      "checkpoint": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t6_8M_UR50D.pt",
+      "checkpoint_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+      "checkpoint_bytes": 30099493,
+      "environment": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "cpu": "Apple M1 Pro",
+        "architecture": "arm64",
+        "logical_cpu_count": 8,
+        "physical_memory_bytes": 34359738368,
+        "versions": {
+          "torch": "2.14.1",
+          "fair-esm": "2.0.0",
+          "numpy": "2.4.6",
+          "psutil": "7.2.2"
+        },
+        "torch_cpu_threads": 4,
+        "interop_threads": 1,
+        "mps_available": true,
+        "mps_fallback_env": null
+      },
+      "input": {
+        "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/proteins.fasta",
+        "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+        "records": 32,
+        "unique_sequences": 32,
+        "residues": 8910,
+        "length_min": 102,
+        "length_median": 255.5,
+        "length_mean": 278.4375,
+        "length_max": 748,
+        "lengths": [
+          102,
+          111,
+          117,
+          128,
+          150,
+          157,
+          158,
+          162,
+          165,
+          182,
+          194,
+          206,
+          222,
+          225,
+          239,
+          254,
+          257,
+          266,
+          274,
+          282,
+          300,
+          310,
+          317,
+          324,
+          334,
+          365,
+          421,
+          443,
+          466,
+          490,
+          541,
+          748
+        ],
+        "token_budget": 4096,
+        "batches": 4,
+        "padded_tokens": 11231
+      },
+      "timing": {
+        "model_load_seconds": 0.12871437519788742,
+        "warmup_full_cohort_count": 1,
+        "warmup_seconds": 0.965665209107101,
+        "repeat_seconds": [
+          0.5001189578324556,
+          0.5012503750622272,
+          0.509896207600832
+        ],
+        "median_seconds": 0.5012503750622272,
+        "min_seconds": 0.5001189578324556,
+        "proteins_per_second_median": 63.84035123370709,
+        "proteins_per_second_min": 62.757870176298574,
+        "residues_per_second_median": 17775.547796635317
+      },
+      "sampled_peak_memory": {
+        "load": {
+          "rss_bytes": 267894784,
+          "mps_allocated_bytes": 30051840,
+          "mps_driver_allocated_bytes": 50741248
+        },
+        "warmup": {
+          "rss_bytes": 409518080,
+          "mps_allocated_bytes": 224108544,
+          "mps_driver_allocated_bytes": 1227718656
+        },
+        "timed": {
+          "rss_bytes": 410173440,
+          "mps_allocated_bytes": 71497728,
+          "mps_driver_allocated_bytes": 1227735040
+        },
+        "correctness": {
+          "rss_bytes": 415891456,
+          "mps_allocated_bytes": 36883968,
+          "mps_driver_allocated_bytes": 1227735040
+        }
+      },
+      "memory_sample_interval_seconds": 0.02,
+      "correctness": {
+        "shape": [
+          32,
+          320
+        ],
+        "all_finite": true,
+        "repeat_max_abs_difference": 0.0,
+        "exact_duplicate_max_abs_difference": 0.0,
+        "synthetic_single_substitution_l2_difference": 0.18711137771606445,
+        "variant_is_runtime_sanity_check_only": true
+      },
+      "scope": "Float32 standalone fair-esm, last-layer residue-only mean pooling; no biological ranking-quality or cluster benchmark."
+    },
+    {
+      "model": "35M",
+      "model_name": "esm2_t12_35M_UR50D",
+      "device": "cpu",
+      "checkpoint": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t12_35M_UR50D.pt",
+      "checkpoint_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+      "checkpoint_bytes": 134095705,
+      "environment": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "cpu": "Apple M1 Pro",
+        "architecture": "arm64",
+        "logical_cpu_count": 8,
+        "physical_memory_bytes": 34359738368,
+        "versions": {
+          "torch": "2.14.1",
+          "fair-esm": "2.0.0",
+          "numpy": "2.4.6",
+          "psutil": "7.2.2"
+        },
+        "torch_cpu_threads": 4,
+        "interop_threads": 1,
+        "mps_available": true,
+        "mps_fallback_env": null
+      },
+      "input": {
+        "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/proteins.fasta",
+        "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+        "records": 32,
+        "unique_sequences": 32,
+        "residues": 8910,
+        "length_min": 102,
+        "length_median": 255.5,
+        "length_mean": 278.4375,
+        "length_max": 748,
+        "lengths": [
+          102,
+          111,
+          117,
+          128,
+          150,
+          157,
+          158,
+          162,
+          165,
+          182,
+          194,
+          206,
+          222,
+          225,
+          239,
+          254,
+          257,
+          266,
+          274,
+          282,
+          300,
+          310,
+          317,
+          324,
+          334,
+          365,
+          421,
+          443,
+          466,
+          490,
+          541,
+          748
+        ],
+        "token_budget": 4096,
+        "batches": 4,
+        "padded_tokens": 11231
+      },
+      "timing": {
+        "model_load_seconds": 0.20322016719728708,
+        "warmup_full_cohort_count": 1,
+        "warmup_seconds": 3.3429563343524933,
+        "repeat_seconds": [
+          3.403591375797987,
+          3.3704444589093328,
+          3.3264808747917414
+        ],
+        "median_seconds": 3.3704444589093328,
+        "min_seconds": 3.3264808747917414,
+        "proteins_per_second_median": 9.49429678789459,
+        "proteins_per_second_min": 9.401833671204864,
+        "residues_per_second_median": 2643.5682618794003
+      },
+      "sampled_peak_memory": {
+        "load": {
+          "rss_bytes": 474677248
+        },
+        "warmup": {
+          "rss_bytes": 1426259968
+        },
+        "timed": {
+          "rss_bytes": 1454063616
+        },
+        "correctness": {
+          "rss_bytes": 1454063616
+        }
+      },
+      "memory_sample_interval_seconds": 0.02,
+      "correctness": {
+        "shape": [
+          32,
+          480
+        ],
+        "all_finite": true,
+        "repeat_max_abs_difference": 0.0,
+        "exact_duplicate_max_abs_difference": 0.0,
+        "synthetic_single_substitution_l2_difference": 0.2775721251964569,
+        "variant_is_runtime_sanity_check_only": true
+      },
+      "scope": "Float32 standalone fair-esm, last-layer residue-only mean pooling; no biological ranking-quality or cluster benchmark."
+    },
+    {
+      "model": "35M",
+      "model_name": "esm2_t12_35M_UR50D",
+      "device": "mps",
+      "checkpoint": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/checkpoints/esm2_t12_35M_UR50D.pt",
+      "checkpoint_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+      "checkpoint_bytes": 134095705,
+      "environment": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "cpu": "Apple M1 Pro",
+        "architecture": "arm64",
+        "logical_cpu_count": 8,
+        "physical_memory_bytes": 34359738368,
+        "versions": {
+          "torch": "2.14.1",
+          "fair-esm": "2.0.0",
+          "numpy": "2.4.6",
+          "psutil": "7.2.2"
+        },
+        "torch_cpu_threads": 4,
+        "interop_threads": 1,
+        "mps_available": true,
+        "mps_fallback_env": null
+      },
+      "input": {
+        "path": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/proteins.fasta",
+        "sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53",
+        "records": 32,
+        "unique_sequences": 32,
+        "residues": 8910,
+        "length_min": 102,
+        "length_median": 255.5,
+        "length_mean": 278.4375,
+        "length_max": 748,
+        "lengths": [
+          102,
+          111,
+          117,
+          128,
+          150,
+          157,
+          158,
+          162,
+          165,
+          182,
+          194,
+          206,
+          222,
+          225,
+          239,
+          254,
+          257,
+          266,
+          274,
+          282,
+          300,
+          310,
+          317,
+          324,
+          334,
+          365,
+          421,
+          443,
+          466,
+          490,
+          541,
+          748
+        ],
+        "token_budget": 4096,
+        "batches": 4,
+        "padded_tokens": 11231
+      },
+      "timing": {
+        "model_load_seconds": 0.3153516249731183,
+        "warmup_full_cohort_count": 1,
+        "warmup_seconds": 1.6370389582589269,
+        "repeat_seconds": [
+          1.1260619154199958,
+          1.1372189577668905,
+          1.1380142085254192
+        ],
+        "median_seconds": 1.1372189577668905,
+        "min_seconds": 1.1260619154199958,
+        "proteins_per_second_median": 28.138820392896953,
+        "proteins_per_second_min": 28.119156826226245,
+        "residues_per_second_median": 7834.902803147246
+      },
+      "sampled_peak_memory": {
+        "load": {
+          "rss_bytes": 478478336,
+          "mps_allocated_bytes": 135203328,
+          "mps_driver_allocated_bytes": 151404544
+        },
+        "warmup": {
+          "rss_bytes": 620462080,
+          "mps_allocated_bytes": 342383616,
+          "mps_driver_allocated_bytes": 1368211456
+        },
+        "timed": {
+          "rss_bytes": 622297088,
+          "mps_allocated_bytes": 198785024,
+          "mps_driver_allocated_bytes": 1376632832
+        },
+        "correctness": {
+          "rss_bytes": 626982912,
+          "mps_allocated_bytes": 143629312,
+          "mps_driver_allocated_bytes": 1376632832
+        }
+      },
+      "memory_sample_interval_seconds": 0.02,
+      "correctness": {
+        "shape": [
+          32,
+          480
+        ],
+        "all_finite": true,
+        "repeat_max_abs_difference": 0.0,
+        "exact_duplicate_max_abs_difference": 0.0,
+        "synthetic_single_substitution_l2_difference": 0.2775722146034241,
+        "variant_is_runtime_sanity_check_only": true
+      },
+      "scope": "Float32 standalone fair-esm, last-layer residue-only mean pooling; no biological ranking-quality or cluster benchmark."
+    }
+  ],
+  "numerical_comparison": {
+    "8M": {
+      "cpu_vs_mps_max_abs_difference": 4.291534423828125e-06
+    },
+    "35M": {
+      "cpu_vs_mps_max_abs_difference": 4.291534423828125e-06
+    }
+  },
+  "engine_smoke": [
+    {
+      "model": "8M",
+      "device": "cpu",
+      "manifest": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/engine-smoke/8M-cpu/embeddings.json",
+      "counts": {
+        "input_records": 34,
+        "retained_records": 34,
+        "unique_proteins": 33,
+        "excluded_records": 0
+      },
+      "cached_runtime": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "model_load_seconds": 0.06419854238629341,
+        "cache_hits": 33,
+        "embedded_proteins": 0,
+        "invalid_cache_entries": 0,
+        "batches": 0,
+        "padded_tokens": 0,
+        "inference_seconds": 0.0,
+        "residues_embedded": 0,
+        "accelerator_memory": null,
+        "elapsed_seconds": 0.36567812506109476
+      },
+      "standalone_vs_engine_max_abs_difference": 5.960464477539062e-07,
+      "finite": true,
+      "cache_vectors_exact": true,
+      "duplicate_and_variant_mapping_correct": true,
+      "actual_device": "cpu",
+      "fallback_reason": null
+    },
+    {
+      "model": "8M",
+      "device": "mps",
+      "manifest": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/engine-smoke/8M-mps/embeddings.json",
+      "counts": {
+        "input_records": 34,
+        "retained_records": 34,
+        "unique_proteins": 33,
+        "excluded_records": 0
+      },
+      "cached_runtime": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "model_load_seconds": 0.0928790420293808,
+        "cache_hits": 33,
+        "embedded_proteins": 0,
+        "invalid_cache_entries": 0,
+        "batches": 0,
+        "padded_tokens": 0,
+        "inference_seconds": 0.0,
+        "residues_embedded": 0,
+        "accelerator_memory": {
+          "allocated_bytes": 30051840,
+          "driver_allocated_bytes": 1227685888
+        },
+        "elapsed_seconds": 0.30190995894372463
+      },
+      "standalone_vs_engine_max_abs_difference": 4.76837158203125e-07,
+      "finite": true,
+      "cache_vectors_exact": true,
+      "duplicate_and_variant_mapping_correct": true,
+      "actual_device": "mps",
+      "fallback_reason": null
+    },
+    {
+      "model": "35M",
+      "device": "cpu",
+      "manifest": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/engine-smoke/35M-cpu/embeddings.json",
+      "counts": {
+        "input_records": 34,
+        "retained_records": 34,
+        "unique_proteins": 33,
+        "excluded_records": 0
+      },
+      "cached_runtime": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "model_load_seconds": 0.23817233368754387,
+        "cache_hits": 33,
+        "embedded_proteins": 0,
+        "invalid_cache_entries": 0,
+        "batches": 0,
+        "padded_tokens": 0,
+        "inference_seconds": 0.0,
+        "residues_embedded": 0,
+        "accelerator_memory": null,
+        "elapsed_seconds": 0.4421006664633751
+      },
+      "standalone_vs_engine_max_abs_difference": 0.0,
+      "finite": true,
+      "cache_vectors_exact": true,
+      "duplicate_and_variant_mapping_correct": true,
+      "actual_device": "cpu",
+      "fallback_reason": null
+    },
+    {
+      "model": "35M",
+      "device": "mps",
+      "manifest": "/Users/nfareed/.codex/worktrees/pathogenwatch-context/chronoclade/tmp/esm2-benchmark/engine-smoke/35M-mps/embeddings.json",
+      "counts": {
+        "input_records": 34,
+        "retained_records": 34,
+        "unique_proteins": 33,
+        "excluded_records": 0
+      },
+      "cached_runtime": {
+        "python": "3.11.14",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "model_load_seconds": 0.3076129574328661,
+        "cache_hits": 33,
+        "embedded_proteins": 0,
+        "invalid_cache_entries": 0,
+        "batches": 0,
+        "padded_tokens": 0,
+        "inference_seconds": 0.0,
+        "residues_embedded": 0,
+        "accelerator_memory": {
+          "allocated_bytes": 135531008,
+          "driver_allocated_bytes": 1276116992
+        },
+        "elapsed_seconds": 0.5626245001330972
+      },
+      "standalone_vs_engine_max_abs_difference": 1.430511474609375e-06,
+      "finite": true,
+      "cache_vectors_exact": true,
+      "duplicate_and_variant_mapping_correct": true,
+      "actual_device": "mps",
+      "fallback_reason": null
+    }
+  ],
+  "failures": [],
+  "slurm_tested": false,
+  "remote_cluster_tested": false,
+  "cuda_tested": false,
+  "limitations": [
+    "Small length-stratified sample of 32 distinct scheme loci, one real allele per locus.",
+    "Exact duplicate and labelled synthetic variant used only for numerical/mapping sanity checks, excluded from timed cohort.",
+    "No real allelic neighbourhood, cohort clustering, genome aggregation or biological ranking-quality evaluation.",
+    "Single Apple M1 Pro 32 GiB host; no SLURM/SSH cluster execution or CUDA performance measurement.",
+    "Local checkpoint files were already present during inference; their download times recorded separately."
+  ],
+  "recommendation": "8M is the lower-runtime, lower-sampled-memory default on this host. 35M should require a separate biological-quality justification; this experiment does not establish one.",
+  "reproduction": "Install isolated Python 3.11 with torch, fair-esm, numpy and psutil. Download separately: python scripts/benchmark_esm2.py --download --model MODEL --cache-dir CACHE --output DOWNLOAD_JSON. Run each model/device in a fresh process: python scripts/benchmark_esm2.py --model MODEL --device DEVICE --checkpoint CHECKPOINT --fasta proteins.fasta --output RESULT_JSON --cpu-threads 4 --token-budget 4096 --warmups 1 --repeats 3. MODEL is 8M or 35M; DEVICE is cpu or mps."
+}

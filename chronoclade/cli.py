@@ -12,6 +12,7 @@ from rich.table import Table
 
 from chronoclade import __version__
 from chronoclade.context import ContextError, prepare_context
+from chronoclade.esm2_cli import esm2_command
 from chronoclade.metadata import MetadataError, group_samples, read_metadata
 from chronoclade.workflow import (
     WorkflowError,
@@ -26,6 +27,9 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 console = Console()
+
+# Optional inference dependencies are imported only when this command runs.
+app.command("esm2")(esm2_command)
 
 
 def _fail(error: Exception) -> None:
