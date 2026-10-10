@@ -3,6 +3,23 @@
 Design specification, 10 October 2026. This describes the requested replacement
 workflow; it does not claim that the five commands have been implemented.
 
+## Implementation status after the independent profile-stage change
+
+| Design component | Current evidence | Remaining work |
+| --- | --- | --- |
+| Shared dataset, metadata, location and report ownership | Implemented and tested | Provider/context separation and further report decomposition |
+| `prepare` | Independent frozen-profile import and validated bundle import; readiness report, portable local assemblies, atomic publication | Collection/accession resolution, fresh calling/assignment, exact INSDC enrichment and configured reference-data readiness |
+| `cgmlst` | Independent prepared-bundle analysis; explicit disjoint depth-5/6/7 or HierCC blocks, full frozen-profile trees and reports | Fresh complete context retrieval, PCoA controls, group calibration, scalable tree/ordination backends |
+| Selections | Mandatory input/pin/nearest ties, recorded overruns, reproducible alternatives, hashes, coverage and validated manifests | Independent downstream execution, shared-anchor tree/dating comparisons |
+| `esm2` | Optional native inference, benchmarks, descriptive date plots and offline validated DNA-catalogue mapping API | Automatic catalogue acquisition, genome-wide ordination/neighbours/clusters and selection integration/biological validation |
+| `tree` and `time` | Existing scientific engines remain in the cumulative runner | Independent runners/contracts/reports, temporal assessment separation and ensemble comparison |
+| Local/SLURM and scale | Existing native execution and optional embedding device support | Independent stage environments/jobs/resume; actual cluster and large-block benchmarks |
+
+The frozen Greek worked example exercises ten input genomes and 431 previously
+retrieved context records. It is a test of independent prepared-data/profile
+commands, not proof of complete current public retrieval, a 10,000-genome run or
+independent tree/time execution.
+
 ## Public interface
 
 Five analysis commands, each independently executable and each owning its output.

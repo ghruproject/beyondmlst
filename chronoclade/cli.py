@@ -11,15 +11,10 @@ from rich.console import Console
 from rich.table import Table
 
 from chronoclade import __version__
-from chronoclade.context import ContextError, prepare_context
 from chronoclade.esm2_cli import esm2_command
-from chronoclade.metadata import MetadataError, group_samples, read_metadata
-from chronoclade.workflow import (
-    WorkflowError,
-    native_platform_supported,
-    plan,
-    tool_status,
-)
+from chronoclade.prepare_cli import prepare_command
+from chronoclade.cgmlst.cli import cgmlst_command
+
 
 app = typer.Typer(
     name="chronoclade",
@@ -30,6 +25,8 @@ console = Console()
 
 # Optional inference dependencies are imported only when this command runs.
 app.command("esm2")(esm2_command)
+app.command("prepare")(prepare_command)
+app.command("cgmlst")(cgmlst_command)
 
 
 def _fail(error: Exception) -> None:
@@ -47,6 +44,8 @@ def version() -> None:
 @app.command()
 def preflight() -> None:
     """Check that external workflow tools are available."""
+
+    from chronoclade.workflow import native_platform_supported, tool_status
 
     table = Table(title="ChronoClade preflight")
     table.add_column("Tool")
@@ -76,6 +75,9 @@ def validate(
     ] = 10,
 ) -> None:
     """Validate files and show the lineage analysis plan."""
+
+    from chronoclade.metadata import MetadataError, read_metadata
+    from chronoclade.workflow import WorkflowError, plan
 
     try:
         samples = read_metadata(metadata)
@@ -163,6 +165,7 @@ def type_queries_command(
     output: Annotated[Path, typer.Option("--output", "-o")] = Path("chronoclade_typing"),
 ) -> None:
     """Call cgMLST and Klebsiella LIN or E. coli HierCC locally."""
+    from chronoclade.metadata import MetadataError, read_metadata
     from chronoclade.query_typing import QueryTypingError, type_query_assemblies
 
     try:
@@ -296,6 +299,9 @@ def prepare_context_command(
     ] = False,
 ) -> None:
     """Fetch and select reproducible public context for one species/ST."""
+
+    from chronoclade.context import ContextError, prepare_context
+    from chronoclade.metadata import MetadataError, group_samples, read_metadata
 
     if year_from is not None and year_to is not None and year_from > year_to:
         _fail(ValueError("--year-from cannot be later than --year-to"))
@@ -493,6 +499,8 @@ def run(
     ] = False,
 ) -> None:
     """Run cumulative profile, corrected-tree and dating stages."""
+    from chronoclade.errors import WorkflowError
+    from chronoclade.metadata import MetadataError
     from chronoclade.profile_inputs import ProfileInputError
     from chronoclade.staged_workflow import run_staged_workflow
 
