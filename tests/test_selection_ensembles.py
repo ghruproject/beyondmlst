@@ -331,3 +331,13 @@ def test_overlap_evidence_and_dataset_hash_are_validated(bundle):
     dataset_manifest.write_text(dataset_manifest.read_text() + "\n")
     with pytest.raises(WorkflowError, match="source.dataset.sha256"):
         load_selection_ensemble(manifest)
+
+
+def test_selection_date_strata_use_validated_intervals_not_raw_prefixes():
+    context = [row('canonical',collection_date=None,date_start='2018-01-01',date_end='2020-12-31',date_precision='interval'),
+               row('invalid',collection_date='09/01/2019'), row('future',collection_date='2099')]
+    selected,_ = select_context_ensemble([],context,{},size=3)
+    audit=selected[0]
+    assert {tuple(row['stratum']) for row in audit['strata_coverage']} == {
+        ('unassigned','2018..2020','UK','Unknown'), ('unassigned','Unknown','UK','Unknown')}
+    assert audit['missing_metadata']['collection_date'] == ['future','invalid']

@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from chronoclade.errors import WorkflowError
+from chronoclade.metadata_dates import sample_date_interval
 
 
 @dataclass(frozen=True)
@@ -187,9 +188,12 @@ def _strata(by_id, analysis):
     }
     strata = defaultdict(list)
     for identifier, row in sorted(by_id.items()):
+        interval = sample_date_interval(row)
+        years = (interval["start"][:4], interval["end"][:4]) if interval["status"] == "valid" else None
+        date_bin = (years[0] if years[0] == years[1] else "..".join(years)) if years else "Unknown"
         cell = (
             groups.get(identifier, "unassigned"),
-            str(row.get("collection_date") or "")[:4] or "Unknown",
+            date_bin,
             str(row.get("nuts2") or row.get("region") or row.get("country") or "Unknown"),
             str(row.get("host") or "Unknown"),
         )
@@ -350,8 +354,11 @@ def select_context_ensemble(
             ],
             "strata_coverage": _coverage(strata, selected),
             "strata_coverage_scope": "context_pool; every input is retained separately",
+            "date_strata_policy": "validated canonical year or year range; missing/invalid/future dates are Unknown",
             "missing_metadata": {
-                field: [i for i in sorted(query_ids + selected) if not all_records[i].get(field)]
+                field: [i for i in sorted(query_ids + selected)
+                        if (sample_date_interval(all_records[i])["status"] != "valid"
+                            if field == "collection_date" else not all_records[i].get(field))]
                 for field in ("collection_date", "country", "host")
             },
             "queries_without_selected_comparable_neighbour": [
