@@ -102,6 +102,8 @@ def write_ordination_views(output, prefix, coordinates, records, *,
             ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1),
                       fontsize=8, frameon=False)
         ax.set(xlabel=axis_labels[0], ylabel=axis_labels[1], title=title)
+        if view == "date":
+            ax.set_title(title, pad=30)
         fig.tight_layout()
         filename = f"{prefix}_pcoa" + ("" if view == "dataset" else f"_{view}") + ".svg"
         fig.savefig(output / filename, bbox_inches="tight")
