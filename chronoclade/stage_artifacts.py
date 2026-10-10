@@ -142,6 +142,11 @@ def load_tree_result(path):
     )
     if result["selected_sample_ids"] != selection["selected_sample_ids"]:
         raise WorkflowError("Tree selected identifiers disagree with the exact selection")
+    if (
+        result["source"].get("dataset", {}).get("sha256")
+        != selection["source"]["dataset"]["sha256"]
+    ):
+        raise WorkflowError("Tree dataset source differs from the exact selection source")
     ids = result["selected_sample_ids"]
     for name in ("corrected_tree", "raw_tree"):
         tips = [
