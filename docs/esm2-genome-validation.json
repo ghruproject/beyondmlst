@@ -1,0 +1,435 @@
+{
+  "fixture": "Two real public Pasteur allele-1 CDS plus explicitly controlled synonymous/nonsynonymous edits; six simulated genomes, five fixed-panel eligible. This is a numerical/semantic validation, not a within-lineage adequacy study.",
+  "source": {
+    "original_loci": [
+      "hfq_S",
+      "KP1_2532_S"
+    ],
+    "source_urls": {
+      "hfq_S": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/hfq_S/alleles/1",
+      "KP1_2532_S": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_2532_S/alleles/1"
+    },
+    "controlled_modifications": "One actual codon edited synonymously or nonsynonymously; simulated genome combinations, metadata and lineage labels."
+  },
+  "catalogue_sha256": "4372ab391394a739932c4c3e4626dde8c5e6e7ba8028c0c5ac60b1bed4505ef1",
+  "runs": [
+    {
+      "model": "8M",
+      "device": "cpu",
+      "checkpoint_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+      "status": "complete",
+      "eligible_samples": 5,
+      "unique_proteins": 4,
+      "inference_seconds": 0.06196437496691942,
+      "stage_seconds": 3.280884792096913,
+      "synonymous_distance": 0.0,
+      "synonymous_allele_differences": 2,
+      "synonymous_DNA_distance": 0.003106218215441516,
+      "neighbour_agreement": [
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "synonymous"
+          ],
+          "jaccard": 0.0,
+          "sample_id": "q",
+          "shared_ids": []
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both",
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "q"
+          ],
+          "jaccard": 0.25,
+          "sample_id": "synonymous",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "variant-y"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-both",
+          "shared_ids": [
+            "variant-y"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "q",
+            "synonymous"
+          ],
+          "jaccard": 0.3333333333333333,
+          "sample_id": "variant-x",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "variant-both"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-y",
+          "shared_ids": [
+            "variant-both"
+          ]
+        }
+      ],
+      "actual_device": "cpu",
+      "model_provenance": {
+        "actual_device": "cpu",
+        "checkpoint_source": "explicit-local",
+        "cpu_threads": 4,
+        "device_name": "arm64",
+        "dimension": 320,
+        "fair_esm": "2.0.0",
+        "model": "esm2_t6_8M_UR50D",
+        "model_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "pooling": "residue-mean-excluding-bos-eos-pad-v1",
+        "precision": "float32",
+        "python": "3.11.14",
+        "representation_layer": 6,
+        "token_budget": 4096,
+        "torch": "2.14.1"
+      }
+    },
+    {
+      "model": "8M",
+      "device": "mps",
+      "checkpoint_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+      "status": "complete",
+      "eligible_samples": 5,
+      "unique_proteins": 4,
+      "inference_seconds": 0.4293317496776581,
+      "stage_seconds": 1.2378629576414824,
+      "synonymous_distance": 0.0,
+      "synonymous_allele_differences": 2,
+      "synonymous_DNA_distance": 0.003106218215441516,
+      "neighbour_agreement": [
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "synonymous"
+          ],
+          "jaccard": 0.0,
+          "sample_id": "q",
+          "shared_ids": []
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both",
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "q"
+          ],
+          "jaccard": 0.25,
+          "sample_id": "synonymous",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "variant-y"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-both",
+          "shared_ids": [
+            "variant-y"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "q",
+            "synonymous"
+          ],
+          "jaccard": 0.3333333333333333,
+          "sample_id": "variant-x",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "variant-both"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-y",
+          "shared_ids": [
+            "variant-both"
+          ]
+        }
+      ],
+      "actual_device": "mps",
+      "model_provenance": {
+        "actual_device": "mps",
+        "checkpoint_source": "explicit-local",
+        "cpu_threads": 4,
+        "device_name": "arm64",
+        "dimension": 320,
+        "fair_esm": "2.0.0",
+        "model": "esm2_t6_8M_UR50D",
+        "model_sha256": "46f002a9870c9bdecd0ea887acb1f9a38a6b561e8f8bf8a6990b679b9d31b928",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "pooling": "residue-mean-excluding-bos-eos-pad-v1",
+        "precision": "float32",
+        "python": "3.11.14",
+        "representation_layer": 6,
+        "token_budget": 4096,
+        "torch": "2.14.1"
+      }
+    },
+    {
+      "model": "35M",
+      "device": "cpu",
+      "checkpoint_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+      "status": "complete",
+      "eligible_samples": 5,
+      "unique_proteins": 4,
+      "inference_seconds": 0.12716745771467686,
+      "stage_seconds": 1.2744247503578663,
+      "synonymous_distance": 0.0,
+      "synonymous_allele_differences": 2,
+      "synonymous_DNA_distance": 0.003106218215441516,
+      "neighbour_agreement": [
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "synonymous"
+          ],
+          "jaccard": 0.0,
+          "sample_id": "q",
+          "shared_ids": []
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both",
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "q"
+          ],
+          "jaccard": 0.25,
+          "sample_id": "synonymous",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "variant-y"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-both",
+          "shared_ids": [
+            "variant-y"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "q",
+            "synonymous"
+          ],
+          "jaccard": 0.3333333333333333,
+          "sample_id": "variant-x",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "variant-both"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-y",
+          "shared_ids": [
+            "variant-both"
+          ]
+        }
+      ],
+      "actual_device": "cpu",
+      "model_provenance": {
+        "actual_device": "cpu",
+        "checkpoint_source": "explicit-local",
+        "cpu_threads": 4,
+        "device_name": "arm64",
+        "dimension": 480,
+        "fair_esm": "2.0.0",
+        "model": "esm2_t12_35M_UR50D",
+        "model_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "pooling": "residue-mean-excluding-bos-eos-pad-v1",
+        "precision": "float32",
+        "python": "3.11.14",
+        "representation_layer": 12,
+        "token_budget": 4096,
+        "torch": "2.14.1"
+      }
+    },
+    {
+      "model": "35M",
+      "device": "mps",
+      "checkpoint_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+      "status": "complete",
+      "eligible_samples": 5,
+      "unique_proteins": 4,
+      "inference_seconds": 0.07667462434619665,
+      "stage_seconds": 1.1616283329203725,
+      "synonymous_distance": 0.0,
+      "synonymous_allele_differences": 2,
+      "synonymous_DNA_distance": 0.003106218215441516,
+      "neighbour_agreement": [
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "synonymous"
+          ],
+          "jaccard": 0.0,
+          "sample_id": "q",
+          "shared_ids": []
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both",
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "q"
+          ],
+          "jaccard": 0.25,
+          "sample_id": "synonymous",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "variant-x",
+            "variant-y"
+          ],
+          "embedding_ids": [
+            "variant-y"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-both",
+          "shared_ids": [
+            "variant-y"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "q",
+            "synonymous"
+          ],
+          "jaccard": 0.3333333333333333,
+          "sample_id": "variant-x",
+          "shared_ids": [
+            "q"
+          ]
+        },
+        {
+          "allele_ids": [
+            "q",
+            "variant-both"
+          ],
+          "embedding_ids": [
+            "variant-both"
+          ],
+          "jaccard": 0.5,
+          "sample_id": "variant-y",
+          "shared_ids": [
+            "variant-both"
+          ]
+        }
+      ],
+      "actual_device": "mps",
+      "model_provenance": {
+        "actual_device": "mps",
+        "checkpoint_source": "explicit-local",
+        "cpu_threads": 4,
+        "device_name": "arm64",
+        "dimension": 480,
+        "fair_esm": "2.0.0",
+        "model": "esm2_t12_35M_UR50D",
+        "model_sha256": "7f21e80e61d16a71735163ef555d3009afb0c98da74c48e29df08606973cc55e",
+        "platform": "macOS-14.6.1-arm64-arm-64bit",
+        "pooling": "residue-mean-excluding-bos-eos-pad-v1",
+        "precision": "float32",
+        "python": "3.11.14",
+        "representation_layer": 12,
+        "token_budget": 4096,
+        "torch": "2.14.1"
+      }
+    }
+  ],
+  "scientific_default_validated": false,
+  "corrected_snp_validation": "not_supplied"
+}

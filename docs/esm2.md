@@ -4,9 +4,11 @@ The optional ESM2 module embeds each unique amino-acid sequence in a supplied
 protein FASTA once and saves vectors with a complete source-record mapping.
 An optional prepared-dataset and sample–locus mapping route adds a descriptive
 date-distance report alongside a conventional cgMLST NJ baseline. It can reuse
-saved embeddings without loading the model. Automatic DNA allele acquisition and
-translation, genome clustering and representative selection remain separate work
-in the [tool suite design](tool-suite-design.md).
+saved embeddings without loading the model. The prepared-data genome route resolves a supplied scope-checked DNA catalogue,
+translates CDS, computes locus-preserving genome distances and exports the same
+validated selection/ensemble contracts as cgMLST. Live catalogue acquisition and
+corrected-SNP biological validation remain separate work in the
+[tool suite design](tool-suite-design.md).
 
 The output is experimental. Protein embedding distances have different units
 from allele or SNP differences. Runtime benchmarks do not demonstrate neighbour
@@ -129,6 +131,12 @@ result = run_embeddings(
 print(result.manifest_path)
 print(result.vectors_path)
 ```
+
+## Prepared-dataset genome exploration
+
+See [the genome workflow](esm2-genomes.md) for independent prepared-data analysis,
+real DNA translation, fixed-panel distances, shared metadata ordination controls,
+nearest neighbours, experimental groups and selection ensembles.
 
 ## Prepared-dataset date-distance report
 
