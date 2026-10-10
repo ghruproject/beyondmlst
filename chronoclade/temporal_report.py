@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import base64
 import math
 import re
 from html import escape
@@ -112,19 +111,6 @@ def observed_metric(temporal: dict[str, object], name: str) -> float:
 
 def format_rate(value: float) -> str:
     return f"{value:.3g} substitutions/site/year"
-
-
-def embedded_font_css() -> str:
-    """Embed the report display face so a saved report remains fully offline."""
-
-    font = Path(__file__).parent / "data" / "fonts" / "archivo-latin-variable.woff2"
-    if not font.is_file():
-        return ""
-    encoded = base64.b64encode(font.read_bytes()).decode("ascii")
-    return (
-        "@font-face{font-family:'Archivo';font-style:normal;font-weight:100 900;"
-        "font-display:swap;src:url(data:font/woff2;base64," + encoded + ") format('woff2');}"
-    )
 
 
 def _pyplot():

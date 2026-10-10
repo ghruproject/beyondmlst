@@ -2,7 +2,7 @@ import json
 import zipfile
 from pathlib import Path
 
-import chronoclade.country_network as country_network
+import chronoclade.location_network.marginal as country_network
 from chronoclade.report import (
     _context_section,
     _context_selection_summary,
@@ -367,7 +367,7 @@ def test_country_network_is_rendered_when_dates_are_unsupported(
     (tmp_path / "country_network.json").write_text("{}", encoding="utf-8")
     monkeypatch.setattr(
         country_network,
-        "country_network_report_html",
+        "marginal_network_report_html",
         lambda directory: '<p class="network-test">Rendered country network</p>',
     )
     report = {

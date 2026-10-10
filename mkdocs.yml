@@ -59,6 +59,7 @@ nav:
   - Development:
       - Design notes: DESIGN.md
       - Tool suite redesign: tool-suite-design.md
+      - Suite architecture review: architecture-review.md
       - Public-health questions: PUBLIC_HEALTH_QUESTIONS.md
       - Roadmap: ROADMAP.md
       - Code review: CODE_REVIEW.md

@@ -81,6 +81,141 @@ large-dataset representation. All manifests include schema and software versions
 parameters, exact IDs, relative artifact paths, checksums and completion status.
 Credentials are referenced by configuration, never copied into bundles.
 
+## Concrete ownership and reuse
+
+The following is the target dependency graph, not a description of completed
+migration. Arrows mean an allowed Python dependency. The five stage runners
+exchange saved manifests; they do not call each other's runners.
+
+```mermaid
+flowchart TD
+    CLI[CLI: argument validation and lazy stage dispatch]
+    PREP[prepare: input resolution and typing readiness]
+    CG[cgmlst: categorical distances, NJ, groups and allele diagnostics]
+    ESM[esm2: sequences, model inference and embedding analysis]
+    TREE[tree: reference, alignment, recombination and temporal assessment]
+    TIME[time: dating and ensemble comparison]
+    DATA[datasets: schemas, identity, metadata and bundle I/O]
+    CTX[context: discovery, compatible partition policy and coverage audit]
+    SEL[selection: pinned members, quotas, reasons and alternatives]
+    EXEC[execution: jobs, fingerprints, resources and publication]
+    LOC[location: biological-tree reconstruction, metrics and renderers]
+    REP[reports: theme, components, assets and downloads]
+    PROVIDER[providers: Pathogenwatch, ENA and assembly retrieval]
+    CLI --> PREP & CG & ESM & TREE & TIME
+    PREP --> DATA & EXEC & PROVIDER & REP
+    CG --> DATA & CTX & SEL & EXEC & LOC & REP
+    ESM --> DATA & CTX & SEL & EXEC & LOC & REP
+    TREE --> DATA & EXEC & PROVIDER & LOC & REP
+    TIME --> DATA & EXEC & LOC & REP
+    CTX --> DATA & PROVIDER
+    SEL --> DATA
+    PROVIDER --> DATA
+    LOC --> DATA
+    REP --> DATA
+    EXEC --> DATA
+```
+
+Each box has an owner and a narrow responsibility:
+
+| Owner | Canonical responsibilities | Must stay elsewhere |
+| --- | --- | --- |
+| `datasets/` | Manifest validation, typed table access, immutable sample IDs, crosswalk resolution, date intervals, metadata precedence and artifact references | Provider requests, distances, plotting and native commands |
+| `providers/` | Source-specific parsing, pagination, raw snapshots, exact metadata links and validated assembly acquisition | Partition choice, sample selection, model inference and reports |
+| `context/` | Same-ST discovery, scheme/version compatibility, explicit cgLIN/HierCC partition policy and retrieval coverage | Automatic deepest-prefix narrowing and representative selection |
+| `selection/` | Mandatory IDs, pins, distance-aware representatives, quotas, reproducible alternatives and coverage evidence | cgMLST/ESM2 distance calculation, tree building and clock-fit optimisation |
+| `execution/` | Input/tool fingerprints, stage jobs, bounded resources, local/SLURM execution and atomic manifest publication | Scientific gates, provider identities and HTML copying |
+| `location/` | Frozen-tree state-change reconstruction, uncertainty, centralities, metadata composition, palette and static/interactive views | cgLIN partition discovery, embedding inference and stage orchestration |
+| `reports/` | Existing theme, labelled figure/table/download components, report pages and indexes | Computation, metadata inference and provider access |
+| Stage package | Its scientific engine, settings, result schema adapter and runner | Another stage's engine or report-private helpers |
+
+Do not create all these packages as empty shells. Extract a boundary when the
+first two real consumers need it, move its implementation and migrate those
+call sites together. Shared code must delete duplication or remove a dependency;
+a forwarding wrapper around a stage helper does neither. The names above define
+ownership; the first foundations change can use `datasets/` and `location/`
+without prematurely relocating every existing file.
+
+The foundation extraction accompanying this design uses the actual names
+`datasets/`, `location_network/`, `metadata_dates.py`, `selections.py` and
+`report_components/styles.py`, with `typing_scopes.py` owning neutral typing
+namespace identity and compatibility. The diagram's location, selection and report
+owners map to those modules. `profile_network.py` remains the cgLIN-specific view
+adapter while common reconstruction/rendering moves beneath `location_network/`.
+This is a concrete first boundary, not a completed stage-package migration.
+Provider/context separation, independent tree/time runners and the complete
+genome-level esm2 route remain subsequent work.
+
+The former provider-owned date decoder is now in `metadata_dates.py`, imported
+by both provider normalization and prepared-data adaptation. Scheme/version/
+frozen-export scope decoding is owned by `typing_scopes.py`, imported by both
+context comparison and datasets. The shared dataset package imports neither
+Pathogenwatch nor context-refinement machinery. Profile matrix scopes preserve
+an explicitly declared database SHA256: conflicting fingerprints and known/
+unknown fingerprints require separate matching catalogues and cannot be merged.
+
+### Contracts shared by the stage runners
+
+Use explicit dataclasses/enums for Python values and versioned, validated JSON
+for public manifests. Dataframes are an access view of typed tables; they do not
+become the manifest or permit silent dtype/identity coercion. Decode provider
+responses once at the boundary rather than inspecting arbitrary nested mappings
+in every downstream renderer.
+
+| Contract | Required evidence and invariants |
+| --- | --- |
+| Dataset manifest | Schema/software version; stable dataset identity; samples/profiles/lineages/crosswalk/provenance artifact paths, hashes, row counts and statuses; exact input/context membership. Profiles have a known or explicitly incomplete locus catalogue, compatible scheme/version and a missing-call mask. |
+| Identity resolution | One internal ID maps to typed provider/accession aliases and a resolution status. Ambiguous aliases are retained as ambiguous, never resolved by nearest profile, filename similarity or first match. Identical profiles do not imply identical specimens. |
+| Metadata value | Value, raw source value, provider/source ID, precedence, conflict evidence and availability status. Dates use start/end/precision plus eligibility reasons. Unknown location/host remains a visible missing category. |
+| Partition manifest | Source dataset hash, scheme/version/database scope, chosen policy/depth, disjoint exact IDs, unresolved inputs, requested/retrieved/usable counts and completeness status. A nested prefix is a child, not an overlapping peer block. |
+| Distance evidence | Ordered IDs, metric identifier and units, compatible scheme/model provenance, callable or missing-data evidence and artifact hash. Allele distances retain raw differences and jointly called denominators; embedding distances have their own units. |
+| Selection manifest | Source dataset/partition hashes, source method and distance evidence hash, all mandatory input/pin/nearest IDs, ordered selected IDs, per-ID reasons, seeds, quotas and budget overruns. Tree consumes these exact IDs without replacement or rerouting. |
+| Stage job/result | Input manifest hashes, stage/parameter/tool versions, execution resources, artifact paths/hashes and explicit pending/running/complete/failed status. Unsupported scientific evidence is a completed assessment with a reason, not an invented output. |
+| Biological tree evidence | Tree path/hash, exact tips, input dataset/selection hash, source method and branch units, rooting policy/provenance and exclusions. Its kind is conventional allele NJ, assembly SNP/corrected phylogeny or dated biological tree; embedding coordinates are not a biological tree. |
+| Location result | Biological-tree source evidence, exact analysed IDs, metadata field/known/unknown counts, root and reconstruction method, coherent displayed history, directed counts, exact pair ranges, centrality definition and root-sensitivity audit. Nearest-observation edges are separately typed and labelled. |
+| Ensemble manifest | Independent selection/run manifest references and declared common anchor/target IDs. Include failed/unsupported runs and assessable denominators; never compare mutable run-local cluster numbers as shared identities. |
+
+Artifact paths inside a bundle are relative and validated against its root.
+References to another bundle include its manifest checksum. Write artifacts to
+their own job namespace and publish the manifest last; a failed replacement must
+leave the previous complete bundle readable. A report receives validated stage
+results and artifact references, rather than discovering science from whatever
+files happen to exist in a directory.
+
+### One location component for cgmlst, esm2 and tree
+
+Reuse the approved interaction, country colours, graph metrics, optimal-history
+count ranges and established report style. Extraction changes ownership, not the
+scientific calculation or its displayed meaning. Store tree-kind, branch units
+and root evidence in the result so the same renderer can label an allele NJ tree
+and a recombination-adjusted SNP tree correctly.
+
+Use two explicit inputs to location rendering:
+
+1. A metadata composition table or ordination with linked IDs. Every stage,
+   including esm2, can show country/region/host distributions and metadata-coloured
+   points without reconstructing ancestral states.
+2. A `BiologicalTreeEvidence` and its matched metadata, used by a separately called
+   reconstruction engine. cgmlst supplies its full comparable conventional NJ;
+   tree supplies its selected-sample corrected SNP tree. esm2 can supply a frozen
+   conventional cgMLST baseline and label that source, or omit the reconstructed
+   network. ESM2 vectors, embedding-space coordinates and an embedding NJ do not
+   satisfy this input contract.
+
+The shared reconstruction engine does not infer sample groups. Stage/context
+owners supply the intended whole-block IDs and optional declared views. Report
+filters operate on a saved result and retain the original denominator; a filtered
+graph is labelled a view, not a new ancestral reconstruction. Reconstructing a
+subgroup is an explicit new result with its own tree, root and IDs.
+
+The existing `country_network.py` TreeTime marginal-state output and
+`profile_network.py` exact parsimony output are different scientific products.
+Share labels, palettes and rendering contracts where valid; keep distinct
+method-specific adapters and uncertainty fields. Do not rename marginal support
+as an exact range or force two products into a generic ambiguous `confidence`
+field. Nearest-country connections remain observations with their own metric;
+SNP/embedding connections never inherit an allele-difference label.
+
 ## prepare
 
 Prepare resolves and types the supplied genomes. It does not choose analysis
@@ -392,7 +527,7 @@ subsampling is used to claim complete analysis.
 
 Implementation sequence:
 
-1. Dataset/manifest contracts, four command entry points and independent caches.
+1. Dataset/manifest contracts, five command entry points and independent caches.
 2. Prepare separation, typing-completion fixes, identity/metadata enrichment and
    explicit database readiness.
 3. cgmlst partitioning/full context retrieval and full-tree display, preserving
@@ -412,6 +547,52 @@ Exercise actual prepare → cgmlst → tree → time outputs where the required 
 and tools are available. Report a skipped/blocked module explicitly. Add scale
 benchmarks and verify rendered plots/tables individually before a final report
 browser check.
+
+### Parallel work packages and integration gates
+
+See [architecture-review.md](architecture-review.md) for findings verified in
+the current checkout. Work packages below have separate file ownership. Agree
+the contracts first; implement shared foundations and isolated engines in parallel
+only after their input/output boundary is fixed.
+
+| Package | Owns | Depends on | Reviewable completion gate |
+| --- | --- | --- | --- |
+| A: dataset foundations | `datasets/`, schema fixtures and contract tests | Agreed manifest schemas | Portable bundle round-trip, checksum/path validation, stable IDs, missing calls/date precision/conflicts retained; no provider/stage/model imports. |
+| B: location extraction | `location_network/`, migrated network/widget/tree-renderer call sites and parity fixtures | Tree/result contract from A | Existing fixed-tree directed counts, ranges, centralities and palette unchanged; renderer labels source/units; no private stage imports. |
+| C: report shell | `reports/` theme/components/assets; migrated report helper call sites | Artifact/location contracts from A/B | Approved full-report style and network controls retained, mobile/desktop render checked, no report-private cross-imports or science computed in HTML. |
+| D: prepare/context | Provider adapters, prepare runner and context/partition services | A | Existing profile with missing assignment handled explicitly; no context assembly acquisition in prepare; exact identity and partition/coverage counts on Greek inputs. |
+| E: cgmlst/selection | Categorical engines, whole-block reports and selection/ensemble writers | A/B/C plus D partitions | Full comparable NJ/PCoA kept; ties and mandatory budget overruns retained; source IDs/hashes stable and selections reproducible. |
+| F: tree/time separation | Independent tree and time runners, corrected-tree/assessment/dating contracts | A/B/C and selection from E | Tree uses exactly selected IDs; time reads saved corrected tree and gate; independent invalidation, unsupported-date result and failures preserved. |
+| G: optional esm2 | Existing inference foundation plus catalogue mapping, genome distance/selection adapter and benchmark | A/C, D partition, E selection contract | Lazy dependency boundary; real sequence mapping and missing masks; benchmark/biological comparison; conventional tree required for any state-change network. |
+| H: scale backend | Distance/tree/ordination implementations behind cgmlst interfaces | E correctness baselines | Same small-input numerical evidence, complete IDs at benchmark sizes, bounded memory/runtime evidence; no silent subsetting. |
+
+The initial change establishes A and B plus shared selection/date/style ownership
+and this reviewed design. It does not complete the full selection policy in E,
+the report decomposition in C or D–H. C can follow alongside D; E follows validated context partitions.
+F can start from a frozen example selection while E develops, but cannot claim
+suite integration until E's emitted manifest is exercised. G can benchmark its
+existing protein engine in parallel; its genome-selection and location integration
+wait for validated A/D/E contracts. H starts from the fixed small-data baseline,
+not by relaxing the current guard before replacement backends exist.
+
+Integration is accepted in this order:
+
+1. **Boundary gate:** schemas, ownership and import direction validated; shared
+   packages import no stage engines; CLI help works without model/native tooling.
+2. **Behaviour gate:** fixed inputs preserve approved network results/style and
+   metadata/identity semantics. Extracting modules is reviewed separately from
+   changing science; intentional scientific changes need their own fixtures.
+3. **Stage gate:** each real command owns a complete, portable output; changing
+   time settings does not rebuild tree/cgmlst, and changing a selection does not
+   overwrite another selection's report. Interrupted publication is recoverable.
+4. **Scientific gate:** partition, denominator, selection, root and temporal
+   evidence matches reported labels; unsupported/failed runs remain visible.
+5. **Worked-example gate:** actual prepare → cgmlst → tree → time from ten Greek
+   inputs, then an alternative selection and independent resume/invalidation.
+   Record unavailable data/tools and blocked commands explicitly.
+6. **Scale/experimental gate:** separately exercised large-data and ESM2 results
+   with resource/biological evidence. A small Greek run is not proof of scale or
+   embedding adequacy.
 
 ## Research informing the design
 

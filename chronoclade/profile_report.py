@@ -7,8 +7,9 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
+from chronoclade.report_components.styles import report_styles
 from chronoclade.sample_labels import label_analysis, read_sample_labels
-from chronoclade.profile_network_widget import interactive_network_html, widget_assets
+from chronoclade.location_network.widget import interactive_network_html, widget_assets
 
 from chronoclade.report import (
     _context_geography_visual,
@@ -17,7 +18,6 @@ from chronoclade.report import (
     _neighbourhood_visual,
     _public_health_visual,
     _recombination_visual,
-    report_styles,
 )
 
 

@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from chronoclade.errors import WorkflowError
-from chronoclade.staged_workflow import run_staged_workflow, select_assembly_context
+from chronoclade.staged_workflow import run_staged_workflow
+from chronoclade.selections import select_assembly_context
 
 
 def row(identifier, **kwargs):
@@ -392,7 +393,7 @@ def test_all_stages_share_one_selection_with_pins_and_distance_ties(
         return pair_table(output / "pairs.csv", [("q", "c1", 0.01), ("q", "c2", 0.01),
                                                 ("q", "c3", 0.9), ("q", "c4", 0.7)])
 
-    monkeypatch.setattr("chronoclade.staged_workflow.select_assembly_context", select)
+    monkeypatch.setattr("chronoclade.selections.select_assembly_context", select)
     monkeypatch.setattr("chronoclade.profile_analysis.analyse_profiles", analyse)
     result = run_staged_workflow(
         None, collection="id", output=tmp_path, mode=mode, context_size=3,

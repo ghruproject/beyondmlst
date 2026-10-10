@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from chronoclade.profile_network_widget import interactive_network_html, widget_assets
+from chronoclade.location_network.widget import interactive_network_html, widget_assets
 
 
 def row():

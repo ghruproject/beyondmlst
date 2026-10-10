@@ -4,7 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from chronoclade.country_network import build_country_network, country_network_report_html
+from chronoclade.location_network.marginal import (
+    build_marginal_network as build_country_network,
+    marginal_network_report_html as country_network_report_html,
+)
 
 
 def inputs(tmp_path: Path, *, root=(0.95, 0.05), inner=(0.95, 0.05), locations=None):
