@@ -1,0 +1,336 @@
+{
+  "source": "Official Institut Pasteur BIGSdb public allele1 DNA records, translated NCBI bacterial code11 with CDS initiation as methionine; terminal stop removed",
+  "scheme_url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/schemes/18",
+  "scheme": "scgMLST629_S",
+  "scheme_snapshot_sha256": "2f13a2751a14aaf6b77d03f93f7cd04d2365fd1948c8fb568d865daca8707886",
+  "scheme_last_updated": "2026-10-05",
+  "public_access_cutoff": "2024-12-31",
+  "selection": "96 evenly spaced scheme loci fetched, 32 proteins spanning eligible 100-800aa length range selected",
+  "download_seconds": 2.2095860419794917,
+  "selected": [
+    {
+      "locus": "hfq_S",
+      "allele": "1",
+      "sequence": "MAKGQSLQDPFLNALRRERVPVSIYLVNGIKLQGQIESFDQFVILLKNTVSQMVYKHAISTVVPSRPVSHHSNNAGGGSSNYHHGGSAQGSSAPQQDSDDAE",
+      "aa_length": 102,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/hfq_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "b93f0ee8688bbc808297f65b6e64613e6429ce838c7bd81b4f792dbaa9c9013a"
+    },
+    {
+      "locus": "KP1_2532_S",
+      "allele": "1",
+      "sequence": "MGLLIKGLLGALVVVLIGVLAKTKNYAIAGLVPLFPTFALIAHYIVASERGIEALRATIVFGMWSILPYFIYLLSLWYFTGIMRLPLALAGAVGCWGLCAWLLILGWSRFH",
+      "aa_length": 111,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_2532_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "d57c8e9732811c4bf9a67e8605a6297afa923c836c5b79e682f615f16ce29a6b"
+    },
+    {
+      "locus": "mtr_S",
+      "allele": "1",
+      "sequence": "MYVITANVKKKGQSTSQMTNDKDYHMILVIIIVVRGETMLQRALGSGWGVMIPGALIVALGYAGVSADVWRVLVAVGMLMSAAMIWHRQLRHFILLPSCVALIGGIMLMIVDIKLRG",
+      "aa_length": 117,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/mtr_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "0e4df7fc0b435008ef0d668af7bdc6be55d91a16f4aeadcdeef506a0e6a98740"
+    },
+    {
+      "locus": "KP1_4861_S",
+      "allele": "1",
+      "sequence": "MAQVPAGKNRSGQLSKQTGDAWENQARRWLEGQGLRFIAANARERGGEIDLIMRDGTVTVFIEVRYRRSARYGDAAASVTPQKQQRLLKAARLWLCRQNGSFETVDCRFDVVAFTGNDIQWLKNAFGE",
+      "aa_length": 128,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_4861_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "c5e747ed7b5eacd68bb8d33dbe04b8962443fa35f38eef20c5d202f87143ff6f"
+    },
+    {
+      "locus": "fur_S",
+      "allele": "1",
+      "sequence": "MTDNNTALKKAGLKVTLPRLKILEVLQEPDNHHVSAEDLYKRLIDMGEEIGLATVYRVLNQFDDAGIVTRHNFEGGKSVFELTQQHHHDHLICLDCGKVIEFSDDSIELRQREIASRHGIRLTNHSLYLYGHCAEGDCREDEHAHDAVEK",
+      "aa_length": 150,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/fur_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "518cbb991f5c79c845643db6b1dbd3b98aa9c5a3999b45b0a7095de5c113b48f"
+    },
+    {
+      "locus": "KP1_5003_S",
+      "allele": "1",
+      "sequence": "MFDVLMYLFETYIHSEAEMRVDQDKLTRDLTDAGFEREDIYNALMWLEKLADYQEGLVEPMQLASDPLSLRVYTEEECQRLDASCRGFLLFLEQIQVLNLETREMVIERVLALDTAEFELEDLKWVILMVLFNIPGCENAYQQMEELLFEVNEGMLH",
+      "aa_length": 157,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_5003_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "ca48b6d082b9db3ca06d3f120e86342721b7c1c334e13b06f7fa483219b5b638"
+    },
+    {
+      "locus": "KP1_4197_S",
+      "allele": "1",
+      "sequence": "MILFALCLNVEPAMPQISRTALVPFSAEQMYQLVNDVKSYPDFLPGCTGSRVLELGPTQMTAAVDVSKAGISKTFTTRNTLTSNQSILMSLVDGPFKKLIGGWKFIPLSPEACKIEFHLDFEFTNKLIEMAFGRIFKELAANMVQAFTSRAKEVYSAG",
+      "aa_length": 158,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_4197_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "6d25c76db7193688cb04c50f77d79bfee3ed2ef87b87d8e3d97684638243c254"
+    },
+    {
+      "locus": "yjjB_S",
+      "allele": "1",
+      "sequence": "MGAARMGIISFIFALAEDMLLAAIPAVGFAMVFNVPQRALRWCALLGAIGHGSRMIMMSAGFNIEWATFLAALLVGSIGIQWSRWYLAHPKIFTVAAVIPMFPGISAYTAMISAVKISHFGYSEEMMILLLSNFLKASSIVGALSIGLSIPGLWLYRKRPRV",
+      "aa_length": 162,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/yjjB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "8abe27dcb456a1d53ccb3f0d6c663c1a8620ea99f94165f7f99508ee6215f458"
+    },
+    {
+      "locus": "ftnA_S",
+      "allele": "1",
+      "sequence": "MLKTDMIDKLNEQMNLELYSSLLYQQMSAWCSYHSFEGAAAFLRRHAQEEMTHMQRLFDYLTDTGSLPRINAIASPFAEYASLDELFRQTYEHEQLITQKINELAHAAMTSQDYPTFNFLQWYVAEQHEEEKLFKSVIDKLTLAGKSGEGLYFIDKELATLDAQN",
+      "aa_length": 165,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/ftnA_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "0ec104e8da4e76416615cb43642f7d208ee898404cf96044ca0161acf2e1d7e8"
+    },
+    {
+      "locus": "yfcM_S",
+      "allele": "1",
+      "sequence": "MQQQHHYQQLIDLFDSCFAEEFNTRLIKGDDEPIYLPADDETPYHRIVFAHGFFASALHEISHWCVAGKARREQVDFGYWYCPDGRDAMTQSQFEDVEVKPQAFEWLFCVAAGFPFNVSCDNLEGDVEPDRIAFQRRVHARVMTLLEQGIPERPARFIRALQHYYQTPPLTAKHFPWPEDLH",
+      "aa_length": 182,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/yfcM_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "eb468da35bed3f3311c0d74789dd8d050373b51dd992b2d31ee541e6671fe784"
+    },
+    {
+      "locus": "KP1_1246_S",
+      "allele": "1",
+      "sequence": "MRNQLSFRDNKLSYAALQVLCNAKETEGEEKMPSFDIVSEVDLQEARNAVDNASREVESRFDFRGVEATFELNDANKTIKVLSESDFQVNQLLDILRAKLLKRGIEGTSLDVPEDIVHSGKTWFVEAKLKQGIESAVQKKIVKLIKDSKLKVQAQIQGEEIRVTGKSRDDLQSVMALVRGGDLGQPFQFKNFRD",
+      "aa_length": 194,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_1246_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": true,
+      "dna_sha256": "3264edca2a45a5a455266f1f6a99a78b390dd9be47b928e70af7c48956dfc3f3"
+    },
+    {
+      "locus": "rhtB_S",
+      "allele": "1",
+      "sequence": "MTIEWWFAYLLTSIILSLSPGSGAINTMTTSINHGYRGAAASIAGLQTGLAIHIVLVGVGLGTLFSRSVLAFEVLKWAGAAYLIWLGIQQWRAAGAIDLNTLAKAQTRGKLFQRAVFVNLTNPKSIVFLAALFPQFILPHQPQVMQYIVLGVTTIVVDIIVMIGYATLAQRISAWIKGPKQMKALNKVFGSLFMLVGALLASARHA",
+      "aa_length": 206,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/rhtB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "08885753274496836a19559fe3a76270305cf372a802a2fce1afed4c4f0b9cc8"
+    },
+    {
+      "locus": "folE_S",
+      "allele": "1",
+      "sequence": "MSSLSKEAVLVHEALVARGLETPMRAPVQEIDNETRKRLITGHMTEIMQLLNLDLSDDSLMETPHRIAKMYVDEIFSGLDYSRFPKITVIENKMKVDEMVTVRDITLTSTCEHHFVTIDGKATVAYIPKDSVIGLSKINRIVQFFAQRPQVQERLTQQILIALQTLLGTNNVAVSIDAVHYCVKARGIRDATSATTTTSLGGLFKSSQNTRQEFLRAVRHHN",
+      "aa_length": 222,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/folE_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "32906bf14b45be59e21706fa8643dfb92e34b6afd76aef3d6997b18ac197303f"
+    },
+    {
+      "locus": "cbiQ_S",
+      "allele": "1",
+      "sequence": "MTGFDRLSYQSRWLQVAPERKFLLWLLLMVLAFTLPAWGQALTLALTAALTCWLLRVSFWRWCRWMALPFGFLLVGVLTILFSVSRDPQMLLASFRLGAFSIGISAPGLAVAGETFWRSLAAMAATLWLVLNLPFPQLIILLKRGRVPRLLTEQILLTWRFIFILLDEAMAIHRAQTLRFGYGSVPQGYRSLAMLVGLLFTRVLLRYQQMSTALDIKLYQGDFHL",
+      "aa_length": 225,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/cbiQ_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "71ac36b43f3329d7cd0edcee19fe11ee90617efdf7f55bfbee836d2dbb122030"
+    },
+    {
+      "locus": "KP1_0801_S",
+      "allele": "1",
+      "sequence": "MATPHINAEMGDFADVVLMPGDPLRAKHIAETFLEDVREVNNVRGMLGFTGTYKGRKISVMGHGMGIPSCSIYTKELITDFGVKKIIRVGSCGAVREDVKLRDVVIGMGACTDSKVNRLRFKDHDFAAIADFGMVRNAVDAAKALGVDARVGNIFSADLFYTPDPSMFDVMEKYGILGVEMEAAGIYGVAAEFGAKALTICTVSDHIRTHEQTTAAERQTTFNDMIKIALESVLLGDKE",
+      "aa_length": 239,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_0801_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "96e416c8fb394091291742af2ca0b1a47dc472993234df7ba8bf3c3452c95a4e"
+    },
+    {
+      "locus": "endA_S",
+      "allele": "1",
+      "sequence": "MHPAPSFATLRARFDTELTMSRMHVLAVAVLSAAVSGPLAAAGINSFSQAKAAGVKVNADVPGDFYCGCKIDWQGKKGVIDLESCGYKVRKNENRASRVEWEHVVPAWQFGHQRQCWQEGGRKNCAKDPEYRKMESDMHNLQPAVGEVNGDRGNFMYSQWNGGEGQYGQCTMKVDFKDKIAEPPARARGAIARTYFYMRDRYQLNLSRQQTQLFTAWNKQYPVTAWECERDERIAKVQGNHNPYVQQACQAQKS",
+      "aa_length": 254,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/endA_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": true,
+      "dna_sha256": "f1113233f50156851bae9f2b9a16079d32e8f42426671b34f19421a6282a595b"
+    },
+    {
+      "locus": "nudC_S",
+      "allele": "1",
+      "sequence": "MDRIIEKLDRGWWVVSHEQKLWLPGGELPHGEAVNFDLVGQHALHIGEWQGESVWMVRQDRRHDMGSLRQVLDQDPGLFQLAGRGIQLAEFYRSHKFCGYCGHPMHASKSEWAMLCSHCRERYYPQIAPCIIVAIRRDDAILLAQHTRHRNGVHTVLAGFVEVGETLEQAVAREVMEESGIRVKNLRYVTSQPWPFPQSLMTAFMADYADGEIVVDKKELLTADWYRYDDLPLLPPPGTVARRLIEDTVAMCRAEFE",
+      "aa_length": 257,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/nudC_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "6565fdfe68e716eed4ba6bf81b8cc14ad49f7c5c26c85ba34ede95e7bc478552"
+    },
+    {
+      "locus": "nagB_S",
+      "allele": "1",
+      "sequence": "MRLIPLVTAEQVGKWAARHIVNRINAFKPTADRPFVLGLPTGGTPLTAYKALVEMHKAGQVSFKHVVTFNMDEYVGLPKEHPESYHSFMHRNFFDHVDIPAENINLLNGNAPDIDAECRRYEEKIRSYGKIHLFMGGVGNDGHIAFNEPASSLASRTRIKTLTHETRVANSRFFDGDVDLVPKYALTVGVGTLLDAEEVMILVLGHQKALALQAAVEGNVNHMWTITCLQLHPKAVIVCDEPSTMELKVKTLKYFNELEAENIKGL",
+      "aa_length": 266,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/nagB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "2990a52c8b1fecf55dcb12db18ef2555c76278403fe75e6b24093d97fe783e92"
+    },
+    {
+      "locus": "KP1_0567_S",
+      "allele": "1",
+      "sequence": "MLLAHISDTHFRSRGEKLYGFIDVNAANADVVSQLNALRERPDAVVVSGDIVNCGRPEEYQVARQILGSLNYPLYLIPGNHDDKAHFLEHLHPLCPQLGNDPQNMRYAVDDFATRLLFIDSSHAGTSKGWLTDETIGWLEAQLFEGGDKPATIFMHHPPLPLGNAQMDPIACENGHRLLALVERFPSLTRIFCGHNHSLTMTQYRQALISTIPGTVHQVPYCHEDTRPYYDLSPASCLMHRQVGEQWVSYQHSLAHYAGPWLYDENISCPTEER",
+      "aa_length": 274,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_0567_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "3986e3851ab0bfa6be9740eff90fcda996dec5b58d8563b96fa2e3db04baf238"
+    },
+    {
+      "locus": "hemK_S",
+      "allele": "1",
+      "sequence": "MTFQAWLQQAIARLAESDSPRRDAEILLGHVTGRARTWILAFGETTLSADEAAKLEALLVRRQRGEPIAHLVGQREFWSLPLFVSPATLIPRPDTECLVEQALARLPTAPCRILDLGTGTGAIALALASERPDCEVTAVDVMPDAVALALRNAEHLSIANVTISQSDWFSALAGQRFATIVSNPPYIDAADPHLAEGDVRFEPLTALVAGDQGLADLAHIIREGRQYLQPGGWMLLEHGWTQGEAVRALFREAGYLDVATCRDYGDNERLTLGRLPDMENVG",
+      "aa_length": 282,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/hemK_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "39fbd76e8120c6bc4595a43c5150979a00b280d07993c2ad20326ae296469b4a"
+    },
+    {
+      "locus": "pduX_S",
+      "allele": "1",
+      "sequence": "MRPGEGKRKGENVAVAQCPASCGELIQGWILGSEKLVSCPVDWYSTVEVETGVPRKDERPLSRAMVNQLLAHWGYPPALSQQIRITLHSTIPVAKGMASSTADIAATAVATAHHLGHLLDEPTLARLCVALEPTDSTLFRQLTLFDHNTAATQIACPPPPALDLLVLESPLTLRTTDYHQLPREPGLLANASRLQLAWEKVQQACHCGSPQLLGEAATISAIASQQLLPKPGFDALLDLVESAGLYGLNVAHSGSVVGLLLDRRRHDVEFLQWRLADSDIAAHWPQQHLLAMVPGGVILQ",
+      "aa_length": 300,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/pduX_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "f0f2509950b8cd662df3c4fd17ffa0d01045fc73f3a6606700173622c152ac09"
+    },
+    {
+      "locus": "pfkB_S",
+      "allele": "1",
+      "sequence": "MTKIYTLTLAPSLDSATQTPQIYPEGKLRCSAPVFEPGGGGINVARAVTFLGGKATAIFPVGGATGEHLAALLADEQVPVETVETRDWTRQNLHVHVAASGEQYRFVMPGAALTDDEFRRLEEKVLTIEPGSLLVVSGSLPPGISVDNLMQLVKNAQQQGLRCIIDSSGDALAAALDVGNIELVKPNQKELSALVQRDLSQPDDVRLAAQSLIQSGKVRRVVVSLGPQGALGVDASGSVQVVPPPMKSQSTVGAGDSMVGAMTLRLAENASLEDMVRFGVAAGSAATINQGTRLCSRTNTQKIYDYLCGR",
+      "aa_length": 310,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/pfkB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "8866f7b54e9bb4c16603589e9a2b02cb6253330bef3dd2921ce8c413b8273377"
+    },
+    {
+      "locus": "fabH_S",
+      "allele": "1",
+      "sequence": "MYTKIIGTGSYLPEQVRTNADLEKMVETSDEWIVTRTGIRERRIAAAHETVATMGFEAAKQALAMAGVSAEQIGLIIVATTSGTHAFPSSACQIQSMLGVKGCPAFDVAAACAGFTYALSVADQYVKNGAVDYALVVGADVLARTCDPADRGTIIIFGDGAGAVVLGASEEPGIISTHLHADGSYGELLTLPNADRVDPENPIYLTMAGNEVFKVAVTELAHIVDETLAANNLERSALDWLVPHQANLRIISATAKKLGMSMDNVVVTLDRHGNTSAASVPCALDEAVRDGRIQRGQLILLEAFGGGFTWGSALVRF",
+      "aa_length": 317,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/fabH_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "bf827c342e4aac3fdf488bfbe56e652af8f169ccfbe5994d8bfb9ec96cf6c9ca"
+    },
+    {
+      "locus": "ilvY_S",
+      "allele": "1",
+      "sequence": "MTGILLRKLIYSQRHVAFYEIQNRGVRAVDLRDLKTFLHLAESRHFGRSARAMHVSPSTLSRQIQRLEEDLGQPLFVRDNRTVTLTEAGEELRTFAQQTLLQYQQLRHVIDQQGPSLSGELHIFCSVTAAYSHLPPILDRFRAAHPSVEIKLSTGDAADAMEKVVTGEADLAIAGKPETLPGSVAFSMLENLAVVLIAPALPCPVRNQVTVERPDWSTVPFIMADQGPVRRRIELWFRRHKISNPSIYATVGGHEAMVSMVALGCGVALLPEVVLENSPEPVRNRVMILERSDEQTPFELGVCAQKKRLHEPLIDAFWKILPNH",
+      "aa_length": 324,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/ilvY_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "0e79fba8f3336c89a3ada5c8b648f3ebffc699942b7828d3bffdb3506abd3789"
+    },
+    {
+      "locus": "holB_S",
+      "allele": "1",
+      "sequence": "MKWYPWLRPSFEQLVGSYQAGRGHHALLLQSLNGMGGEALIYALCRFLMCRQPEGHKSCGHCHSCQLMQAGTHPDYYALSPEKGKSALGIDAVRDVNEKLYEHARLGGAKVVWISDAALLTDAAANALLKTLEEPPENTWFFLACEEPARLLTTLRSRCRLHHLAPPSEPYALAWLEREVSLPQESLLTALRLCASAPAAALELLQEPLWTARQQLCQALAATLASGDWLALLPILNHEQAAVRLHWLASLLVDAQKRQQGITLVSNPDVWPLLEQLAHSLPAARLQAIAHDVCTCREQLLNVIGVNRELLLTERLLRWEHYLQPGTGLPVSHL",
+      "aa_length": 334,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/holB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "8ada29b9b530cd1c83f168e8294cd557a8fb9d41d8c80b571a6aa313d1e72a0d"
+    },
+    {
+      "locus": "anmK_S",
+      "allele": "1",
+      "sequence": "MSGTSLDGIDVVLATITENMVAQQASLTWPIPHAIKEEILAICQGQSLTLSQLGRLDTRLGRLFADAVLALMRQESLKPTDVIAIGCHGQTVWHEPQGEAPHTLQIGDNNQIAAHTGITVVGDFRRRDMALGGQGAPLVPAFHHALLAHPVERRMVLNIGGIANVSLLAPGQPVRGYDTGPGNMLLDAWIWRQKGKPYDKDAQWASEGKVLLPLLQDMLSDPWFALPAPKSTGREYFNYGWLEQHMARYPGLRGEDVQATLAELTAVTISEQVLLSGGCERLLVCGGGARNPLLMARLAALLPGTEVSTTDEAGISGDDMEALAFAWLAWRTLAGLPGNLPSVTGASEASVLGAIFPANPPQNRS",
+      "aa_length": 365,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/anmK_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "5065cb974c066cfe7b05d4c867efd26987b94dac11ddf5a698092c7e18a64864"
+    },
+    {
+      "locus": "rhaA_S",
+      "allele": "1",
+      "sequence": "MRMTTQLEQAWEIAKQRYAAVGVDVEEALRQLDRLPVSMHCWQGDDVAGFENPAGSLTGGIQATGNYPGKARNAEELRADLEQALSLIPGPKRLNLHAIYLESDAPVARNEIKPEHFKNWVTWAKANKLGLDFNPSCFSHPLSADGFTLSHANDEIRQFWIDHCKASRRVSAYFGEQLGTPSVMNIWVPDGMKDITVDRFAPRQRLLNALDEVISEKLDPAHHIDAVESKLFGIGAESYTVGSNEFYMGYATSRQTALCLDAGHFHPTEVISDKISAAMLYIPRLLLHVSRPVRWDSDHVVLLDDETQAIASEIIRHNLFDRVHIGLDFFDASINRIAAWVIGTRNMKKALLRALLEPTAQLRQLENDGDYTARLALLEEQKSLPWQAIWEMYCQRHDTPAGSQWLDSVRAYENAVLSQRG",
+      "aa_length": 421,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/rhaA_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": true,
+      "dna_sha256": "f7cd88a5c1c3f984c2ae09d9c4886158259ed8b1823c0cdf2352aabf2574f1de"
+    },
+    {
+      "locus": "srmB_S",
+      "allele": "1",
+      "sequence": "MTVTTFSELELDENLLEALQDKGFTRPTAIQAAAIPPALDGRDILGSAPTGTGKTAAYLLPALQHLLDFPRKKSGPPRILILTPTRELAMQVADHARELAKHTHLDIATITGGVAYMNHAEVFSENQDIVVATTGRLLQYIKEENFDCRAVETLILDEADRMLDMGFAQDIETIAGETRWRKQTMLFSATLEGDAIKDFAERLLEEPVEVSANPSTRERKKIHQWYYRADDIEHKTKLLVNLLQQPEATRAIVFVRKRERVHELANWLREAGINTCWLEGEMVQAKRNEAIKRLTDGRVNVLIATDVAARGIDIPDVSHVFNFDMPRTADTYLHRIGRTGRAGKKGTAISLVEAHDHLLLGKIGRYIEEPLKARVIDELRPTTRAPSEKLTGKPSKKVLAKRAQKKKDEKEKPRVKKRHRDTKNIGKRRKPSAAGTPSASSDE",
+      "aa_length": 443,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/srmB_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "b8c596ed7a0f8b5376f00bc894297044b7912b0e79f7210537b9d6ecb195c7f7"
+    },
+    {
+      "locus": "KP1_4524_S",
+      "allele": "1",
+      "sequence": "MPKVSGCSPGRNKPFTLRYSFMALQDKLIDALGRFATTFNSYRYIMAIKSAFITLMPVIIVGAFSVLISNMVLDPKNGLASFSSLSFLAALKPITSALNYATLNFLNIGAVFLIGIELGRINGIKSLFPGLLAVICFICVTPTTVEMMVDGQMHVVKDVLLRQFSDTRSLFLGMFIAILSVEIYCWLEGRKGLKIKMPDTVPPNVSASFSALIPAIITTTAIATFGFLFHQLTGMYLYDAVYQVVQQPLERVVQSLPGILLLMFVAQLFWVIGIHGNQMIKPIREPLLLGAITVNMSAFEQGKEVPNIITMPFWDVYMSIGGSGLTIGLLIAVMIATRRKEMKEIAKLSIGPGLFNINEPVIFGMPIMLNPILAIPFIITPLVTGSIGYFATLTGFAGKAVVMVPWTTPPLINAWLSTAGSMGAVVTQLICIVVAVLIYLPFVKIASRRADAAQRQVDNQQTANPV",
+      "aa_length": 466,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/KP1_4524_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "cff5f37c2f0075fa7db9cfc432a5780a60e7daca2eff791955abf9307db63714"
+    },
+    {
+      "locus": "yhiP_S",
+      "allele": "1",
+      "sequence": "MNTTAPTGLLQQPRPFFMIFFVELWERFGYYGVQGILAVFFVKQLGFSQEQAFITFGAFAALVYGLISIGGYVGDHLLGTKRTLVLGAIVLAIGYFMTGMSLLKPQLIFIALGTIAVGNGLFKANPASLLSKCYPPKDARLDGAFTLFYMSINIGSLLSLSLAPVIAEKFGYAVTYNLCGAGLIIALLVYFACRGMVKDIGSEPDHRPLSLRNLALVLAGTVVMIFLCAWLMHNVMIANLVLIVLSVVVIAFFFREAFRLDKTGRNKMFVAFILMIEAVLFYILYAQMPTSLNFFAINNVHHEILGFTINPVSFQALNPFWVVVASPVLAAIYTHLGHKGKDLTMPVKFTLGMFLCALGFLTAAAAGMWFADAQGLTSPWFIVLVYLFQSLGELLISALGLAMVAALVPQHLMGFILGMWFLTQAAAFLLGGYVATFTAVPENITDPLQTLPVYTNVFSKIGLVTLGVTVVMALMVPWLNRMINTPASAE",
+      "aa_length": 490,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/yhiP_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "b08da117c43f6e3b7cb3e4c181766521c3d877a53ee3d492af1da9756c7700b1"
+    },
+    {
+      "locus": "yibO_S",
+      "allele": "1",
+      "sequence": "MIFHGDLNDSAVVKLRKISVFEHEVVAMSVSKKPMVLVILDGYGYREDQQDNAIYSAKTPVMDALWAKRPHTLIDASGLEVGLPDRQMGNSEVGHVNLGAGRIVYQDLTRLDVEIKERTFFANPVLTAAVDKAVAAGKAVHIMGLMSPGGVHSHEDHIMAMVELAAERGAEKIYLHAFLDGRDTPPRSAEKTLATFEAKFAALGKGRIASLIGRYYAMDRDNRWDRVEQAYDLLTLAKGEFQADTAVAGLQAAYARDENDEFVKATVIRAAGQADAAMEDGDALIFMNFRADRAREITRAFVNADFDGFARKKVVNLDFVMLTEYAADIKVACAYPPASLANTFGEWMAKHDKTQLRISETEKYAHVTFFFNGGVEEPFKGEERILINSPKVATYDLQPEMSSAELTEKLVAAIKGGKYDTIICNYPNGDMVGHTGVMEAAVKAVEALDRCIDQVAQAVESVGGQLLITADHGNAEQMRDPATGQAHTAHTNLPVPLIYVGNKAVKAVNGGKLSDIAPTMLSLMGMEIPQEMTGKPLFIVE",
+      "aa_length": 541,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/yibO_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": true,
+      "dna_sha256": "bf705b1a7abb7ace5b4f14422922d4b395b638a4dd29d461e3a0a782be91daa1"
+    },
+    {
+      "locus": "ptsP_S",
+      "allele": "1",
+      "sequence": "MLTRLREIVEKVASAPRLNEALDILVTDVCQAMETEVCSVYLADNDRRCYYLMATRGLKKPRGRTVALAFDEGLVGLVGRLAEPINLADAQKHPSFKYIPAVKEDRFRAFLGVPIIQRRQLLGVLVVQQRELRQFDESEESFLVTLATQMAAILSQSQLNALFGQYRQTRIRALPASSGVAIAEGWMDVSLPLMEQVYEASTLDTASERERLTGALEEAANEFRRYSKRYAAGAQKETAAIFDLYSHLLSDARLRRELFAEVDKGAVAEWAVKKIIEKFAEQFAALSDGYLKERAGDLRTLGQRLLFHLDDSIQGPNTWPARIILVADELSATTLAEVPQDRLAGVVVRDGAANSHAAIMVRALGIPTVMGADIQPSLLHGHTLIVDGYRGELLVDPEPVLLQEYQRLISEENELSRLAEDDLQRASELKSGERVKVMLNAGLSPEHEEKLGSFVDGIGLYRTEIPFMLQSGFPSEEEQVAQYQGMLQMFNSKPVTLRTLDIGADKQLPYMPISEENPCLGWRGIRITLDQPEIFLIQVRAMLRANAATGNLSILLPMVTSLEEVDEARRLIDRASREVEEMIGYAIPRPRLGVMLEVPSMVFMLPQLASRIDFISVGTNDLTQYLLAVDRNNTRVASMYDSLHPAVLRALAMIAHDAERFGIDLRLCGEMAGDPMCVTILIGLGYRHLSMNGRSVARVKYLLRRIDIEEAQELSRRSLDAQMTAEVRHQVAAFMERRGLGGLIRGGR",
+      "aa_length": 748,
+      "url": "https://bigsdb.pasteur.fr/api/db/pubmlst_klebsiella_seqdef/loci/ptsP_S/alleles/1",
+      "translation_table": 11,
+      "alternative_initiation_to_methionine": false,
+      "dna_sha256": "aa4b208b58ca8b899f204bdf4c5fec6428365580a59098df4866cada7c854cba"
+    }
+  ],
+  "correctness_extra": "one exact duplicate, one explicitly synthetic single amino-acid substitution; neither counted in runtime cohort",
+  "fetched_loci": 96,
+  "eligible_loci": 83,
+  "proteins_fasta_sha256": "ba9bd2751b9c9d9cb0bec7761813f85c321de58e4e14750881a13d7d4e9b3a53"
+}
