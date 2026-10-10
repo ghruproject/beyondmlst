@@ -1,0 +1,65 @@
+{
+  "schema": "chronoclade.cgmlst.synthetic_scale_benchmark",
+  "sample_count": 1500,
+  "locus_count": 629,
+  "synthetic": true,
+  "seed": 173,
+  "model": "20 categorical templates; three independently changed loci/profile; 21 reported countries including unknown; ten inputs; eight collection years; country independent of template=True",
+  "hardware": {
+    "platform": "macOS-14.6.1-arm64-arm-64bit",
+    "machine": "arm64"
+  },
+  "wall_seconds": 12.465756583027542,
+  "peak_self_rss_bytes": 388399104,
+  "peak_child_rss_bytes": 25636864,
+  "backend": {
+    "distance": "batched compiled SciPy categorical Hamming; exact called counts",
+    "storage": "memory-mapped square matrices and cohort condensed vectors",
+    "profile_count": 1500,
+    "silent_subsetting": false,
+    "batch_size": 128,
+    "distance_seconds": 3.2220571655780077,
+    "total_seconds": 12.377065625041723
+  },
+  "cohorts": [
+    {
+      "profile_count": 1500,
+      "seconds": 9.131954500451684,
+      "nj_backend": {
+        "backend": "RapidNJ",
+        "executable": "/Users/nfareed/.local/share/chronoclade/scale/bin/rapidnj",
+        "command": [
+          "/Users/nfareed/.local/share/chronoclade/scale/bin/rapidnj",
+          "/tmp/chronoclade-scale-benchmark-1500-20countries/cohort_1_nj.phy",
+          "-i",
+          "pd",
+          "-o",
+          "t",
+          "-m",
+          "2048"
+        ],
+        "executable_sha256": "bb6e3535315406cb64f424a085c57b05ba4577aa3964d40b473ec65a83096944",
+        "memory_budget_mb": 2048,
+        "stderr_path": "/tmp/chronoclade-scale-benchmark-1500-20countries/cohort_1_nj.rapidnj.log",
+        "sample_count": 1500,
+        "distance_precision": "PHYLIP 17 significant digits; RapidNJ float32 internals"
+      },
+      "pcoa_solver": "iterative ARPACK leading eigenpairs of the exact all-profile centered distance operator"
+    }
+  ],
+  "network": [
+    {
+      "profile_count": 1500,
+      "seconds": 5.356545333750546,
+      "country_count": 20,
+      "root_count": 5,
+      "uncertainty_scope": "fixed tree; no topology or sampling uncertainty assessment"
+    }
+  ],
+  "comparable_pairs": 1124250,
+  "available_profiles": 1500,
+  "ordination_csv_rows": 1500,
+  "tree_tip_count": 1500,
+  "output_disk_bytes": 82999507,
+  "interpretation": "Computational resource/correctness exercise on labelled synthetic inputs; not evidence of biological adequacy, real-world cohort comparability, or large-country network behaviour."
+}
